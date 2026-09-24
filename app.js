@@ -814,10 +814,9 @@
   }
   function htmlMood() {
     var d = DIAS[st.sel], l = lista();
+    // Cuántas canciones hay en tu biblioteca con ese mood (null = Ninguno: todas)
     function cuenta(m) {
-      var vistas = {};
-      l.forEach(function (e) { enlacesMusica(e, d.grupo, m).forEach(function (u) { vistas[u] = 1; }); });
-      return Object.keys(vistas).length;
+      return biblioteca.filter(function (c) { return !m || (c.moods || []).indexOf(m) >= 0; }).length;
     }
     function txt(n) { return n ? n + (n === 1 ? ' canción' : ' canciones') : 'sin canciones'; }
     var botones = moods.map(function (m, i) {
