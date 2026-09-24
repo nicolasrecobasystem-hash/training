@@ -6,7 +6,7 @@
   var hoy = new Date().getDay();
 
   var st = {
-    pantalla: 'semana', sel: hoy, hueco: 0, cfgSel: 0, cfgMood: 0, mood: null, pidiendoMood: false,
+    pantalla: 'semana', sel: hoy, hueco: 0, cfgVista: 'biblio', filtroMood: '', filtroInt: 0, mood: null, pidiendoMood: false,
     fase: 'espera', corriendo: false, pausado: false,
     serie: 1, dur: 20, quedan: 20, total: 20
   };
@@ -22,15 +22,18 @@
   function lista() { return CALENTAMIENTOS[DIAS[st.sel].grupo] || []; }
   function ejActual() { return lista()[st.hueco]; }
   function cfg() { var e = ejActual(); return e && e.temporizador ? e.temporizador : null; }
-  // ---------- música y moods ----------
-  // Moods: lista personalizable desde Configuración.
-  // Enlaces: por ejercicio y por mood, guardados en este navegador.
-  // Si un ejercicio no se ha tocado en Configuración, se usan los de datos.js (campo musica).
-  var LS_MUSICA = 'miSemana.musica.v2', LS_MOODS = 'miSemana.moods.v1';
+  // ---------- música: biblioteca con mood e intensidad ----------
+  // Cada canción (archivo subido o enlace de YouTube) está UNA sola vez en la biblioteca,
+  // con sus moods y un nivel de intensidad (1 baja · 2 media · 3 alta).
+  // Cada ejercicio tiene su intensidad; al entrenar suena una canción al azar
+  // del mood elegido y de la intensidad del ejercicio.
+  var LS_MOODS = 'miSemana.moods.v1', LS_BIBLIO = 'miSemana.biblioteca.v1', LS_INTENS = 'miSemana.intensidad.v1';
+  var INTENSIDADES = ['', 'Baja', 'Media', 'Alta'];
+  var INTENSIDAD_BLOQUE = { Calentamiento: 1 };   // por defecto; se cambia por ejercicio en Configuración
   function leerLS(k, def) { try { var v = JSON.parse(localStorage.getItem(k)); return v == null ? def : v; } catch (e) { return def; } }
   function escribirLS(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } }
   function esEnlace(x) { return /^https?:\/\/\S+$/i.test(x); }
-  // Un archivo subido a Supabase se guarda como "sb:<ruta en el almacén>|<nombre para mostrar>"
+  // Un archivo subido a Supabase se guarda como "sb:<ruta en el almacén>|<nombre>"
   function esArchivo(x) { return /^sb:[^|]+\|.+$/.test(x); }
   function rutaArchivo(x) { return x.slice(3, x.indexOf('|')); }
   function nombreArchivo(x) { return x.slice(x.indexOf('|') + 1); }
@@ -38,46 +41,89 @@
     return (Array.isArray(ls) ? ls : [ls]).map(function (x) { return String(x || '').trim(); })
       .filter(function (x) { return esEnlace(x) || esArchivo(x); });
   }
-  // Normaliza a { mood: [enlaces] }. Una lista suelta (sin moods) va al mood "General".
-  function porMood(m) {
-    var o = {};
-    if (!m) return o;
-    if (typeof m === 'string' || Array.isArray(m)) { var l = limpiar(m); if (l.length) o.General = l; return o; }
-    Object.keys(m).forEach(function (k) { var l2 = limpiar(m[k]); if (l2.length) o[k] = l2; });
-    return o;
-  }
   var moods = leerLS(LS_MOODS, null);
   if (!Array.isArray(moods)) moods = ['Energía', 'Tranquilo', 'Motivación'];
-  var musicaGuardada = leerLS(LS_MUSICA, null);
-  if (!musicaGuardada || typeof musicaGuardada !== 'object') {
-    // Recupera lo guardado con la versión anterior (sin moods) dentro de "General"
-    var viejo = leerLS('miSemana.musica.v1', {});
-    musicaGuardada = {};
-    Object.keys(viejo || {}).forEach(function (k) { var l = limpiar(viejo[k]); if (l.length) musicaGuardada[k] = { General: l }; });
+  var biblioteca = leerLS(LS_BIBLIO, null);
+  var ejIntensidad = leerLS(LS_INTENS, null);
+  if (!ejIntensidad || typeof ejIntensidad !== 'object' || Array.isArray(ejIntensidad)) ejIntensidad = {};
+  function nuevoId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+  function nombreDe(item) {
+    if (esArchivo(item)) return nombreArchivo(item);
+    var d = datosYouTube(item);
+    return d ? 'YouTube · ' + (d.id || 'lista ' + d.list) : item;
   }
-  function asegurarMoods(o) { Object.keys(o).forEach(function (m) { if (moods.indexOf(m) < 0) moods.push(m); }); }
+  function normalizarCancion(c) {
+    if (!c || typeof c !== 'object') return null;
+    var item = limpiar([c.item])[0];
+    if (!item) return null;
+    var n = +c.intensidad;
+    if (!(n >= 1 && n <= 3)) n = 2;
+    return {
+      id: String(c.id || nuevoId()), item: item, intensidad: n,
+      nombre: String(c.nombre || nombreDe(item)).slice(0, 120),
+      moods: Array.isArray(c.moods) ? c.moods.filter(function (m) { return typeof m === 'string' && m; }) : []
+    };
+  }
+  function cancionPorItem(item) { for (var i = 0; i < biblioteca.length; i++) if (biblioteca[i].item === item) return biblioteca[i]; return null; }
+  function cancionPorId(id) { for (var i = 0; i < biblioteca.length; i++) if (biblioteca[i].id === id) return biblioteca[i]; return null; }
+  // Añade una canción (o completa la que ya existe con los moods nuevos)
+  function anadirCancion(item, nombre, moodsIni, intensidad) {
+    var c = cancionPorItem(item);
+    if (!c) {
+      c = normalizarCancion({ item: item, nombre: nombre, intensidad: intensidad || 2 });
+      if (!c) return null;
+      biblioteca.push(c);
+    }
+    (moodsIni || []).forEach(function (m) { if (m && c.moods.indexOf(m) < 0) c.moods.push(m); });
+    return c;
+  }
+  // Pasa el formato anterior ({ "Grupo|Ejercicio": { mood: [enlaces] } }) a la biblioteca
+  function migrarAntiguo(mus) {
+    if (!mus || typeof mus !== 'object') return 0;
+    var n = 0;
+    Object.keys(mus).forEach(function (clave) {
+      if (clave === 'version' || clave === 'moods') return;
+      var v = mus[clave], o = {};
+      if (typeof v === 'string' || Array.isArray(v)) o.General = limpiar(v);
+      else if (v && typeof v === 'object') Object.keys(v).forEach(function (m) { o[m] = limpiar(v[m]); });
+      var inten = intensidadDeClave(clave);
+      Object.keys(o).forEach(function (m) {
+        if (o[m].length && moods.indexOf(m) < 0) moods.push(m);
+        o[m].forEach(function (item) { if (anadirCancion(item, null, [m], inten)) n++; });
+      });
+    });
+    return n;
+  }
+  function asegurarMoods() {
+    biblioteca.forEach(function (c) { c.moods.forEach(function (m) { if (moods.indexOf(m) < 0) moods.push(m); }); });
+  }
   // Último mood elegido ('' = Ninguno, null = nunca elegido): sale marcado al pulsar START
   var LS_ULTIMO = 'miSemana.ultimoMood.v1';
   var ultimoMood = leerLS(LS_ULTIMO, null);
   function guardarTodo() {
-    var a = escribirLS(LS_MUSICA, musicaGuardada), b = escribirLS(LS_MOODS, moods);
+    var a = escribirLS(LS_BIBLIO, biblioteca), b = escribirLS(LS_MOODS, moods), c = escribirLS(LS_INTENS, ejIntensidad);
     subirNube();   // y a la nube, si hay sesión
-    return a && b;
+    return a && b && c;
   }
-  // { mood: [enlaces] } de un ejercicio
-  function musicaDe(e, grupo) {
-    if (!e) return {};
-    var k = grupo + '|' + e.nombre;
-    return Object.prototype.hasOwnProperty.call(musicaGuardada, k) ? porMood(musicaGuardada[k]) : porMood(e.musica);
+  // Intensidad de un ejercicio: la elegida en Configuración, la de datos.js o la de su bloque
+  function intensidadDeClave(clave) {
+    var n = +ejIntensidad[clave];
+    if (n >= 1 && n <= 3) return n;
+    var x = todosLosEjercicios().filter(function (y) { return y.clave === clave; })[0];
+    if (!x) return 2;
+    var d = +x.ej.intensidad;
+    return d >= 1 && d <= 3 ? d : (INTENSIDAD_BLOQUE[x.bloque] || 2);
   }
-  // Enlaces de un ejercicio para un mood (null = "Ninguno": todos mezclados)
-  function enlacesMusica(e, grupo, mood) {
-    var o = musicaDe(e, grupo);
-    if (mood) return o[mood] || [];
-    var todos = [];
-    Object.keys(o).forEach(function (m) { o[m].forEach(function (u) { if (todos.indexOf(u) < 0) todos.push(u); }); });
-    return todos;
+  // Canciones para un ejercicio y un mood (null = "Ninguno": cualquier mood).
+  // Primero las de la intensidad del ejercicio; si no hay ninguna, cualquiera de ese mood.
+  function cancionesPara(e, grupo, mood) {
+    if (!e) return [];
+    var inten = intensidadDeClave(grupo + '|' + e.nombre);
+    var delMood = biblioteca.filter(function (c) { return !mood || c.moods.indexOf(mood) >= 0; });
+    var exactas = delMood.filter(function (c) { return c.intensidad === inten; });
+    return exactas.length ? exactas : delMood;
   }
+  function enlacesMusica(e, grupo, mood) { return cancionesPara(e, grupo, mood).map(function (c) { return c.item; }); }
   // Abre uno al azar (sin repetir el último si hay más de uno) en una ventanita aparte
   var ultimaMusica = '';
   function abrirMusica(ls) {
@@ -113,7 +159,17 @@
     });
     return out;
   }
-  todosLosEjercicios().forEach(function (x) { asegurarMoods(musicaDe(x.ej, x.grupo)); });
+  // Primera vez con la biblioteca: se trae la música guardada con el formato anterior
+  if (!Array.isArray(biblioteca)) {
+    biblioteca = [];
+    migrarAntiguo(leerLS('miSemana.musica.v2', null));
+    migrarAntiguo(leerLS('miSemana.musica.v1', null));
+    todosLosEjercicios().forEach(function (x) { if (x.ej.musica) { var o = {}; o[x.clave] = x.ej.musica; migrarAntiguo(o); } });
+    escribirLS(LS_BIBLIO, biblioteca); escribirLS(LS_MOODS, moods);
+  } else {
+    biblioteca = biblioteca.map(normalizarCancion).filter(Boolean);
+  }
+  asegurarMoods();
   function esReps() { var c = cfg(); return !!(c && c.reps); }
 
   // ---------- reproductor de YouTube embebido ----------
@@ -234,13 +290,16 @@
   var NUBE_URL = 'https://idjlewvzuzqywthrwibv.supabase.co';
   var NUBE_CLAVE = 'sb_publishable_rgLetEILYTeBPvEqWcAyrA_82D41Npt';   // clave pública (publishable)
   var nube = { sb: null, usuario: null, estado: 'apagada', msg: '', pendiente: false, reloj: null };
-  function datosParaNube() { return { moods: moods, musica: musicaGuardada, ultimoMood: ultimoMood }; }
+  function datosParaNube() { return { version: 3, moods: moods, biblioteca: biblioteca, ejIntensidad: ejIntensidad, ultimoMood: ultimoMood }; }
   function aplicarDeNube(d) {
     if (!d || typeof d !== 'object') return;
     if (Array.isArray(d.moods)) moods = d.moods.filter(function (m) { return typeof m === 'string' && m.trim(); });
-    if (d.musica && typeof d.musica === 'object' && !Array.isArray(d.musica)) musicaGuardada = d.musica;
+    if (Array.isArray(d.biblioteca)) biblioteca = d.biblioteca.map(normalizarCancion).filter(Boolean);
+    else if (d.musica && typeof d.musica === 'object') migrarAntiguo(d.musica);   // datos de la versión anterior
+    if (d.ejIntensidad && typeof d.ejIntensidad === 'object' && !Array.isArray(d.ejIntensidad)) ejIntensidad = d.ejIntensidad;
     if (d.ultimoMood === null || typeof d.ultimoMood === 'string') ultimoMood = d.ultimoMood;
-    escribirLS(LS_MUSICA, musicaGuardada); escribirLS(LS_MOODS, moods); escribirLS(LS_ULTIMO, ultimoMood);
+    asegurarMoods();
+    escribirLS(LS_BIBLIO, biblioteca); escribirLS(LS_MOODS, moods); escribirLS(LS_INTENS, ejIntensidad); escribirLS(LS_ULTIMO, ultimoMood);
     var a = document.activeElement;
     var escribiendo = a && (a.tagName === 'TEXTAREA' || a.tagName === 'INPUT');
     if (!escribiendo && st.pantalla !== 'calent') pintar();
@@ -502,7 +561,11 @@
   // Ventana "¿Con qué mood entrenas?" al pulsar START
   function htmlMood() {
     var d = DIAS[st.sel], l = lista();
-    function cuenta(m) { var n = 0; l.forEach(function (e) { n += enlacesMusica(e, d.grupo, m).length; }); return n; }
+    function cuenta(m) {
+      var vistas = {};
+      l.forEach(function (e) { enlacesMusica(e, d.grupo, m).forEach(function (u) { vistas[u] = 1; }); });
+      return Object.keys(vistas).length;
+    }
     function txt(n) { return n ? n + (n === 1 ? ' canción' : ' canciones') : 'sin canciones'; }
     var botones = moods.map(function (m, i) {
       var ult = ultimoMood === m;
@@ -518,9 +581,6 @@
   }
 
   function htmlConfig() {
-    var todos = todosLosEjercicios();
-    if (st.cfgSel >= todos.length) st.cfgSel = 0;
-    if (st.cfgMood >= moods.length) st.cfgMood = 0;
     var chips = moods.map(function (m, i) {
       return '<span class="chip"><span>' + esc(m) + '</span><button type="button" class="chip-x" data-acc="mood-borrar" data-i="' + i + '" aria-label="Borrar el mood ' + esc(m) + '">✕</button></span>';
     }).join('');
@@ -528,139 +588,132 @@
       '<input id="mood-nuevo" type="text" maxlength="24" placeholder="Nuevo mood…" aria-label="Nombre del nuevo mood">' +
       '<button type="button" class="btn-sec" data-acc="mood-anadir">+ Añadir</button>' +
       '<span id="mood-aviso" class="aviso-cfg mono"></span></div>';
-    var lista = '', ultimo = '';
-    todos.forEach(function (x, i) {
-      var cab = x.grupo + ' · ' + x.bloque;
-      if (cab !== ultimo) { lista += '<div class="cfg-grupo">' + esc(cab.toUpperCase()) + '</div>'; ultimo = cab; }
-      var n = enlacesMusica(x.ej, x.grupo, null).length;
-      lista += '<button type="button" class="cfg-ej' + (i === st.cfgSel ? ' activo' : '') + '" data-acc="cfg-ej" data-i="' + i + '" aria-pressed="' + (i === st.cfgSel) + '">' +
-        '<span class="n">' + esc(x.ej.nombre) + '</span>' +
-        '<span class="cuenta' + (n ? ' on' : '') + '" data-cuenta="' + i + '">' + (n ? '♪ ' + n : 'sin música') + '</span></button>';
-    });
-    var sel = todos[st.cfgSel], editor;
-    if (!sel) {
-      editor = '<div class="vacio">Todavía no hay ejercicios cargados.</div>';
-    } else {
-      editor = '<div class="antetitulo">' + esc((sel.grupo + ' · ' + sel.bloque).toUpperCase()) + '</div>' +
-        '<div class="cfg-nombre">' + esc(sel.ej.nombre.toUpperCase()) + '</div>';
-      if (!moods.length) {
-        editor += '<div class="vacio">Añade un mood arriba para empezar a poner enlaces.</div>';
-      } else {
-        var mus = musicaDe(sel.ej, sel.grupo), moodSel = moods[st.cfgMood];
-        var tabs = moods.map(function (m, i) {
-          return '<button type="button" class="tab-mood' + (i === st.cfgMood ? ' activo' : '') + '" data-acc="cfg-mood" data-i="' + i + '" aria-pressed="' + (i === st.cfgMood) + '">' +
-            esc(m) + '<span data-tab="' + i + '">' + (mus[m] || []).length + '</span></button>';
-        }).join('');
-        editor += '<div class="tabs-mood">' + tabs + '</div>' +
-          '<label class="cfg-lbl" for="cfg-texto">ENLACES PARA «' + esc(moodSel.toUpperCase()) + '» · UNO POR LÍNEA · SE ELIGE UNO AL AZAR</label>' +
-          '<textarea id="cfg-texto" spellcheck="false" placeholder="https://www.youtube.com/watch?v=...&#10;https://youtu.be/...">' +
-          esc((mus[moodSel] || []).filter(esEnlace).join('\n')) + '</textarea>' +
-          htmlArchivos((mus[moodSel] || []).filter(esArchivo)) +
-          '<div class="cfg-pie"><div id="cfg-estado" class="cfg-estado"></div>' +
-          '<button type="button" class="btn-sec" data-acc="cfg-probar">♪ Probar uno al azar</button>' +
-          '<button type="button" class="btn-sec" data-acc="cfg-borrar">Borrar enlaces</button></div>';
-      }
+    var vista = st.cfgVista === 'ejercicios' ? 'ejercicios' : 'biblio';
+    var filtros = '';
+    if (vista === 'biblio') {
+      var fm = st.filtroMood || '', fi = +st.filtroInt || 0;
+      filtros = '<div class="cfg-filtros">' +
+        '<label>MOOD<select id="filtro-mood"><option value="">Todos</option>' +
+        moods.map(function (m) { return '<option value="' + esc(m) + '"' + (fm === m ? ' selected' : '') + '>' + esc(m) + '</option>'; }).join('') +
+        '<option value="-"' + (fm === '-' ? ' selected' : '') + '>Sin mood</option></select></label>' +
+        '<label>INTENSIDAD<select id="filtro-int"><option value="0">Todas</option>' +
+        [1, 2, 3].map(function (n) { return '<option value="' + n + '"' + (fi === n ? ' selected' : '') + '>' + INTENSIDADES[n] + '</option>'; }).join('') +
+        '</select></label></div>';
     }
+    var pestanas = '<div class="cfg-tabs">' +
+      '<button type="button" class="tab-mood' + (vista === 'biblio' ? ' activo' : '') + '" data-acc="cfg-vista" data-v="biblio" aria-pressed="' + (vista === 'biblio') + '">♫ Biblioteca<span>' + biblioteca.length + '</span></button>' +
+      '<button type="button" class="tab-mood' + (vista === 'ejercicios' ? ' activo' : '') + '" data-acc="cfg-vista" data-v="ejercicios" aria-pressed="' + (vista === 'ejercicios') + '">Intensidad de los ejercicios</button>' +
+      filtros + '</div>';
     return '<div class="pantalla config">' +
       '<div class="barra-sup"><button type="button" class="btn-sec" data-acc="volver">← Semana</button>' +
-      '<div class="cab-paso"><span class="antetitulo">MÚSICA POR EJERCICIO</span><h2 class="titulo-m">CONFIGURACIÓN</h2></div>' +
+      '<div class="cab-paso"><span class="antetitulo">TU MÚSICA</span><h2 class="titulo-m">CONFIGURACIÓN</h2></div>' +
       '<div class="barra-der"><button type="button" class="btn-sec" data-acc="cfg-exportar">Descargar copia</button>' +
       '<button type="button" class="btn-sec" data-acc="cfg-importar">Cargar copia</button>' +
       '<input type="file" id="cfg-archivo" accept=".json,application/json" hidden></div></div>' +
-      barraMoods +
-      '<div class="cfg-cuerpo"><div class="panel cfg-lista">' + lista + '</div><div class="panel cfg-editor">' + editor + '</div></div>' +
+      barraMoods + pestanas +
+      '<div class="panel cfg-panel">' + (vista === 'biblio' ? htmlBiblioteca() : htmlEjercicios()) + '</div>' +
       '<div id="cfg-nube" class="cfg-nube"></div>' +
       '</div>';
   }
-
-  // Lista de archivos de audio del mood abierto + botón para subir más
-  function htmlArchivos(archivos) {
-    var chips = archivos.map(function (x) {
-      return '<span class="chip chip-audio"><span>♫ ' + esc(nombreArchivo(x)) + '</span>' +
-        '<button type="button" class="chip-x" data-acc="archivo-quitar" data-item="' + esc(x) + '" aria-label="Quitar ' + esc(nombreArchivo(x)) + '">✕</button></span>';
+  function pillsIntensidad(acc, attrs, actual) {
+    return '<div class="pills-int" role="group" aria-label="Intensidad">' + [1, 2, 3].map(function (n) {
+      return '<button type="button" class="pill-int n' + n + (n === actual ? ' on' : '') + '" data-acc="' + acc + '" ' + attrs +
+        ' data-n="' + n + '" aria-pressed="' + (n === actual) + '">' + INTENSIDADES[n] + '</button>';
+    }).join('') + '</div>';
+  }
+  // Biblioteca: cada canción con sus moods y su intensidad
+  function htmlBiblioteca() {
+    var herr = '<div class="biblio-herr">' +
+      (EMBEBIDO && nube.usuario
+        ? '<label class="btn-sec btn-subir">⬆ Subir canciones<input type="file" id="subir-audio" accept="audio/*" multiple hidden></label>'
+        : '<span class="cfg-nota-mini">' + (EMBEBIDO ? 'Entra con tu correo (abajo) para subir tus archivos.' : 'Los archivos se suben desde la web publicada.') + '</span>') +
+      '<input id="yt-nuevo" type="url" placeholder="Pega un enlace de YouTube…" aria-label="Enlace de YouTube">' +
+      '<button type="button" class="btn-sec" data-acc="yt-anadir">+ Añadir</button>' +
+      '<span id="cfg-estado" class="cfg-nota-mini"></span></div>';
+    var fm = st.filtroMood || '', fi = +st.filtroInt || 0;
+    var visibles = biblioteca.filter(function (c) {
+      return (!fm || (fm === '-' ? !c.moods.length : c.moods.indexOf(fm) >= 0)) && (!fi || c.intensidad === fi);
+    });
+    var filas = visibles.map(function (c) {
+      var id = esc(c.id), arch = esArchivo(c.item);
+      var pills = moods.map(function (m) {
+        var on = c.moods.indexOf(m) >= 0;
+        return '<button type="button" class="pill-mood' + (on ? ' on' : '') + '" data-acc="song-mood" data-id="' + id + '" data-m="' + esc(m) + '" aria-pressed="' + on + '">' + esc(m) + '</button>';
+      }).join('');
+      return '<div class="cancion">' +
+        '<span class="icono" title="' + (arch ? 'Archivo' : 'YouTube') + '">' + (arch ? '♫' : '▶') + '</span>' +
+        '<input class="song-nombre" data-id="' + id + '" value="' + esc(c.nombre) + '" maxlength="120" aria-label="Nombre de la canción">' +
+        '<div class="moods-fila">' + (pills || '<span class="cfg-nota-mini">Crea un mood arriba</span>') + '</div>' +
+        pillsIntensidad('song-int', 'data-id="' + id + '"', c.intensidad) +
+        '<button type="button" class="btn-ico" data-acc="song-probar" data-id="' + id + '" aria-label="Probar ' + esc(c.nombre) + '">▶</button>' +
+        '<button type="button" class="btn-ico" data-acc="song-quitar" data-id="' + id + '" aria-label="Quitar ' + esc(c.nombre) + '">✕</button></div>';
     }).join('');
-    var subir = !EMBEBIDO ? '<span class="cfg-nota-mini">Los archivos se suben desde la web publicada.</span>'
-      : !nube.usuario ? '<span class="cfg-nota-mini">Entra con tu correo (abajo) para subir canciones.</span>'
-      : '<label class="btn-sec btn-subir">⬆ Subir canciones<input type="file" id="subir-audio" accept="audio/*" multiple hidden></label>' +
-        '<label class="cfg-check"><input type="checkbox" id="subir-todos"> añadirlas a todos los ejercicios</label>';
-    return '<div class="cfg-archivos"><div class="cfg-lbl">ARCHIVOS DE AUDIO' + (archivos.length ? ' · ' + archivos.length : '') + '</div>' +
-      '<div class="lista-audio">' + chips + subir + '<span id="subir-estado" class="cfg-nota-mini"></span></div></div>';
+    var vacio = !biblioteca.length ? '<div class="vacio">Tu biblioteca está vacía: sube canciones o pega enlaces de YouTube.</div>'
+      : '<div class="vacio">Ninguna canción con ese filtro.</div>';
+    return herr + '<div class="biblio-lista">' + (filas || vacio) + '</div>';
+  }
+  // Intensidad de cada ejercicio y cuántas canciones le tocan por mood
+  function htmlEjercicios() {
+    var filas = '', ultimo = '';
+    todosLosEjercicios().forEach(function (x) {
+      var cab = x.grupo + ' · ' + x.bloque;
+      if (cab !== ultimo) { filas += '<div class="cfg-grupo">' + esc(cab.toUpperCase()) + '</div>'; ultimo = cab; }
+      var n = intensidadDeClave(x.clave);
+      var cuentas = moods.map(function (m) {
+        var c = biblioteca.filter(function (s) { return s.moods.indexOf(m) >= 0 && s.intensidad === n; }).length;
+        return '<span' + (c ? ' class="on"' : '') + '>' + esc(m) + ' ' + c + '</span>';
+      }).join(' · ');
+      filas += '<div class="ej-fila"><div class="n">' + esc(x.ej.nombre) + '</div>' +
+        pillsIntensidad('ej-int', 'data-clave="' + esc(x.clave) + '"', n) + '<div class="ej-cuentas">' + cuentas + '</div></div>';
+    });
+    return '<div class="cfg-nota-mini">Al entrenar suena una canción del mood elegido con la misma intensidad que el ejercicio. Si no hay ninguna, suena otra de ese mood.</div>' +
+      '<div class="biblio-lista">' + (filas || '<div class="vacio">Todavía no hay ejercicios cargados.</div>') + '</div>';
+  }
+  function actualizarEstadoCfg(msg) { var el = document.getElementById('cfg-estado'); if (el) el.innerHTML = msg || ''; }
+  function moodsDelFiltro() { return st.filtroMood && st.filtroMood !== '-' ? [st.filtroMood] : []; }
+  function anadirYouTube() {
+    var inp = document.getElementById('yt-nuevo'), u = inp ? inp.value.trim() : '';
+    if (!esEnlace(u) || !datosYouTube(u)) { actualizarEstadoCfg('<span class="aviso-cfg">Pega un enlace de YouTube válido</span>'); return; }
+    if (cancionPorItem(u)) { actualizarEstadoCfg('<span class="aviso-cfg">Ese enlace ya está en la biblioteca</span>'); return; }
+    anadirCancion(u, null, moodsDelFiltro(), +st.filtroInt || 2);
+    guardarTodo(); pintar();
+    actualizarEstadoCfg('Añadido ✓ · marca su mood y su intensidad');
+    var n = document.getElementById('yt-nuevo'); if (n) n.focus();
   }
   function nombreSeguro(n) {
     return n.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Za-z0-9._-]+/g, '_').slice(-80);
   }
   function subirArchivos(files) {
-    var sel = todosLosEjercicios()[st.cfgSel], m = moods[st.cfgMood];
-    var aTodos = !!(document.getElementById('subir-todos') || {}).checked;
-    var est = function (t) { var e = document.getElementById('subir-estado'); if (e) e.textContent = t; };
-    if (!sel || !m || !nube.usuario) return;
-    var lista = Array.prototype.slice.call(files), hechos = 0, fallos = 0;
+    if (!nube.sb || !nube.usuario) return;
+    var lista = Array.prototype.slice.call(files), hechos = 0, fallos = 0, total = lista.length;
+    var moodsIni = moodsDelFiltro(), inten = +st.filtroInt || 2;
     function siguiente() {
       if (!lista.length) {
         guardarTodo(); pintar();
-        est(hechos + (hechos === 1 ? ' canción subida' : ' canciones subidas') + (fallos ? ' · ' + fallos + ' con error' : '') + ' ✓');
+        actualizarEstadoCfg(hechos + (hechos === 1 ? ' canción subida' : ' canciones subidas') +
+          (fallos ? ' · <span class="aviso-cfg">' + fallos + ' con error</span>' : '') + ' ✓ · marca su mood y su intensidad');
         return;
       }
       var f = lista.shift();
       if (f.size > 50 * 1024 * 1024) { fallos++; siguiente(); return; }
-      est('Subiendo ' + f.name + '… (' + (hechos + fallos + 1) + ' de ' + (hechos + fallos + lista.length + 1) + ')');
+      actualizarEstadoCfg('Subiendo ' + esc(f.name) + '… (' + (hechos + fallos + 1) + ' de ' + total + ')');
       var ruta = nube.usuario.id + '/' + Date.now() + '-' + nombreSeguro(f.name);
+      var nombre = f.name.replace(/\.[^.]+$/, '').replace(/\|/g, ' ');
       nube.sb.storage.from('musica').upload(ruta, f, { contentType: f.type || 'audio/mpeg', upsert: false }).then(function (r) {
         if (r.error) { fallos++; siguiente(); return; }
-        var item = 'sb:' + ruta + '|' + f.name.replace(/\.[^.]+$/, '').replace(/\|/g, ' ');
-        var destinos = aTodos ? todosLosEjercicios() : [sel];
-        destinos.forEach(function (x) {
-          var o = musicaDe(x.ej, x.grupo);
-          o[m] = (o[m] || []).concat([item]);
-          musicaGuardada[x.clave] = o;
-        });
+        anadirCancion('sb:' + ruta + '|' + nombre, nombre, moodsIni, inten);
         hechos++; siguiente();
       });
     }
     siguiente();
   }
-  // Quita un archivo del mood abierto; si ya no se usa en ningún sitio, lo borra de la nube
-  function quitarArchivo(item) {
-    var sel = todosLosEjercicios()[st.cfgSel], m = moods[st.cfgMood];
-    if (!sel || !m) return;
-    var o = musicaDe(sel.ej, sel.grupo);
-    o[m] = (o[m] || []).filter(function (x) { return x !== item; });
-    if (!o[m].length) delete o[m];
-    musicaGuardada[sel.clave] = o;
-    var enUso = todosLosEjercicios().some(function (x) {
-      var mm = musicaDe(x.ej, x.grupo);
-      return Object.keys(mm).some(function (k) { return mm[k].indexOf(item) >= 0; });
-    });
-    if (!enUso && nube.sb && nube.usuario) nube.sb.storage.from('musica').remove([rutaArchivo(item)]);
+  function quitarCancion(id) {
+    var c = cancionPorId(id);
+    if (!c) return;
+    if (!window.confirm('¿Quitar "' + c.nombre + '" de la biblioteca?' + (esArchivo(c.item) ? ' El archivo se borrará de la nube.' : ''))) return;
+    biblioteca = biblioteca.filter(function (x) { return x.id !== id; });
+    if (esArchivo(c.item) && nube.sb && nube.usuario) nube.sb.storage.from('musica').remove([rutaArchivo(c.item)]);
     guardarTodo(); pintar();
-  }
-
-  function lineasCfg() {
-    var ta = document.getElementById('cfg-texto');
-    return ta ? ta.value.split('\n').map(function (x) { return x.trim(); }).filter(Boolean) : [];
-  }
-  function actualizarEstadoCfg(msg) {
-    var el = document.getElementById('cfg-estado');
-    if (!el) return;
-    var lineas = lineasCfg(), ok = lineas.filter(esEnlace).length, malas = lineas.length - ok;
-    el.innerHTML = (ok ? ok + (ok === 1 ? ' enlace' : ' enlaces') : 'Sin enlaces') +
-      (malas ? ' · <span class="aviso-cfg">' + malas + (malas === 1 ? ' línea no parece un enlace' : ' líneas no parecen enlaces') + '</span>' : '') +
-      (msg ? ' · ' + msg : '');
-  }
-  function guardarCfg() {
-    var sel = todosLosEjercicios()[st.cfgSel], m = moods[st.cfgMood];
-    if (!sel || !m) return;
-    var o = musicaDe(sel.ej, sel.grupo);
-    var ls = lineasCfg().filter(esEnlace).concat((o[m] || []).filter(esArchivo));   // los archivos se conservan
-    if (ls.length) o[m] = ls; else delete o[m];
-    musicaGuardada[sel.clave] = o;
-    var ok = guardarTodo();
-    actualizarEstadoCfg(ok ? 'guardado ✓' : '<span class="aviso-cfg">no se pudo guardar en este navegador: usa "Descargar copia"</span>');
-    var total = enlacesMusica(sel.ej, sel.grupo, null).length;
-    var c = document.querySelector('[data-cuenta="' + st.cfgSel + '"]');
-    if (c) { c.textContent = total ? '♪ ' + total : 'sin música'; c.className = 'cuenta' + (total ? ' on' : ''); }
-    var t = document.querySelector('[data-tab="' + st.cfgMood + '"]');
-    if (t) t.textContent = ls.length;
   }
   function avisoMood(t) { var a = document.getElementById('mood-aviso'); if (a) a.textContent = t; }
   function anadirMood() {
@@ -668,32 +721,23 @@
     var nombre = inp ? inp.value.trim() : '';
     if (!nombre) { avisoMood('Escribe un nombre'); return; }
     if (moods.some(function (m) { return m.toLowerCase() === nombre.toLowerCase(); })) { avisoMood('Ese mood ya existe'); return; }
-    moods.push(nombre); guardarTodo();
-    st.cfgMood = moods.length - 1; pintar();
+    moods.push(nombre); guardarTodo(); pintar();
     var n = document.getElementById('mood-nuevo'); if (n) n.focus();
   }
   function borrarMood(i) {
     var m = moods[i];
     if (m == null) return;
-    var usos = 0;
-    todosLosEjercicios().forEach(function (x) { usos += enlacesMusica(x.ej, x.grupo, m).length; });
-    if (usos && !window.confirm('¿Borrar el mood "' + m + '"? Se quitarán sus ' + usos + ' enlaces de todos los ejercicios.')) return;
-    todosLosEjercicios().forEach(function (x) {
-      var o = musicaDe(x.ej, x.grupo);
-      if (o[m]) { delete o[m]; musicaGuardada[x.clave] = o; }
-    });
-    Object.keys(musicaGuardada).forEach(function (k) { var o = musicaGuardada[k]; if (o && !Array.isArray(o) && o[m]) delete o[m]; });
+    var usos = biblioteca.filter(function (c) { return c.moods.indexOf(m) >= 0; }).length;
+    if (usos && !window.confirm('¿Borrar el mood "' + m + '"? ' + usos + (usos === 1 ? ' canción dejará' : ' canciones dejarán') + ' de tenerlo (siguen en la biblioteca).')) return;
+    biblioteca.forEach(function (c) { c.moods = c.moods.filter(function (x) { return x !== m; }); });
     moods.splice(i, 1);
     if (st.mood === m) st.mood = null;
-    if (st.cfgMood >= moods.length) st.cfgMood = Math.max(0, moods.length - 1);
+    if (st.filtroMood === m) st.filtroMood = '';
     guardarTodo(); pintar();
   }
   function exportarCfg() {
-    var mus = {};
-    todosLosEjercicios().forEach(function (x) { mus[x.clave] = musicaDe(x.ej, x.grupo); });
-    Object.keys(musicaGuardada).forEach(function (k) { if (!(k in mus)) mus[k] = porMood(musicaGuardada[k]); });
     var a = document.createElement('a');
-    a.href = URL.createObjectURL(new Blob([JSON.stringify({ version: 2, moods: moods, musica: mus }, null, 2)], { type: 'application/json' }));
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(datosParaNube(), null, 2)], { type: 'application/json' }));
     a.download = 'musica-mi-semana.json';
     document.body.appendChild(a); a.click();
     setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
@@ -705,15 +749,24 @@
       var n = 0;
       try {
         var o = JSON.parse(r.result);
-        var mus = o && o.musica && typeof o.musica === 'object' ? o.musica : o;
         if (o && Array.isArray(o.moods)) o.moods.forEach(function (m) { if (typeof m === 'string' && m.trim() && moods.indexOf(m) < 0) moods.push(m); });
-        Object.keys(mus).forEach(function (k) {
-          if (k === 'version' || k === 'moods') return;
-          var p2 = porMood(mus[k]); musicaGuardada[k] = p2; asegurarMoods(p2); n++;
-        });
+        if (o && Array.isArray(o.biblioteca)) {
+          o.biblioteca.forEach(function (x) {
+            var c = normalizarCancion(x);
+            if (!c) return;
+            var ya = cancionPorItem(c.item);
+            if (ya) { ya.nombre = c.nombre; ya.intensidad = c.intensidad; c.moods.forEach(function (m) { if (ya.moods.indexOf(m) < 0) ya.moods.push(m); }); }
+            else biblioteca.push(c);
+            n++;
+          });
+        } else {
+          n = migrarAntiguo(o && o.musica && typeof o.musica === 'object' ? o.musica : o);   // copias antiguas
+        }
+        if (o && o.ejIntensidad && typeof o.ejIntensidad === 'object') Object.keys(o.ejIntensidad).forEach(function (k) { ejIntensidad[k] = o.ejIntensidad[k]; });
+        asegurarMoods();
       } catch (e) { n = -1; }
       guardarTodo(); pintar();
-      actualizarEstadoCfg(n < 0 ? '<span class="aviso-cfg">ese archivo no es una copia válida</span>' : 'copia cargada ✓ (' + n + ' ejercicios)');
+      actualizarEstadoCfg(n < 0 ? '<span class="aviso-cfg">ese archivo no es una copia válida</span>' : 'copia cargada ✓ (' + n + ' canciones)');
     };
     r.readAsText(archivo);
   }
@@ -776,7 +829,6 @@
     else if (acc === 'nube-entrar') { entrarNube(); }
     else if (acc === 'nube-salir') { salirNube(); }
     else if (acc === 'cerrar-mood') { if (b === ev.target || b.tagName === 'BUTTON') { st.pidiendoMood = false; pintar(); } }
-    else if (acc === 'cfg-mood') { st.cfgMood = +b.getAttribute('data-i'); pintar(); }
     else if (acc === 'mood-anadir') { anadirMood(); }
     else if (acc === 'mood-borrar') { borrarMood(+b.getAttribute('data-i')); }
     else if (acc === 'volver') { reiniciar(); cerrarRep(); st.pantalla = 'semana'; pintar(); }
@@ -786,10 +838,28 @@
     else if (acc === 'hueco') { st.hueco = +b.getAttribute('data-i'); reiniciar(); pintar(); }
     else if (acc === 'dur') { st.dur = +b.getAttribute('data-s'); st.quedan = st.dur; st.total = st.dur; pintarTemporizador(); }
     else if (acc === 'config') { reiniciar(); st.pantalla = 'config'; pintar(); }
-    else if (acc === 'cfg-ej') { st.cfgSel = +b.getAttribute('data-i'); pintar(); }
-    else if (acc === 'cfg-probar') { var sx = todosLosEjercicios()[st.cfgSel]; if (sx) reproducir(enlacesMusica(sx.ej, sx.grupo, moods[st.cfgMood]), '♪ Prueba · ' + (moods[st.cfgMood] || '')); }
-    else if (acc === 'archivo-quitar') { quitarArchivo(b.getAttribute('data-item')); }
-    else if (acc === 'cfg-borrar') { var ta = document.getElementById('cfg-texto'); if (ta) { ta.value = ''; guardarCfg(); } }
+    else if (acc === 'cfg-vista') { st.cfgVista = b.getAttribute('data-v'); pintar(); }
+    else if (acc === 'song-mood') {
+      var cm = cancionPorId(b.getAttribute('data-id')), mm = b.getAttribute('data-m');
+      if (cm) {
+        var on = cm.moods.indexOf(mm) < 0;
+        cm.moods = on ? cm.moods.concat([mm]) : cm.moods.filter(function (x) { return x !== mm; });
+        b.classList.toggle('on', on); b.setAttribute('aria-pressed', on);
+        guardarTodo();
+      }
+    }
+    else if (acc === 'song-int') {
+      var ci = cancionPorId(b.getAttribute('data-id')), ni = +b.getAttribute('data-n');
+      if (ci) {
+        ci.intensidad = ni;
+        Array.prototype.forEach.call(b.parentNode.children, function (x) { var y = +x.getAttribute('data-n') === ni; x.classList.toggle('on', y); x.setAttribute('aria-pressed', y); });
+        guardarTodo();
+      }
+    }
+    else if (acc === 'song-probar') { var cp = cancionPorId(b.getAttribute('data-id')); if (cp) reproducir([cp.item], '♪ Prueba · ' + cp.nombre); }
+    else if (acc === 'song-quitar') { quitarCancion(b.getAttribute('data-id')); }
+    else if (acc === 'yt-anadir') { anadirYouTube(); }
+    else if (acc === 'ej-int') { ejIntensidad[b.getAttribute('data-clave')] = +b.getAttribute('data-n'); guardarTodo(); pintar(); }
     else if (acc === 'cfg-exportar') { exportarCfg(); }
     else if (acc === 'cfg-importar') { document.getElementById('cfg-archivo').click(); }
     else if (acc === 'principal') { botonPrincipal(); }
@@ -801,10 +871,15 @@
   });
 
   // Configuración: guardar al escribir y cargar copia
-  app.addEventListener('input', function (ev) { if (ev.target.id === 'cfg-texto') guardarCfg(); });
   app.addEventListener('change', function (ev) {
     if (ev.target.id === 'cfg-archivo' && ev.target.files && ev.target.files[0]) importarCfg(ev.target.files[0]);
     if (ev.target.id === 'subir-audio' && ev.target.files && ev.target.files.length) subirArchivos(ev.target.files);
+    if (ev.target.id === 'filtro-mood') { st.filtroMood = ev.target.value; pintar(); }
+    if (ev.target.id === 'filtro-int') { st.filtroInt = +ev.target.value; pintar(); }
+    if (ev.target.classList.contains('song-nombre')) {
+      var cn = cancionPorId(ev.target.getAttribute('data-id')), nv = ev.target.value.trim();
+      if (cn && nv) { cn.nombre = nv.slice(0, 120); guardarTodo(); }
+    }
   });
 
   // Esc cierra la ventana de mood · Enter añade un mood nuevo
@@ -812,6 +887,8 @@
     if (ev.key === 'Escape' && st.pidiendoMood) { st.pidiendoMood = false; pintar(); }
     if (ev.key === 'Enter' && ev.target.id === 'mood-nuevo') { ev.preventDefault(); anadirMood(); }
     if (ev.key === 'Enter' && ev.target.id === 'nube-correo') { ev.preventDefault(); entrarNube(); }
+    if (ev.key === 'Enter' && ev.target.id === 'yt-nuevo') { ev.preventDefault(); anadirYouTube(); }
+    if (ev.key === 'Enter' && ev.target.classList && ev.target.classList.contains('song-nombre')) ev.target.blur();
   });
 
   // Barra espaciadora = iniciar / pausar en la pantalla de calentamiento

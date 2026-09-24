@@ -42,3 +42,10 @@ Nube (Supabase)
 - Tus canciones (MP3, M4A...): en Configuración, con la sesión iniciada, elige ejercicio
   y mood y pulsa "Subir canciones". Se guardan en un almacén privado de Supabase
   (bucket "musica"); solo tú puedes oírlas. Máx. 50 MB por archivo.
+
+Biblioteca de música
+- En Configuración → Biblioteca está cada canción una sola vez (archivos y enlaces de
+  YouTube). A cada una le marcas sus moods y su intensidad (Baja, Media, Alta).
+- En Configuración → Intensidad de los ejercicios eliges la intensidad de cada ejercicio.
+- Al entrenar suena una canción al azar del mood elegido con la intensidad del ejercicio
+  (si no hay ninguna de esa intensidad, suena otra del mismo mood).

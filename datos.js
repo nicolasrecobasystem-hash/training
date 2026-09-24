@@ -26,10 +26,10 @@ const INFO_GRUPO = {
 //      · reps: número            -> ejercicio por repeticiones (botón "Serie hecha")
 //  - agarre (opcional): { dibujo, puntos: [[título, texto], ...] } -> panel AGARRE
 //  - errores (opcional): [[error, cómo corregirlo], ...] -> panel ERRORES COMUNES
-//  - musica (opcional): enlaces de YouTube por mood. Lo más cómodo es ponerlos desde
-//    la pantalla ⚙ Configuración de la web (tiene prioridad sobre lo que haya aquí).
-//    Formato: { 'Energía': ['enlace', 'enlace'], 'Tranquilo': ['enlace'] }
-//    Al pulsar START eliges mood; el botón "♪ Música" abre uno AL AZAR de ese mood.
+//  - intensidad (opcional): 1 baja · 2 media · 3 alta. Si no se pone, la del bloque
+//    (calentamiento = baja). También se cambia en ⚙ Configuración → Intensidad.
+//    Al entrenar suena una canción de tu biblioteca con el mood elegido y esta intensidad.
+//  - musica: formato antiguo; lo que haya aquí se pasa solo a la biblioteca de la web.
 const CALENTAMIENTOS = {
   Hombro: [
     {
