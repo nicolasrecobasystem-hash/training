@@ -1430,9 +1430,9 @@
   var luces = leerLS(LS_LUCES, null);
   if (!luces || typeof luces !== 'object') luces = { activas: false, devs: [], brillo: 0 };
   if (!Array.isArray(luces.devs)) luces.devs = [];
-  var COLOR_FASE = { prep: 0x8000FF, trabajo: 0xFF0000, descanso: 0x0000FF, hecho: 0xFFFFFF };   // morado · rojo · azul · blanco
-  var BRILLO_FASE = { prep: 100, trabajo: 100, descanso: 50, hecho: 100 };
-  var NOMBRE_FASE = { prep: 'Preparación', trabajo: 'Trabajo', descanso: 'Descanso', hecho: 'Completado' };
+  var COLOR_FASE = { prep: 0x8000FF, trabajo: 0xFF0000, descanso: 0x0000FF, espera: 0xFFFFFF, hecho: 0xFFFFFF };   // morado · rojo · azul · blanco
+  var BRILLO_FASE = { prep: 100, trabajo: 100, descanso: 50, espera: 100, hecho: 100 };
+  var NOMBRE_FASE = { prep: 'Preparación', trabajo: 'Trabajo', descanso: 'Descanso', espera: 'Siguiente serie', hecho: 'Completado' };
   var lucesEstado = { encontradas: null, msg: '', buscando: false, ultimaFase: '', encendidas: false };
   function guardarLuces() { escribirLS(LS_LUCES, luces); subirNube(); }
   function hex(n) { return '#' + ('000000' + n.toString(16)).slice(-6).toUpperCase(); }
@@ -1455,6 +1455,7 @@
   function lucesPorFase() {
     if (!luces.activas || !luces.devs.length || st.pantalla !== 'calent') return;
     var f = st.fase;
+    if (f === 'espera' && st.serie < 2) return;   // blanco en "siguiente serie", no al abrir un ejercicio
     if (!COLOR_FASE.hasOwnProperty(f) || f === lucesEstado.ultimaFase) return;
     lucesEstado.ultimaFase = f;
     var enc = !lucesEstado.encendidas; lucesEstado.encendidas = true;
@@ -1478,7 +1479,7 @@
       return '<label class="luz-fila' + (d.color ? '' : ' sin-color') + '"><input type="checkbox" data-luz="' + esc(d.device) + '" data-sku="' + esc(d.sku) + '" data-nombre="' + esc(d.nombre) + '"' + (elegida(d) ? ' checked' : '') + (d.color ? '' : ' disabled') + '>' +
         '<span class="luz-nombre">' + esc(d.nombre) + '</span><span class="luz-sku mono">' + esc(d.sku) + (d.color ? '' : ' · sin color') + '</span></label>';
     }).join('') : '<div class="vacio">Pulsa «Buscar mis luces» para traer las luces de tu cuenta Govee.</div>';
-    var muestras = Object.keys(COLOR_FASE).map(function (f) {
+    var muestras = Object.keys(COLOR_FASE).filter(function (f) { return f !== 'espera'; }).map(function (f) {
       return '<button type="button" class="luz-muestra" data-acc="luz-probar" data-f="' + f + '"><i style="background:' + hex(COLOR_FASE[f]) + '"></i>' + NOMBRE_FASE[f] + (BRILLO_FASE[f] ? ' · ' + BRILLO_FASE[f] + '%' : '') + '</button>';
     }).join('');
     var brillo = +luces.brillo || 0;
@@ -1487,7 +1488,7 @@
       '<button type="button" class="btn-sec" data-acc="luces-buscar"' + (lucesEstado.buscando ? ' disabled' : '') + '>' + (lucesEstado.buscando ? 'Buscando…' : '⟳ Buscar mis luces') + '</button></div>' +
       '<div class="luces-cuerpo"><div class="luces-lista"><div class="cfg-lbl">LUCES QUE SE USAN</div>' + filas + '</div>' +
       '<div class="luces-lado"><div class="cfg-lbl">PROBAR UN COLOR</div><div class="luz-muestras">' + muestras + '</div>' +
-      '<p class="luces-nota">Preparación morado · trabajo rojo · descanso azul al 50% · al completar, blanco. Todo al 100% salvo el descanso. Govee limita las órdenes por minuto: solo se manda una al cambiar de fase.</p></div></div>' +
+      '<p class="luces-nota">Preparación morado · trabajo rojo · descanso azul al 50% · siguiente serie y al completar, blanco. Todo al 100% salvo el descanso. Govee limita las órdenes por minuto: solo se manda una al cambiar de fase.</p></div></div>' +
       '<div class="luces-msg aviso-cfg">' + esc(lucesEstado.msg) + '</div></div>';
   }
 
