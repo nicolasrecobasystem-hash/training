@@ -159,36 +159,36 @@ const BLOQUES = {
       titulo: 'Principal', nota: 'Descanso 60–90 s',
       ejercicios: [
         {
-          nombre: 'Press militar con banda',
-          indicacion: 'Pisa la banda y empuja por encima de la cabeza sin arquear la espalda.',
+          nombre: 'Press militar a una mano',
+          indicacion: 'Pisa la banda y empuja con un brazo por encima de la cabeza sin arquear la espalda.',
           ritmo: '1 s arriba · 3 s abajo',
-          dosis: '4 × 8–12', dibujo: 'pressMilitar', anclaNota: 'Sin ancla: pisas la banda con ambos pies',
+          dosis: '4 × 8–12 c/brazo', dibujo: 'pressMilitar', anclaNota: 'Sin ancla: pisas la banda con el pie del mismo lado',
           claves: [
-            ['Inicio', 'Manos a la altura de los hombros, palmas delante, codos bajo las manos.'],
-            ['Cuerpo', 'Aprieta abdomen y glúteos: solo se mueven los brazos.'],
-            ['Subir', 'Empuja soltando el aire hasta estirar, sin bloquear de golpe.'],
-            ['Bajar', 'En 3 s tomando aire, frenando la banda hasta los hombros.']
+            ['Inicio', 'Mano a la altura del hombro, palma delante, codo bajo la mano.'],
+            ['Cuerpo', 'Abdomen y glúteos firmes; no te inclines hacia el otro lado.'],
+            ['Subir', 'Empuja soltando el aire hasta estirar el brazo, sin bloquear de golpe.'],
+            ['Bajar', 'En 3 s frenando la banda. Haz todas y cambia de brazo.']
           ],
           agarre: {
             titulo: 'MONTAJE', dibujo: 'bienMalPress',
             puntos: [
-              ['Pies', 'Pisa el centro de la banda, pies al ancho de los hombros.'],
-              ['Manos', 'Un extremo en cada mano, subidos a los hombros.'],
-              ['Dificultad', '¿Fácil? Separa más los pies o banda más dura. ¿Difícil? Pisa con un pie.'],
-              ['Seguridad', 'Banda bien centrada bajo los pies, para que no se escape.']
+              ['Pie', 'Pisa la banda con el pie del lado que trabaja.'],
+              ['Manos', 'Extremo en una mano, al hombro; la otra en la cintura.'],
+              ['Dificultad', '¿Fácil? Menos banda suelta o banda más dura. ¿Difícil? Más banda suelta.'],
+              ['Seguridad', 'Banda bien pisada, que no se escape.']
             ]
           },
           errores: [
-            ['Arquear la espalda', 'Costillas abajo, manos encima de los pies. Si pasa, banda más suave.'],
-            ['Hombros a las orejas', 'Empieza con los hombros bajos y relajados.'],
-            ['Codos muy abiertos', 'Llévalos un poco hacia delante, no en cruz.'],
+            ['Arquear la espalda', 'Costillas abajo, mano encima del pie. Si pasa, banda más suave.'],
+            ['Inclinarte hacia un lado', 'El tronco recto: solo se mueve el brazo que empuja.'],
+            ['Hombro a la oreja', 'Empieza con el hombro bajo y relajado.'],
             ['Bajar de golpe', 'La bajada controlada también construye músculo.']
           ],
           info: [
-            ['Qué trabaja', 'Deltoides anterior y medio, tríceps y abdomen como estabilizador.'],
-            ['Seguridad', 'La banda bien centrada bajo los pies, para que no se escape y te golpee.']
+            ['Qué trabaja', 'Deltoides anterior y medio, tríceps, y el abdomen para no inclinarte hacia un lado.'],
+            ['Seguridad', 'La banda bien pisada, para que no se escape y te golpee.']
           ],
-          temporizador: { series: 4, reps: '8–12', descanso: 60, descansos: [60, 75, 90], preparacion: 5 }
+          temporizador: { series: 4, reps: '8–12', lado: 'por brazo', descanso: 60, descansos: [60, 75, 90], preparacion: 5 }
         },
         {
           nombre: 'Elevaciones laterales',
@@ -222,35 +222,35 @@ const BLOQUES = {
           temporizador: { series: 3, reps: '12–15', lado: 'por brazo', descanso: 60, descansos: [60, 75, 90], preparacion: 5 }
         },
         {
-          nombre: 'Elevación en Y',
-          indicacion: 'Mirando a la pared, sube los brazos en diagonal formando una Y.',
+          nombre: 'Elevación en Y a una mano',
+          indicacion: 'Mirando a la pared, sube un brazo en diagonal hasta la línea de la Y.',
           ritmo: '1 s arriba · 1 s pausa · 3 s abajo',
-          dosis: '3 × 12', dibujo: 'elevY', ancla: 'baja',
+          dosis: '3 × 12 c/brazo', dibujo: 'elevY', ancla: 'baja',
           claves: [
-            ['Brazos', 'Estirados, pulgares hacia arriba y hombros bajos.'],
-            ['Subir', 'En diagonal hasta formar una Y, soltando el aire.'],
+            ['Brazo', 'Estirado, pulgar hacia arriba y hombro bajo.'],
+            ['Subir', 'En diagonal, a unos 30° de la vertical, soltando el aire.'],
             ['Pausa', 'Aguanta 1 s arriba.'],
-            ['Bajar', 'En 3 segundos, sin perder la tensión.']
+            ['Bajar', 'En 3 s. Haz todas y cambia de brazo.']
           ],
           agarre: {
             titulo: 'MONTAJE', dibujo: 'bienMalY',
             puntos: [
-              ['Ancla', 'Engancha la banda al ancla baja, un extremo en cada mano.'],
+              ['Ancla', 'Engancha la banda al ancla baja y agarra un extremo con una mano.'],
               ['Distancia', 'De frente a la pared, retrocede hasta que la banda tenga tensión.'],
               ['Pies', 'Al ancho de las caderas, rodillas ligeramente flexionadas.']
             ]
           },
           errores: [
-            ['Hombros encogidos', 'Hombros abajo y banda más suave.'],
-            ['Arquear la espalda', 'Costillas abajo y abdomen firme al subir.'],
-            ['Brazos muy juntos', 'La Y es abierta, a unos 30° de la vertical.'],
-            ['Doblar los codos', 'Brazos casi rectos todo el recorrido.']
+            ['Hombro encogido', 'Hombro abajo, lejos de la oreja. Si no puedes, banda más suave.'],
+            ['Girar el tronco', 'El pecho mira a la pared; costillas abajo y abdomen firme.'],
+            ['Brazo muy cerrado', 'La Y es abierta, a unos 30° de la vertical.'],
+            ['Doblar el codo', 'Brazo casi recto todo el recorrido.']
           ],
           info: [
-            ['Qué trabaja', 'Trapecio inferior y deltoides: estabilizan el hombro al subir los brazos por encima de la cabeza.'],
+            ['Qué trabaja', 'Trapecio inferior y deltoides: estabilizan el hombro al subir el brazo por encima de la cabeza.'],
             ['Cómo progresar', 'Retrocede un paso más o usa una banda más dura cuando las 12 salgan limpias.']
           ],
-          temporizador: { series: 3, reps: 12, descanso: 60, descansos: [60, 75, 90], preparacion: 5 }
+          temporizador: { series: 3, reps: 12, lado: 'por brazo', descanso: 60, descansos: [60, 75, 90], preparacion: 5 }
         }
       ]
     },
@@ -258,66 +258,66 @@ const BLOQUES = {
       titulo: 'Posterior y estabilidad', nota: 'Descanso ~45 s',
       ejercicios: [
         {
-          nombre: 'Face pull con banda',
-          indicacion: 'Tira hacia la cara abriendo los codos; manos al lado de las orejas.',
+          nombre: 'Face pull a una mano',
+          indicacion: 'Tira hacia la cara con un brazo, codo alto, hasta dejar la mano junto a la oreja.',
           ritmo: '1 s tirar · 1 s pausa · 2 s volver',
-          dosis: '3 × 15', dibujo: 'facePull', ancla: 'alta',
+          dosis: '3 × 15 c/brazo', dibujo: 'facePull', ancla: 'alta',
           claves: [
-            ['Antes', 'Pecho fuera y hombros bajos.'],
-            ['Tirar', 'Hacia la cara con los codos altos y abiertos.'],
-            ['Pausa', '1 s con las manos junto a las orejas.'],
-            ['Volver', 'En 2 segundos, sin que la banda tire de ti.']
+            ['Antes', 'Pecho fuera y hombros bajos, de frente a la pared.'],
+            ['Tirar', 'Hacia la cara con el codo alto y abierto.'],
+            ['Pausa', '1 s con la mano junto a la oreja.'],
+            ['Volver', 'En 2 s. Haz todas y cambia de brazo.']
           ],
           agarre: {
             titulo: 'MONTAJE', dibujo: 'bienMalFace',
             puntos: [
               ['Ancla', 'Engancha la banda al ancla alta, la de las asas, a la altura de la oreja.'],
-              ['Manos', 'Un asa en cada mano, palmas hacia abajo o enfrentadas.'],
-              ['Tensión', 'Da un paso atrás hasta tener tensión con los brazos estirados.']
+              ['Mano', 'Un asa en una mano, palma hacia abajo.'],
+              ['Tensión', 'Da un paso atrás hasta tener tensión con el brazo estirado.']
             ]
           },
           errores: [
-            ['Codos bajos', 'Tirar hacia la tripa es un remo. Codos a la altura de los hombros.'],
-            ['Echarse hacia atrás', 'El tronco no se mueve. Si te inclinas, acércate a la pared.'],
-            ['Subir los hombros', 'Hombros lejos de las orejas en todo momento.'],
+            ['Codo bajo', 'Tirar hacia la tripa es un remo. Codo a la altura del hombro.'],
+            ['Girar el tronco', 'El pecho sigue mirando a la pared; no rotes para ayudarte.'],
+            ['Subir el hombro', 'Hombro lejos de la oreja en todo momento.'],
             ['Ir rápido', 'Sin pausa arriba, el deltoide posterior casi no trabaja.']
           ],
           info: [
             ['Qué trabaja', 'Deltoide posterior, trapecio medio y rotadores externos. Muy bueno para la postura.'],
             ['Cómo progresar', 'Da otro paso atrás o cambia a una banda más dura.']
           ],
-          temporizador: { series: 3, reps: 15, descanso: 45, preparacion: 5 }
+          temporizador: { series: 3, reps: 15, lado: 'por brazo', descanso: 45, preparacion: 5 }
         },
         {
-          nombre: 'Pájaros con banda',
-          indicacion: 'Brazos casi rectos; abre hacia atrás juntando los omóplatos.',
+          nombre: 'Pájaro a una mano',
+          indicacion: 'Mirando a la pared, abre un brazo casi recto hacia el lado juntando el omóplato.',
           ritmo: '1 s abrir · 2 s volver',
-          dosis: '3 × 15', dibujo: 'pajaros', ancla: 'media',
+          dosis: '3 × 15 c/brazo', dibujo: 'pajaros', ancla: 'media',
           claves: [
-            ['Inicio', 'Brazos casi rectos al frente, a la altura del pecho, hombros bajos.'],
-            ['Abrir', 'Hacia los lados y un poco atrás, soltando el aire.'],
-            ['Final', 'Omóplatos juntos, brazos como alas.'],
-            ['Volver', 'Al frente en 2 segundos, sin que la banda tire de ti.']
+            ['Inicio', 'Brazo casi recto al frente, a la altura del pecho, hombro bajo.'],
+            ['Abrir', 'Hacia el lado y un poco atrás, soltando el aire.'],
+            ['Final', 'Omóplato hacia la columna; el tronco no gira.'],
+            ['Volver', 'En 2 s. Haz todas y cambia de brazo.']
           ],
           agarre: {
             titulo: 'MONTAJE', dibujo: 'bienMalPajaros',
             puntos: [
               ['Ancla', 'Engancha la banda al ancla media, a la altura de la cintura.'],
-              ['Manos', 'Un extremo en cada mano, palmas enfrentadas.'],
-              ['Tensión', 'Retrocede hasta tener tensión con los brazos al frente.']
+              ['Mano', 'Un extremo en una mano, palma hacia dentro.'],
+              ['Tensión', 'Retrocede hasta tener tensión con el brazo al frente.']
             ]
           },
           errores: [
-            ['Doblar los codos', 'Tirar con los codos hacia atrás lo convierte en un remo.'],
-            ['Banda demasiado dura', 'Aquí manda la técnica: mejor liviana y con buen recorrido.'],
-            ['Subir los hombros', 'Los hombros se quedan lejos de las orejas.'],
-            ['Mover el tronco', 'El cuerpo quieto; solo se mueven los brazos.']
+            ['Doblar el codo', 'Tirar con el codo hacia atrás lo convierte en un remo.'],
+            ['Girar el tronco', 'Solo se mueve el brazo; el pecho mira a la pared.'],
+            ['Subir el hombro', 'El hombro se queda lejos de la oreja.'],
+            ['Banda demasiado dura', 'Aquí manda la técnica: mejor liviana y con buen recorrido.']
           ],
           info: [
             ['Qué trabaja', 'Deltoide posterior y romboides. Equilibra todo el trabajo de empuje de la semana.'],
             ['Cómo progresar', 'Retrocede un poco más cuando las 15 salgan limpias y controladas.']
           ],
-          temporizador: { series: 3, reps: 15, descanso: 45, preparacion: 5 }
+          temporizador: { series: 3, reps: 15, lado: 'por brazo', descanso: 45, preparacion: 5 }
         },
         {
           nombre: 'Rotación externa',
@@ -406,7 +406,7 @@ const DIBUJOS = {
 <line x1="100" y1="248" x2="140" y2="248"/>
 <polyline points="102,248 100,322 98,380"/><polyline points="138,248 140,322 142,380"/>
 </g>
-<circle cx="120" cy="100" r="22" fill="#F4F1EA"/>
+<circle cx="120" cy="100" r="22" fill="#F4F1EA"/><circle cx="112.08" cy="97.8" r="2.64" fill="#16181B"/><circle cx="127.92" cy="97.8" r="2.64" fill="#16181B"/>
 <line x1="98" y1="392" x2="98" y2="406" stroke="#F2913D" stroke-width="2" stroke-dasharray="3 3"/>
 <line x1="142" y1="392" x2="142" y2="406" stroke="#F2913D" stroke-width="2" stroke-dasharray="3 3"/>
 </svg>`,
@@ -446,7 +446,7 @@ const DIBUJOS = {
 <line x1="150" y1="252" x2="145" y2="182"><animate attributeName="x2" values="145;178.7;205;218;218;205;178.7;145" keyTimes="0;0.13;0.27;0.4;0.6;0.73;0.87;1" dur="3s" repeatCount="indefinite"/><animate attributeName="y2" values="182;188.4;210;242;242;210;188.4;182" keyTimes="0;0.13;0.27;0.4;0.6;0.73;0.87;1" dur="3s" repeatCount="indefinite"/></line>
 <line x1="88" y1="252" x2="152" y2="252" stroke-width="20"/>
 </g>
-<circle cx="120" cy="258" r="18" fill="#F4F1EA" stroke="#1F2227" stroke-width="3"/>
+<polygon points="114.06,242 120,229.2 125.94,242" fill="#F4F1EA"/><circle cx="120" cy="258" r="18" fill="#F4F1EA" stroke="#1F2227" stroke-width="3"/>
 <line x1="95" y1="182" x2="145" y2="182" stroke="#F2913D" stroke-width="7" stroke-linecap="round"><animate attributeName="x1" values="95;61.3;35;22;22;35;61.3;95" keyTimes="0;0.13;0.27;0.4;0.6;0.73;0.87;1" dur="3s" repeatCount="indefinite"/><animate attributeName="y1" values="182;188.4;210;242;242;210;188.4;182" keyTimes="0;0.13;0.27;0.4;0.6;0.73;0.87;1" dur="3s" repeatCount="indefinite"/><animate attributeName="x2" values="145;178.7;205;218;218;205;178.7;145" keyTimes="0;0.13;0.27;0.4;0.6;0.73;0.87;1" dur="3s" repeatCount="indefinite"/><animate attributeName="y2" values="182;188.4;210;242;242;210;188.4;182" keyTimes="0;0.13;0.27;0.4;0.6;0.73;0.87;1" dur="3s" repeatCount="indefinite"/><animate attributeName="stroke-width" values="7;6;5;4;4;5;6;7" keyTimes="0;0.13;0.27;0.4;0.6;0.73;0.87;1" dur="3s" repeatCount="indefinite"/></line>
 <circle cx="95" cy="182" r="9" fill="#F4F1EA"><animate attributeName="cx" values="95;61.3;35;22;22;35;61.3;95" keyTimes="0;0.13;0.27;0.4;0.6;0.73;0.87;1" dur="3s" repeatCount="indefinite"/><animate attributeName="cy" values="182;188.4;210;242;242;210;188.4;182" keyTimes="0;0.13;0.27;0.4;0.6;0.73;0.87;1" dur="3s" repeatCount="indefinite"/></circle>
 <circle cx="145" cy="182" r="9" fill="#F4F1EA"><animate attributeName="cx" values="145;178.7;205;218;218;205;178.7;145" keyTimes="0;0.13;0.27;0.4;0.6;0.73;0.87;1" dur="3s" repeatCount="indefinite"/><animate attributeName="cy" values="182;188.4;210;242;242;210;188.4;182" keyTimes="0;0.13;0.27;0.4;0.6;0.73;0.87;1" dur="3s" repeatCount="indefinite"/></circle>
@@ -481,7 +481,7 @@ const DIBUJOS = {
 <line x1="120" y1="118" x2="120" y2="250"/>
 <polyline points="120,250 118,330 116,398 136,398"/>
 </g>
-<circle cx="120" cy="92" r="22" fill="#F4F1EA"/>
+<circle cx="120" cy="92" r="22" fill="#F4F1EA"/><polygon points="140,86.5 150.36,93.1 140,98.16" fill="#F4F1EA"/>
 <g>
 <animateTransform attributeName="transform" type="rotate" values="-20 120 130;-180 120 130;-340 120 130;-180 120 130;-20 120 130" keyTimes="0;0.25;0.5;0.75;1" dur="4s" repeatCount="indefinite"/>
 <line x1="120" y1="130" x2="120" y2="236" stroke="#F4F1EA" stroke-width="12" stroke-linecap="round"/>
@@ -506,25 +506,24 @@ const DIBUJOS = {
 <line x1="210" y1="76" x2="210" y2="112"/><polyline points="203,134 210,112 217,134"/>
 </g>
 <line x1="203" y1="34" x2="217" y2="34" stroke="#F2913D" stroke-width="3"/>
-<circle cx="70" cy="62" r="9" fill="#F4F1EA"/><circle cx="210" cy="62" r="9" fill="#F4F1EA"/>
+<circle cx="70" cy="62" r="9" fill="#F4F1EA"/><circle cx="66.76" cy="61.1" r="1.3" fill="#16181B"/><circle cx="73.24" cy="61.1" r="1.3" fill="#16181B"/><circle cx="210" cy="62" r="9" fill="#F4F1EA"/><circle cx="206.76" cy="61.1" r="1.3" fill="#16181B"/><circle cx="213.24" cy="61.1" r="1.3" fill="#16181B"/>
 <line x1="30" y1="136" x2="110" y2="136" stroke="#4A5059" stroke-width="2"/>
 <line x1="170" y1="136" x2="250" y2="136" stroke="#4A5059" stroke-width="2"/>
 </svg>`,
 
   pressMilitar: `
-<svg viewBox="0 0 240 420" fill="none" role="img" aria-label="De frente: pisas el centro de la banda y empujas desde los hombros hasta estirar los brazos por encima de la cabeza; bajas en 3 segundos">
+<svg viewBox="0 0 240 420" fill="none" role="img" aria-label="De frente, a una mano: pisas la banda con el pie del mismo lado y empujas con un brazo desde el hombro hasta estirarlo por encima de la cabeza; la otra mano en la cintura">
 <line x1="10" y1="412" x2="230" y2="412" stroke="#4A5059" stroke-width="2"/>
-<line x1="90" y1="408" x2="150" y2="408" stroke="#F2913D" stroke-width="5" stroke-linecap="round"/>
-<line x1="98" y1="406" x2="84" y2="132" stroke="#F2913D" stroke-width="3"><animate attributeName="x2" values="84;96;96;84" keyTimes="0;0.22;0.33;1" dur="4.5s" repeatCount="indefinite"/><animate attributeName="y2" values="132;30;30;132" keyTimes="0;0.22;0.33;1" dur="4.5s" repeatCount="indefinite"/></line>
+<line x1="126" y1="408" x2="158" y2="408" stroke="#F2913D" stroke-width="5" stroke-linecap="round"/>
 <line x1="142" y1="406" x2="156" y2="132" stroke="#F2913D" stroke-width="3"><animate attributeName="x2" values="156;144;144;156" keyTimes="0;0.22;0.33;1" dur="4.5s" repeatCount="indefinite"/><animate attributeName="y2" values="132;30;30;132" keyTimes="0;0.22;0.33;1" dur="4.5s" repeatCount="indefinite"/></line>
 <g stroke="#F4F1EA" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"><line x1="120" y1="118" x2="120" y2="250"/><line x1="94" y1="130" x2="146" y2="130"/><line x1="102" y1="250" x2="138" y2="250"/><polyline points="104,250 100,330 98,402"/><polyline points="136,250 140,330 142,402"/></g>
 <g stroke="#F4F1EA" stroke-width="12" stroke-linecap="round" stroke-linejoin="round">
-<polyline points="96,130 82,176 84,132"><animate attributeName="points" values="96,130 82,176 84,132;96,130 94,80 96,30;96,130 94,80 96,30;96,130 82,176 84,132" keyTimes="0;0.22;0.33;1" dur="4.5s" repeatCount="indefinite"/></polyline>
+<polyline points="96,130 76,186 104,238"/>
 <polyline points="144,130 158,176 156,132"><animate attributeName="points" values="144,130 158,176 156,132;144,130 146,80 144,30;144,130 146,80 144,30;144,130 158,176 156,132" keyTimes="0;0.22;0.33;1" dur="4.5s" repeatCount="indefinite"/></polyline>
 </g>
-<circle cx="120" cy="92" r="22" fill="#F4F1EA"/>
+<circle cx="120" cy="92" r="22" fill="#F4F1EA"/><circle cx="112.08" cy="89.8" r="2.64" fill="#16181B"/><circle cx="127.92" cy="89.8" r="2.64" fill="#16181B"/>
 <path d="M214 210 V130 M205 141 L214 130 L223 141" stroke="#F2913D" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-<text x="214" y="228" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">empuja</text><text x="186" y="400" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">pisa la banda</text>
+<text x="214" y="228" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">empuja</text><text x="46" y="250" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">mano en</text><text x="46" y="265" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">la cintura</text><text x="190" y="400" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">pisa la banda</text>
 </svg>`,
 
   elevLateral: `
@@ -538,22 +537,23 @@ const DIBUJOS = {
 <g stroke="#F4F1EA" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"><line x1="110" y1="118" x2="110" y2="250"/><line x1="84" y1="130" x2="136" y2="130"/><line x1="92" y1="250" x2="128" y2="250"/><polyline points="94,250 90,330 88,402"/><polyline points="126,250 130,330 132,402"/></g>
 <g stroke="#F4F1EA" stroke-width="12" stroke-linecap="round"><polyline points="86,130 80,186 78,232" stroke-linejoin="round"/>
 <line x1="134" y1="130" x2="142" y2="226"><animate attributeName="x2" values="142;189;221;230;230;221;189;142;142" keyTimes="0;0.074;0.148;0.222;0.3;0.5;0.7;0.9;1" dur="4.5s" repeatCount="indefinite"/><animate attributeName="y2" values="226;209;171;130;130;171;209;226;226" keyTimes="0;0.074;0.148;0.222;0.3;0.5;0.7;0.9;1" dur="4.5s" repeatCount="indefinite"/></line></g>
-<circle cx="110" cy="92" r="22" fill="#F4F1EA"/>
+<circle cx="110" cy="92" r="22" fill="#F4F1EA"/><circle cx="102.08" cy="89.8" r="2.64" fill="#16181B"/><circle cx="117.92" cy="89.8" r="2.64" fill="#16181B"/>
 </svg>`,
 
   elevY: `
-<svg viewBox="0 0 240 420" fill="none" role="img" aria-label="Vista por detrás: con la banda enganchada al ancla baja, los brazos suben en diagonal hasta formar una Y y bajan en 3 segundos">
+<svg viewBox="0 0 240 420" fill="none" role="img" aria-label="Vista por detrás, a una mano: con la banda enganchada al ancla baja, un brazo sube en diagonal hasta la línea de la Y y baja en 3 segundos; el otro brazo queda abajo">
 <line x1="10" y1="412" x2="230" y2="412" stroke="#4A5059" stroke-width="2"/>
 <circle cx="120" cy="398" r="6" fill="#9EA3AA"/><text x="150" y="396" text-anchor="start" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="11">ancla baja</text>
-<line x1="120" y1="398" x2="92" y2="226" stroke="#F2913D" stroke-width="3"><animate attributeName="x2" values="92;48;48;92" keyTimes="0;0.2;0.4;1" dur="5s" repeatCount="indefinite"/><animate attributeName="y2" values="226;47;47;226" keyTimes="0;0.2;0.4;1" dur="5s" repeatCount="indefinite"/></line>
 <line x1="120" y1="398" x2="148" y2="226" stroke="#F2913D" stroke-width="3"><animate attributeName="x2" values="148;192;192;148" keyTimes="0;0.2;0.4;1" dur="5s" repeatCount="indefinite"/><animate attributeName="y2" values="226;47;47;226" keyTimes="0;0.2;0.4;1" dur="5s" repeatCount="indefinite"/></line>
 <g stroke="#F4F1EA" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"><line x1="120" y1="118" x2="120" y2="250"/><line x1="94" y1="130" x2="146" y2="130"/><line x1="102" y1="250" x2="138" y2="250"/><polyline points="104,250 100,330 98,402"/><polyline points="136,250 140,330 142,402"/></g>
 <g stroke="#F4F1EA" stroke-width="12" stroke-linecap="round">
-<line x1="96" y1="130" x2="92" y2="226"><animate attributeName="x2" values="92;48;48;92" keyTimes="0;0.2;0.4;1" dur="5s" repeatCount="indefinite"/><animate attributeName="y2" values="226;47;47;226" keyTimes="0;0.2;0.4;1" dur="5s" repeatCount="indefinite"/></line>
+<line x1="96" y1="130" x2="92" y2="226"/>
 <line x1="144" y1="130" x2="148" y2="226"><animate attributeName="x2" values="148;192;192;148" keyTimes="0;0.2;0.4;1" dur="5s" repeatCount="indefinite"/><animate attributeName="y2" values="226;47;47;226" keyTimes="0;0.2;0.4;1" dur="5s" repeatCount="indefinite"/></line></g>
+<line x1="120" y1="130" x2="48" y2="47" stroke="#9EA3AA" stroke-width="1.5" stroke-dasharray="4 5" opacity=".6"/>
+<line x1="120" y1="130" x2="192" y2="47" stroke="#9EA3AA" stroke-width="1.5" stroke-dasharray="4 5" opacity=".6"/>
 <circle cx="120" cy="92" r="22" fill="#F4F1EA"/>
 <text x="214" y="46" text-anchor="middle" fill="#F2913D" font-family="Anton, Impact, sans-serif" font-size="30">Y</text>
-<text x="120" y="20" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="11">vista por detrás</text>
+<text x="120" y="20" text-anchor="11" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">vista por detrás</text>
 </svg>`,
 
   facePull: `
@@ -563,23 +563,21 @@ const DIBUJOS = {
 <circle cx="22" cy="112" r="6" fill="#9EA3AA"/><text x="28" y="98" text-anchor="start" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="11">ancla alta</text>
 <line x1="22" y1="112" x2="62" y2="120" stroke="#F2913D" stroke-width="3"><animate attributeName="x2" values="62;174;174;62" keyTimes="0;0.25;0.5;1" dur="4s" repeatCount="indefinite"/><animate attributeName="y2" values="120;96;96;120" keyTimes="0;0.25;0.5;1" dur="4s" repeatCount="indefinite"/></line>
 <g stroke="#F4F1EA" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"><line x1="160" y1="112" x2="160" y2="398"/><polyline points="160,398 140,400"/></g>
-<circle cx="160" cy="90" r="21" fill="#F4F1EA"/>
+<circle cx="160" cy="90" r="21" fill="#F4F1EA"/><polygon points="141,84.75 131.02,91.05 141,95.88" fill="#F4F1EA"/>
 <polyline points="160,128 110,124 62,120" stroke="#F4F1EA" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"><animate attributeName="points" values="160,128 110,124 62,120;160,128 194,118 174,96;160,128 194,118 174,96;160,128 110,124 62,120" keyTimes="0;0.25;0.5;1" dur="4s" repeatCount="indefinite"/></polyline>
 <text x="212" y="142" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="11">codo alto</text>
 </svg>`,
 
   pajaros: `
-<svg viewBox="0 0 240 420" fill="none" role="img" aria-label="Vista desde arriba: mirando a la pared con la banda en el ancla media, los brazos casi rectos se abren hacia los lados y un poco atrás, y vuelven al frente en 2 segundos">
+<svg viewBox="0 0 240 420" fill="none" role="img" aria-label="Vista desde arriba, a una mano: mirando a la pared con la banda en el ancla media, el brazo casi recto se abre hacia el lado y un poco atrás, y vuelve al frente en 2 segundos">
 <line x1="14" y1="100" x2="226" y2="100" stroke="#4A5059" stroke-width="3"/>
 <circle cx="120" cy="106" r="6" fill="#9EA3AA"/><text x="132" y="92" text-anchor="start" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="11">ancla media</text>
-<line x1="120" y1="106" x2="100" y2="185" stroke="#F2913D" stroke-width="3"><animate attributeName="x2" values="100;59;29;22;22;29;59;100;100" keyTimes="0;0.095;0.19;0.286;0.343;0.533;0.724;0.914;1" dur="3.5s" repeatCount="indefinite"/><animate attributeName="y2" values="185;191;221;262;262;221;191;185;185" keyTimes="0;0.095;0.19;0.286;0.343;0.533;0.724;0.914;1" dur="3.5s" repeatCount="indefinite"/></line>
 <line x1="120" y1="106" x2="140" y2="185" stroke="#F2913D" stroke-width="3"><animate attributeName="x2" values="140;181;211;218;218;211;181;140;140" keyTimes="0;0.095;0.19;0.286;0.343;0.533;0.724;0.914;1" dur="3.5s" repeatCount="indefinite"/><animate attributeName="y2" values="185;191;221;262;262;221;191;185;185" keyTimes="0;0.095;0.19;0.286;0.343;0.533;0.724;0.914;1" dur="3.5s" repeatCount="indefinite"/></line>
 <g stroke="#F4F1EA" stroke-width="12" stroke-linecap="round">
-<line x1="90" y1="252" x2="100" y2="185"><animate attributeName="x2" values="100;59;29;22;22;29;59;100;100" keyTimes="0;0.095;0.19;0.286;0.343;0.533;0.724;0.914;1" dur="3.5s" repeatCount="indefinite"/><animate attributeName="y2" values="185;191;221;262;262;221;191;185;185" keyTimes="0;0.095;0.19;0.286;0.343;0.533;0.724;0.914;1" dur="3.5s" repeatCount="indefinite"/></line>
 <line x1="150" y1="252" x2="140" y2="185"><animate attributeName="x2" values="140;181;211;218;218;211;181;140;140" keyTimes="0;0.095;0.19;0.286;0.343;0.533;0.724;0.914;1" dur="3.5s" repeatCount="indefinite"/><animate attributeName="y2" values="185;191;221;262;262;221;191;185;185" keyTimes="0;0.095;0.19;0.286;0.343;0.533;0.724;0.914;1" dur="3.5s" repeatCount="indefinite"/></line>
 <line x1="88" y1="252" x2="152" y2="252" stroke-width="20"/></g>
-<circle cx="120" cy="258" r="18" fill="#F4F1EA" stroke="#1F2227" stroke-width="3"/>
-<text x="120" y="330" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="11">vista desde arriba</text>
+<polygon points="114.06,242 120,229.2 125.94,242" fill="#F4F1EA"/><circle cx="120" cy="258" r="18" fill="#F4F1EA" stroke="#1F2227" stroke-width="3"/>
+<text x="120" y="330" text-anchor="11" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">vista desde arriba</text>
 </svg>`,
 
   rotacion: `
@@ -591,7 +589,7 @@ const DIBUJOS = {
 <rect x="160" y="270" width="12" height="16" rx="3" fill="#7FB2E5"/>
 <g><animateTransform attributeName="transform" type="rotate" values="-45 166 264;-22.5 166 264;0 166 264;22.5 166 264;45 166 264;45 166 264;45 166 264;22.5 166 264;0 166 264;-22.5 166 264;-45 166 264;-45 166 264" keyTimes="0;0.083;0.167;0.25;0.333;0.444;0.556;0.667;0.778;0.889;1" dur="4.5s" repeatCount="indefinite"/>
 <line x1="166" y1="264" x2="166" y2="194" stroke="#F4F1EA" stroke-width="12" stroke-linecap="round"/><circle cx="166" cy="194" r="7" fill="#F2913D"/></g>
-<circle cx="120" cy="268" r="18" fill="#F4F1EA" stroke="#1F2227" stroke-width="3"/>
+<polygon points="114.06,252 120,239.2 125.94,252" fill="#F4F1EA"/><circle cx="120" cy="268" r="18" fill="#F4F1EA" stroke="#1F2227" stroke-width="3"/>
 <text x="176" y="304" text-anchor="start" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="11">codo pegado</text><text x="120" y="350" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="11">vista desde arriba</text>
 </svg>`,
 
@@ -607,29 +605,40 @@ const DIBUJOS = {
 <g stroke="#F4F1EA" stroke-width="13" stroke-linecap="round" stroke-linejoin="round">
 <line x1="90" y1="126" x2="150" y2="126"/><line x1="120" y1="120" x2="120" y2="248"/><line x1="100" y1="248" x2="140" y2="248"/>
 <polyline points="102,248 100,322 98,378"/><polyline points="138,248 140,322 142,378"/></g>
-<circle cx="120" cy="104" r="22" fill="#F4F1EA"/></g>
+<circle cx="120" cy="104" r="22" fill="#F4F1EA"/><circle cx="112.08" cy="101.8" r="2.64" fill="#16181B"/><circle cx="127.92" cy="101.8" r="2.64" fill="#16181B"/></g>
 <path d="M204 190 V130 M195 141 L204 130 L213 141" stroke="#F2913D" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
 <text x="204" y="208" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">el cuerpo</text><text x="204" y="223" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">sube</text>
 </svg>`,
 
   bienMalPress: `
-<svg viewBox="0 0 280 140" fill="none" role="img" aria-label="De perfil. Bien: espalda recta y manos encima de los pies. Mal: espalda baja arqueada y brazos hacia atrás"><text x="70" y="14" text-anchor="middle" fill="#7FB2E5" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✓ ESPALDA RECTA</text><text x="210" y="14" text-anchor="middle" fill="#F2913D" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✕ ARQUEADA</text><line x1="140" y1="10" x2="140" y2="132" stroke="#2E3238" stroke-width="2"/><line x1="24" y1="136" x2="116" y2="136" stroke="#4A5059" stroke-width="2"/><line x1="164" y1="136" x2="256" y2="136" stroke="#4A5059" stroke-width="2"/><line x1="74" y1="134" x2="66" y2="16" stroke="#F2913D" stroke-width="2.5"/><g stroke="#F4F1EA" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><line x1="66" y1="50" x2="66" y2="130"/><polyline points="66,130 78,132"/><line x1="66" y1="56" x2="66" y2="16"/></g><circle cx="66" cy="40" r="9" fill="#F4F1EA"/><line x1="214" y1="134" x2="188" y2="18" stroke="#F2913D" stroke-width="2.5"/><g stroke="#F4F1EA" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><path d="M204 50 Q222 88 206 130"/><polyline points="206,130 218,132"/><line x1="203" y1="56" x2="188" y2="18"/></g><circle cx="200" cy="40" r="9" fill="#F4F1EA"/></svg>`,
+<svg viewBox="0 0 280 140" fill="none" role="img" aria-label="De perfil. Bien: espalda recta y manos encima de los pies. Mal: espalda baja arqueada y brazos hacia atrás"><text x="70" y="14" text-anchor="middle" fill="#7FB2E5" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✓ ESPALDA RECTA</text><text x="210" y="14" text-anchor="middle" fill="#F2913D" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✕ ARQUEADA</text><line x1="140" y1="10" x2="140" y2="132" stroke="#2E3238" stroke-width="2"/><line x1="24" y1="136" x2="116" y2="136" stroke="#4A5059" stroke-width="2"/><line x1="164" y1="136" x2="256" y2="136" stroke="#4A5059" stroke-width="2"/><line x1="74" y1="134" x2="66" y2="16" stroke="#F2913D" stroke-width="2.5"/><g stroke="#F4F1EA" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><line x1="66" y1="50" x2="66" y2="130"/><polyline points="66,130 78,132"/><line x1="66" y1="56" x2="66" y2="16"/></g><circle cx="66" cy="40" r="9" fill="#F4F1EA"/><polygon points="73,37.75 78.42,40.45 73,42.52" fill="#F4F1EA"/><line x1="214" y1="134" x2="188" y2="18" stroke="#F2913D" stroke-width="2.5"/><g stroke="#F4F1EA" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><path d="M204 50 Q222 88 206 130"/><polyline points="206,130 218,132"/><line x1="203" y1="56" x2="188" y2="18"/></g><circle cx="200" cy="40" r="9" fill="#F4F1EA"/><polygon points="207,37.75 212.42,40.45 207,42.52" fill="#F4F1EA"/></svg>`,
 
   bienMalLateral: `
-<svg viewBox="0 0 280 140" fill="none" role="img" aria-label="Bien: el brazo sube justo a la altura del hombro. Mal: pasarse del hombro con impulso"><text x="70" y="14" text-anchor="middle" fill="#7FB2E5" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✓ ALTURA DEL HOMBRO</text><text x="210" y="14" text-anchor="middle" fill="#F2913D" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✕ SE PASA</text><line x1="140" y1="10" x2="140" y2="132" stroke="#2E3238" stroke-width="2"/><line x1="24" y1="136" x2="116" y2="136" stroke="#4A5059" stroke-width="2"/><line x1="164" y1="136" x2="256" y2="136" stroke="#4A5059" stroke-width="2"/><line x1="60" y1="56" x2="118" y2="56" stroke="#9EA3AA" stroke-width="1" stroke-dasharray="3 4"/><line x1="200" y1="56" x2="258" y2="56" stroke="#9EA3AA" stroke-width="1" stroke-dasharray="3 4"/><line x1="22" y1="132" x2="108" y2="56" stroke="#F2913D" stroke-width="2.5"/><line x1="162" y1="132" x2="246" y2="22" stroke="#F2913D" stroke-width="2.5"/><g stroke="#F4F1EA" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><line x1="56" y1="50" x2="56" y2="106"/><polyline points="49,134 56,106 63,134"/><polyline points="46,56 66,56"/><line x1="46" y1="56" x2="42" y2="96"/><line x1="66" y1="56" x2="108" y2="56"/></g><circle cx="56" cy="40" r="9" fill="#F4F1EA"/><g stroke="#F4F1EA" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><line x1="196" y1="50" x2="196" y2="106"/><polyline points="189,134 196,106 203,134"/><polyline points="186,56 206,56"/><line x1="186" y1="56" x2="182" y2="96"/><line x1="206" y1="56" x2="246" y2="22"/></g><circle cx="196" cy="40" r="9" fill="#F4F1EA"/></svg>`,
+<svg viewBox="0 0 280 140" fill="none" role="img" aria-label="Bien: el brazo sube justo a la altura del hombro. Mal: pasarse del hombro con impulso"><text x="70" y="14" text-anchor="middle" fill="#7FB2E5" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✓ ALTURA DEL HOMBRO</text><text x="210" y="14" text-anchor="middle" fill="#F2913D" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✕ SE PASA</text><line x1="140" y1="10" x2="140" y2="132" stroke="#2E3238" stroke-width="2"/><line x1="24" y1="136" x2="116" y2="136" stroke="#4A5059" stroke-width="2"/><line x1="164" y1="136" x2="256" y2="136" stroke="#4A5059" stroke-width="2"/><line x1="60" y1="56" x2="118" y2="56" stroke="#9EA3AA" stroke-width="1" stroke-dasharray="3 4"/><line x1="200" y1="56" x2="258" y2="56" stroke="#9EA3AA" stroke-width="1" stroke-dasharray="3 4"/><line x1="22" y1="132" x2="108" y2="56" stroke="#F2913D" stroke-width="2.5"/><line x1="162" y1="132" x2="246" y2="22" stroke="#F2913D" stroke-width="2.5"/><g stroke="#F4F1EA" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><line x1="56" y1="50" x2="56" y2="106"/><polyline points="49,134 56,106 63,134"/><polyline points="46,56 66,56"/><line x1="46" y1="56" x2="42" y2="96"/><line x1="66" y1="56" x2="108" y2="56"/></g><circle cx="56" cy="40" r="9" fill="#F4F1EA"/><circle cx="52.76" cy="39.1" r="1.3" fill="#16181B"/><circle cx="59.24" cy="39.1" r="1.3" fill="#16181B"/><g stroke="#F4F1EA" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><line x1="196" y1="50" x2="196" y2="106"/><polyline points="189,134 196,106 203,134"/><polyline points="186,56 206,56"/><line x1="186" y1="56" x2="182" y2="96"/><line x1="206" y1="56" x2="246" y2="22"/></g><circle cx="196" cy="40" r="9" fill="#F4F1EA"/><circle cx="192.76" cy="39.1" r="1.3" fill="#16181B"/><circle cx="199.24" cy="39.1" r="1.3" fill="#16181B"/></svg>`,
 
   bienMalY: `
-<svg viewBox="0 0 280 140" fill="none" role="img" aria-label="Bien: Y amplia con los hombros bajos. Mal: hombros encogidos hacia las orejas"><text x="70" y="14" text-anchor="middle" fill="#7FB2E5" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✓ HOMBROS BAJOS</text><text x="210" y="14" text-anchor="middle" fill="#F2913D" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✕ ENCOGIDOS</text><line x1="140" y1="10" x2="140" y2="132" stroke="#2E3238" stroke-width="2"/><line x1="24" y1="136" x2="116" y2="136" stroke="#4A5059" stroke-width="2"/><line x1="164" y1="136" x2="256" y2="136" stroke="#4A5059" stroke-width="2"/><polyline points="30,20 70,132 110,20" stroke="#F2913D" stroke-width="2"/><polyline points="176,20 210,132 244,20" stroke="#F2913D" stroke-width="2"/><g stroke="#F4F1EA" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><line x1="70" y1="50" x2="70" y2="106"/><polyline points="63,134 70,106 77,134"/><polyline points="60,58 80,58"/><line x1="60" y1="58" x2="30" y2="20"/><line x1="80" y1="58" x2="110" y2="20"/></g><circle cx="70" cy="42" r="9" fill="#F4F1EA"/><g stroke="#F4F1EA" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><line x1="210" y1="50" x2="210" y2="106"/><polyline points="203,134 210,106 217,134"/><polyline points="198,44 222,44"/><line x1="198" y1="44" x2="176" y2="20"/><line x1="222" y1="44" x2="244" y2="20"/></g><circle cx="210" cy="40" r="9" fill="#F4F1EA"/></svg>`,
+<svg viewBox="0 0 280 140" fill="none" role="img" aria-label="Por detrás, a una mano. Bien: brazo en la línea de la Y con el hombro bajo. Mal: hombro encogido hacia la oreja"><text x="70" y="14" text-anchor="middle" fill="#7FB2E5" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✓ HOMBRO BAJO</text><text x="210" y="14" text-anchor="middle" fill="#F2913D" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✕ ENCOGIDO</text><line x1="140" y1="10" x2="140" y2="132" stroke="#2E3238" stroke-width="2"/><line x1="24" y1="136" x2="116" y2="136" stroke="#4A5059" stroke-width="2"/><line x1="164" y1="136" x2="256" y2="136" stroke="#4A5059" stroke-width="2"/>
+<line x1="70" y1="132" x2="108" y2="20" stroke="#F2913D" stroke-width="2"/><line x1="210" y1="132" x2="246" y2="22" stroke="#F2913D" stroke-width="2"/>
+<g stroke="#F4F1EA" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+<line x1="70" y1="50" x2="70" y2="106"/><polyline points="63,134 70,106 77,134"/><polyline points="60,58 80,58"/><line x1="60" y1="58" x2="56" y2="98"/><line x1="80" y1="58" x2="108" y2="20"/>
+<line x1="210" y1="50" x2="210" y2="106"/><polyline points="203,134 210,106 217,134"/><polyline points="200,58 210,54 222,44"/><line x1="200" y1="58" x2="196" y2="98"/><line x1="222" y1="44" x2="246" y2="22"/></g>
+<circle cx="70" cy="42" r="9" fill="#F4F1EA"/><circle cx="210" cy="40" r="9" fill="#F4F1EA"/>
+</svg>`,
 
   bienMalFace: `
-<svg viewBox="0 0 280 140" fill="none" role="img" aria-label="Bien: codos a la altura de los hombros y manos a la cara. Mal: codos bajos tirando hacia la tripa, eso es un remo"><text x="70" y="14" text-anchor="middle" fill="#7FB2E5" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✓ CODO ALTO</text><text x="210" y="14" text-anchor="middle" fill="#F2913D" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✕ CODO BAJO</text><line x1="140" y1="10" x2="140" y2="132" stroke="#2E3238" stroke-width="2"/><line x1="24" y1="136" x2="116" y2="136" stroke="#4A5059" stroke-width="2"/><line x1="164" y1="136" x2="256" y2="136" stroke="#4A5059" stroke-width="2"/><line x1="26" y1="30" x2="26" y2="136" stroke="#4A5059" stroke-width="2"/><line x1="166" y1="30" x2="166" y2="136" stroke="#4A5059" stroke-width="2"/><line x1="28" y1="46" x2="80" y2="38" stroke="#F2913D" stroke-width="2.5"/><line x1="168" y1="46" x2="216" y2="82" stroke="#F2913D" stroke-width="2.5"/><g stroke="#F4F1EA" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><line x1="84" y1="52" x2="84" y2="130"/><polyline points="84,130 74,132"/><polyline points="84,58 100,50 80,38"/><line x1="224" y1="52" x2="224" y2="130"/><polyline points="224,130 214,132"/><polyline points="224,58 232,76 216,82"/></g><circle cx="84" cy="40" r="9" fill="#F4F1EA"/><circle cx="224" cy="40" r="9" fill="#F4F1EA"/></svg>`,
+<svg viewBox="0 0 280 140" fill="none" role="img" aria-label="Bien: codos a la altura de los hombros y manos a la cara. Mal: codos bajos tirando hacia la tripa, eso es un remo"><text x="70" y="14" text-anchor="middle" fill="#7FB2E5" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✓ CODO ALTO</text><text x="210" y="14" text-anchor="middle" fill="#F2913D" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✕ CODO BAJO</text><line x1="140" y1="10" x2="140" y2="132" stroke="#2E3238" stroke-width="2"/><line x1="24" y1="136" x2="116" y2="136" stroke="#4A5059" stroke-width="2"/><line x1="164" y1="136" x2="256" y2="136" stroke="#4A5059" stroke-width="2"/><line x1="26" y1="30" x2="26" y2="136" stroke="#4A5059" stroke-width="2"/><line x1="166" y1="30" x2="166" y2="136" stroke="#4A5059" stroke-width="2"/><line x1="28" y1="46" x2="80" y2="38" stroke="#F2913D" stroke-width="2.5"/><line x1="168" y1="46" x2="216" y2="82" stroke="#F2913D" stroke-width="2.5"/><g stroke="#F4F1EA" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><line x1="84" y1="52" x2="84" y2="130"/><polyline points="84,130 74,132"/><polyline points="84,58 100,50 80,38"/><line x1="224" y1="52" x2="224" y2="130"/><polyline points="224,130 214,132"/><polyline points="224,58 232,76 216,82"/></g><circle cx="84" cy="40" r="9" fill="#F4F1EA"/><polygon points="77,37.75 71.58,40.45 77,42.52" fill="#F4F1EA"/><circle cx="224" cy="40" r="9" fill="#F4F1EA"/><polygon points="217,37.75 211.58,40.45 217,42.52" fill="#F4F1EA"/></svg>`,
 
   bienMalPajaros: `
-<svg viewBox="0 0 280 140" fill="none" role="img" aria-label="Vista desde arriba. Bien: brazos casi rectos que se abren como alas. Mal: codos doblados tirando hacia atrás, se convierte en un remo"><text x="70" y="14" text-anchor="middle" fill="#7FB2E5" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✓ COMO ALAS</text><text x="210" y="14" text-anchor="middle" fill="#F2913D" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✕ CODOS DOBLADOS</text><line x1="140" y1="10" x2="140" y2="132" stroke="#2E3238" stroke-width="2"/><line x1="24" y1="136" x2="116" y2="136" stroke="#4A5059" stroke-width="2"/><line x1="164" y1="136" x2="256" y2="136" stroke="#4A5059" stroke-width="2"/><line x1="24" y1="30" x2="116" y2="30" stroke="#4A5059" stroke-width="2"/><line x1="164" y1="30" x2="256" y2="30" stroke="#4A5059" stroke-width="2"/><polyline points="28,96 70,32 112,96" stroke="#F2913D" stroke-width="2"/><polyline points="178,84 210,32 242,84" stroke="#F2913D" stroke-width="2"/><g stroke="#F4F1EA" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><polyline points="28,96 58,104 82,104 112,96"/><polyline points="178,84 182,108 238,108 242,84"/></g><circle cx="70" cy="106" r="8" fill="#F4F1EA"/><circle cx="210" cy="108" r="8" fill="#F4F1EA"/></svg>`,
+<svg viewBox="0 0 280 140" fill="none" role="img" aria-label="Vista desde arriba, a una mano. Bien: brazo casi recto que se abre como un ala. Mal: codo doblado tirando hacia atrás, se convierte en un remo"><text x="70" y="14" text-anchor="middle" fill="#7FB2E5" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✓ COMO UN ALA</text><text x="210" y="14" text-anchor="middle" fill="#F2913D" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✕ CODO DOBLADO</text><line x1="140" y1="10" x2="140" y2="132" stroke="#2E3238" stroke-width="2"/><line x1="24" y1="136" x2="116" y2="136" stroke="#4A5059" stroke-width="2"/><line x1="164" y1="136" x2="256" y2="136" stroke="#4A5059" stroke-width="2"/>
+<line x1="24" y1="30" x2="116" y2="30" stroke="#4A5059" stroke-width="2"/><line x1="164" y1="30" x2="256" y2="30" stroke="#4A5059" stroke-width="2"/>
+<line x1="70" y1="32" x2="112" y2="96" stroke="#F2913D" stroke-width="2"/><line x1="210" y1="32" x2="242" y2="84" stroke="#F2913D" stroke-width="2"/>
+<g stroke="#F4F1EA" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><polyline points="58,104 82,104 112,96"/><polyline points="198,108 238,108 242,84"/></g>
+<polygon points="67.36,100 70,93.2 72.64,100" fill="#F4F1EA"/><circle cx="70" cy="106" r="8" fill="#F4F1EA"/><polygon points="207.36,102 210,95.2 212.64,102" fill="#F4F1EA"/><circle cx="210" cy="108" r="8" fill="#F4F1EA"/>
+</svg>`,
 
   bienMalRotacion: `
-<svg viewBox="0 0 280 140" fill="none" role="img" aria-label="De frente. Bien: codo pegado con la toalla y antebrazo girando hacia fuera. Mal: el codo se despega para ganar recorrido"><text x="70" y="14" text-anchor="middle" fill="#7FB2E5" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✓ CODO PEGADO</text><text x="210" y="14" text-anchor="middle" fill="#F2913D" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✕ CODO FUERA</text><line x1="140" y1="10" x2="140" y2="132" stroke="#2E3238" stroke-width="2"/><line x1="24" y1="136" x2="116" y2="136" stroke="#4A5059" stroke-width="2"/><line x1="164" y1="136" x2="256" y2="136" stroke="#4A5059" stroke-width="2"/><line x1="14" y1="30" x2="14" y2="136" stroke="#4A5059" stroke-width="2"/><line x1="154" y1="30" x2="154" y2="136" stroke="#4A5059" stroke-width="2"/><line x1="16" y1="82" x2="106" y2="82" stroke="#F2913D" stroke-width="2.5"/><line x1="156" y1="82" x2="252" y2="62" stroke="#F2913D" stroke-width="2.5"/><g stroke="#F4F1EA" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><line x1="60" y1="50" x2="60" y2="106"/><polyline points="53,134 60,106 67,134"/><polyline points="50,56 70,56"/><line x1="50" y1="56" x2="46" y2="96"/><polyline points="70,56 72,82 106,82"/></g><circle cx="60" cy="40" r="9" fill="#F4F1EA"/><rect x="73" y="68" width="7" height="12" rx="2" fill="#7FB2E5"/><g stroke="#F4F1EA" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><line x1="200" y1="50" x2="200" y2="106"/><polyline points="193,134 200,106 207,134"/><polyline points="190,56 210,56"/><line x1="190" y1="56" x2="186" y2="96"/><polyline points="210,56 230,76 252,62"/></g><circle cx="200" cy="40" r="9" fill="#F4F1EA"/></svg>`,
+<svg viewBox="0 0 280 140" fill="none" role="img" aria-label="De frente. Bien: codo pegado con la toalla y antebrazo girando hacia fuera. Mal: el codo se despega para ganar recorrido"><text x="70" y="14" text-anchor="middle" fill="#7FB2E5" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✓ CODO PEGADO</text><text x="210" y="14" text-anchor="middle" fill="#F2913D" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✕ CODO FUERA</text><line x1="140" y1="10" x2="140" y2="132" stroke="#2E3238" stroke-width="2"/><line x1="24" y1="136" x2="116" y2="136" stroke="#4A5059" stroke-width="2"/><line x1="164" y1="136" x2="256" y2="136" stroke="#4A5059" stroke-width="2"/><line x1="14" y1="30" x2="14" y2="136" stroke="#4A5059" stroke-width="2"/><line x1="154" y1="30" x2="154" y2="136" stroke="#4A5059" stroke-width="2"/><line x1="16" y1="82" x2="106" y2="82" stroke="#F2913D" stroke-width="2.5"/><line x1="156" y1="82" x2="252" y2="62" stroke="#F2913D" stroke-width="2.5"/><g stroke="#F4F1EA" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><line x1="60" y1="50" x2="60" y2="106"/><polyline points="53,134 60,106 67,134"/><polyline points="50,56 70,56"/><line x1="50" y1="56" x2="46" y2="96"/><polyline points="70,56 72,82 106,82"/></g><circle cx="60" cy="40" r="9" fill="#F4F1EA"/><circle cx="56.76" cy="39.1" r="1.3" fill="#16181B"/><circle cx="63.24" cy="39.1" r="1.3" fill="#16181B"/><rect x="73" y="68" width="7" height="12" rx="2" fill="#7FB2E5"/><g stroke="#F4F1EA" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><line x1="200" y1="50" x2="200" y2="106"/><polyline points="193,134 200,106 207,134"/><polyline points="190,56 210,56"/><line x1="190" y1="56" x2="186" y2="96"/><polyline points="210,56 230,76 252,62"/></g><circle cx="200" cy="40" r="9" fill="#F4F1EA"/><circle cx="196.76" cy="39.1" r="1.3" fill="#16181B"/><circle cx="203.24" cy="39.1" r="1.3" fill="#16181B"/></svg>`,
 
   bienMalDominadas: `
-<svg viewBox="0 0 280 140" fill="none" role="img" aria-label="Bien: codos rectos, solo se mueven hombros y omóplatos. Mal: codos doblados, eso es media dominada"><text x="70" y="14" text-anchor="middle" fill="#7FB2E5" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✓ CODOS RECTOS</text><text x="210" y="14" text-anchor="middle" fill="#F2913D" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✕ CODOS DOBLADOS</text><line x1="140" y1="10" x2="140" y2="132" stroke="#2E3238" stroke-width="2"/><line x1="24" y1="136" x2="116" y2="136" stroke="#4A5059" stroke-width="2"/><line x1="164" y1="136" x2="256" y2="136" stroke="#4A5059" stroke-width="2"/><line x1="36" y1="26" x2="104" y2="26" stroke="#9EA3AA" stroke-width="4" stroke-linecap="round"/><line x1="176" y1="26" x2="244" y2="26" stroke="#9EA3AA" stroke-width="4" stroke-linecap="round"/><g stroke="#F4F1EA" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><polyline points="58,26 60,62 80,62 82,26"/><line x1="70" y1="62" x2="70" y2="106"/><polyline points="63,130 70,106 77,130"/><polyline points="196,26 184,46 200,62 220,62 236,46 224,26"/><line x1="210" y1="62" x2="210" y2="106"/><polyline points="203,130 210,106 217,130"/></g><circle cx="70" cy="52" r="9" fill="#F4F1EA"/><circle cx="210" cy="44" r="9" fill="#F4F1EA"/></svg>`
+<svg viewBox="0 0 280 140" fill="none" role="img" aria-label="Bien: codos rectos, solo se mueven hombros y omóplatos. Mal: codos doblados, eso es media dominada"><text x="70" y="14" text-anchor="middle" fill="#7FB2E5" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✓ CODOS RECTOS</text><text x="210" y="14" text-anchor="middle" fill="#F2913D" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✕ CODOS DOBLADOS</text><line x1="140" y1="10" x2="140" y2="132" stroke="#2E3238" stroke-width="2"/><line x1="24" y1="136" x2="116" y2="136" stroke="#4A5059" stroke-width="2"/><line x1="164" y1="136" x2="256" y2="136" stroke="#4A5059" stroke-width="2"/><line x1="36" y1="26" x2="104" y2="26" stroke="#9EA3AA" stroke-width="4" stroke-linecap="round"/><line x1="176" y1="26" x2="244" y2="26" stroke="#9EA3AA" stroke-width="4" stroke-linecap="round"/><g stroke="#F4F1EA" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><polyline points="58,26 60,62 80,62 82,26"/><line x1="70" y1="62" x2="70" y2="106"/><polyline points="63,130 70,106 77,130"/><polyline points="196,26 184,46 200,62 220,62 236,46 224,26"/><line x1="210" y1="62" x2="210" y2="106"/><polyline points="203,130 210,106 217,130"/></g><circle cx="70" cy="52" r="9" fill="#F4F1EA"/><circle cx="66.76" cy="51.1" r="1.3" fill="#16181B"/><circle cx="73.24" cy="51.1" r="1.3" fill="#16181B"/><circle cx="210" cy="44" r="9" fill="#F4F1EA"/><circle cx="206.76" cy="43.1" r="1.3" fill="#16181B"/><circle cx="213.24" cy="43.1" r="1.3" fill="#16181B"/></svg>`
 };
