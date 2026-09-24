@@ -1,0 +1,35 @@
+MI SEMANA DE ENTRENAMIENTO
+==========================
+
+Cómo abrirlo
+- Descomprime la carpeta donde quieras (Escritorio, Documentos...).
+- Haz doble clic en index.html. Se abre en tu navegador, sin Claude y sin instalar nada.
+- Consejo: pulsa F11 (Windows) o Ctrl+Cmd+F (Mac) para verlo a pantalla completa.
+
+Archivos
+- index.html   -> la página que abres.
+- datos.js     -> AQUÍ se edita el contenido: días, grupos, ejercicios, dibujos y temporizadores.
+- app.js       -> el funcionamiento (no hace falta tocarlo).
+- estilos.css  -> colores y diseño.
+
+Notas
+- Sin internet funciona igual; solo cambian las tipografías por otras del sistema.
+- El sonido se activa al pulsar "Iniciar" por primera vez.
+- En la pantalla de calentamiento, la barra espaciadora inicia o pausa el temporizador.
+- Música: en la pantalla de la semana, pulsa "⚙ Configuración". Arriba creas o borras
+  tus moods; después eliges un ejercicio y un mood y pegas sus enlaces de YouTube
+  (uno por línea). Se guardan solos en este navegador.
+- Al pulsar START te pregunta el mood (o "Ninguno" = todas las canciones mezcladas).
+  Pulsa "Descargar copia" de vez en cuando para no perderlos (o para otro ordenador).
+
+Música dentro de la web (reproductor embebido)
+- YouTube solo deja poner su reproductor dentro de la web si esta se abre desde una
+  dirección de internet (http/https). Abierta con doble clic, la música sale en una
+  ventanita aparte de YouTube.
+- Para tener el reproductor dentro: abre la versión publicada en GitHub Pages:
+    https://nicolasrecobasystem-hash.github.io/training/
+  (repositorio: github.com/nicolasrecobasystem-hash/training). Para actualizarla:
+  Add file -> Upload files, arrastra los archivos cambiados y Commit changes. Los enlaces de música guardados en el navegador no
+  pasan solos: usa "Descargar copia" aquí y "Cargar copia" en la web publicada.
+- Botones del reproductor: "⏭ Otra" cambia de canción, "–"/"▢" cambia el tamaño
+  y "✕" para la música. Al acabar una canción, pone otra al azar del mismo mood.
