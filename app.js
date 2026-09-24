@@ -822,10 +822,36 @@
   function nombreSeguro(n) {
     return n.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Za-z0-9._-]+/g, '_').slice(-80);
   }
-  function subirArchivos(files) {
+  // Varias canciones a la vez: antes de subir, pregunta mood(s) e intensidad para todas
+  function prepararSubida(files) {
+    var lista = Array.prototype.slice.call(files);
+    if (lista.length < 2) { subirArchivos(lista); return; }
+    st.subida = { files: lista, moods: moodsDelFiltro(), intensidad: +st.filtroInt || 2 };
+    pintar();
+  }
+  function htmlSubida() {
+    var sb = st.subida, n = sb.files.length;
+    var nombres = sb.files.slice(0, 4).map(function (f) { return '<li>' + esc(f.name.replace(/\.[^.]+$/, '')) + '</li>'; }).join('') +
+      (n > 4 ? '<li class="mas">y ' + (n - 4) + ' más</li>' : '');
+    return '<div class="velo" data-acc="sub-cancelar"><div class="modal subida" role="dialog" aria-modal="true" aria-labelledby="tit-sub">' +
+      '<div class="antetitulo">SUBIR A TU BIBLIOTECA</div>' +
+      '<h2 class="titulo-m" id="tit-sub">' + n + ' CANCIONES</h2>' +
+      '<ul class="sub-nombres">' + nombres + '</ul>' +
+      '<div class="cfg-lbl">MOOD · puedes marcar varios</div>' +
+      '<div class="sub-fila">' + (moods.length ? moods.map(function (m) {
+        var on = sb.moods.indexOf(m) >= 0;
+        return '<button type="button" class="pill-mood' + (on ? ' on' : '') + '" data-acc="sub-mood" data-m="' + esc(m) + '" aria-pressed="' + on + '">' + esc(m) + '</button>';
+      }).join('') : '<span class="cfg-nota-mini">Aún no tienes moods: créalos arriba en Configuración.</span>') + '</div>' +
+      '<div class="cfg-lbl">INTENSIDAD</div>' +
+      '<div class="sub-fila">' + pillsIntensidad('sub-int', '', sb.intensidad) + '</div>' +
+      '<div class="modal-pie"><button type="button" class="btn-sec" data-acc="sub-cancelar">Cancelar</button>' +
+      '<button type="button" class="btn-pri" data-acc="sub-ok">Subir ' + n + ' canciones</button></div>' +
+      '</div></div>';
+  }
+  function subirArchivos(files, moodsElegidos, intensidadElegida) {
     if (!nube.sb || !nube.usuario) return;
     var lista = Array.prototype.slice.call(files), hechos = 0, fallos = 0, total = lista.length;
-    var moodsIni = moodsDelFiltro(), inten = +st.filtroInt || 2;
+    var moodsIni = moodsElegidos || moodsDelFiltro(), inten = intensidadElegida || +st.filtroInt || 2;
     function siguiente() {
       if (!lista.length) {
         guardarTodo(); pintar();
@@ -947,7 +973,7 @@
   }
 
   function pintar() {
-    vista.innerHTML = st.pantalla === 'semana' ? htmlSemana() + (st.pidiendoMood ? htmlMood() : '') + (st.completado ? htmlCompletado() : '') : (st.pantalla === 'config' ? htmlConfig() : htmlCalentamiento());
+    vista.innerHTML = st.pantalla === 'semana' ? htmlSemana() + (st.pidiendoMood ? htmlMood() : '') + (st.completado ? htmlCompletado() : '') : (st.pantalla === 'config' ? htmlConfig() + (st.subida ? htmlSubida() : '') : htmlCalentamiento());
     if (st.pidiendoMood) { var f = vista.querySelector('.mood.ultimo') || vista.querySelector('.mood'); if (f) f.focus(); }
     if (st.pantalla === 'calent') pintarTemporizador();
     if (st.pantalla === 'config') { actualizarEstadoCfg(); pintarNube(); }
@@ -1019,6 +1045,17 @@
     else if (acc === 'song-probar') { var cp = cancionPorId(b.getAttribute('data-id')); if (cp) reproducir([cp.item], '♪ Prueba · ' + cp.nombre); }
     else if (acc === 'song-quitar') { quitarCancion(b.getAttribute('data-id')); }
     else if (acc === 'yt-anadir') { anadirYouTube(); }
+    else if (acc === 'sub-mood' && st.subida) {
+      var smm = b.getAttribute('data-m'), sm = st.subida.moods;
+      st.subida.moods = sm.indexOf(smm) >= 0 ? sm.filter(function (x) { return x !== smm; }) : sm.concat([smm]);
+      pintar();
+    }
+    else if (acc === 'sub-int' && st.subida) { st.subida.intensidad = +b.getAttribute('data-n'); pintar(); }
+    else if (acc === 'sub-cancelar') { if (b === ev.target || b.tagName === 'BUTTON') { st.subida = null; pintar(); } }
+    else if (acc === 'sub-ok' && st.subida) {
+      var sp = st.subida; st.subida = null; pintar();
+      subirArchivos(sp.files, sp.moods, sp.intensidad);
+    }
     else if (acc === 'masivo-mood' || acc === 'masivo-int') {
       var fm2 = st.filtroMood || '', fi2 = +st.filtroInt || 0;
       var vis = biblioteca.filter(function (c) {
@@ -1043,7 +1080,7 @@
   // Configuración: guardar al escribir y cargar copia
   app.addEventListener('change', function (ev) {
     if (ev.target.id === 'cfg-archivo' && ev.target.files && ev.target.files[0]) importarCfg(ev.target.files[0]);
-    if (ev.target.id === 'subir-audio' && ev.target.files && ev.target.files.length) subirArchivos(ev.target.files);
+    if (ev.target.id === 'subir-audio' && ev.target.files && ev.target.files.length) prepararSubida(ev.target.files);
     if (ev.target.id === 'filtro-mood') { st.filtroMood = ev.target.value; pintar(); }
     if (ev.target.id === 'filtro-int') { st.filtroInt = +ev.target.value; pintar(); }
     if (ev.target.classList.contains('song-nombre')) {
@@ -1082,13 +1119,14 @@
     if (st.cfgVista !== 'biblio') { st.cfgVista = 'biblio'; pintar(); }
     if (!fs.length) { actualizarEstadoCfg('<span class="aviso-cfg">Solo se pueden soltar archivos de audio (MP3, M4A…)</span>'); return; }
     if (!EMBEBIDO || !nube.usuario) { actualizarEstadoCfg('<span class="aviso-cfg">Entra con tu correo (abajo) para subir canciones</span>'); return; }
-    subirArchivos(fs);
+    prepararSubida(fs);
   });
 
   // Esc cierra la ventana de mood · Enter añade un mood nuevo
   document.addEventListener('keydown', function (ev) {
     if (ev.key === 'Escape' && st.pidiendoMood) { st.pidiendoMood = false; pintar(); }
     if (ev.key === 'Escape' && st.completado) { st.completado = false; pintar(); }
+    if (ev.key === 'Escape' && st.subida) { st.subida = null; pintar(); }
     if (ev.key === 'Enter' && ev.target.id === 'mood-nuevo') { ev.preventDefault(); anadirMood(); }
     if (ev.key === 'Enter' && (ev.target.id === 'nube-correo' || ev.target.id === 'nube-clave')) { ev.preventDefault(); entrarConClave(); }
     if (ev.key === 'Enter' && ev.target.id === 'nube-clave-nueva') { ev.preventDefault(); guardarClave(); }
