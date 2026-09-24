@@ -326,3 +326,23 @@ button:disabled{cursor:not-allowed}
 #relojes b{font-weight:600;color:var(--texto,#F4F1EA)}
 #relojes .sep{opacity:.6}
 #relojes .mando-on{color:var(--azul)}
+/* Configuración · Luces Govee */
+.luces{display:flex;flex-direction:column;gap:14px;height:100%}
+.luces-cab{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.luz-switch{display:flex;align-items:center;gap:10px;font-size:15px;cursor:pointer}
+.luz-switch input{width:20px;height:20px;accent-color:var(--acento)}
+.luces-cuerpo{display:grid;grid-template-columns:1fr 360px;gap:22px;flex:1;min-height:0}
+.luces-lista{display:flex;flex-direction:column;gap:8px;overflow-y:auto;min-height:0}
+.luz-fila{display:flex;align-items:center;gap:12px;padding:10px 14px;border:1px solid var(--linea);border-radius:10px;background:var(--fondo);cursor:pointer}
+.luz-fila input{width:18px;height:18px;accent-color:var(--acento)}
+.luz-fila.sin-color{opacity:.5;cursor:default}
+.luz-nombre{font-weight:600;flex:1}
+.luz-sku{font-size:11px;color:var(--tenue)}
+.luces-lado{display:flex;flex-direction:column;gap:10px}
+.luz-muestras{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.luz-muestra{display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:10px;border:1px solid var(--linea2);background:var(--fondo);color:var(--texto);font:inherit;font-size:13px;cursor:pointer}
+.luz-muestra i{width:16px;height:16px;border-radius:50%;flex-shrink:0}
+.luz-brillo{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--suave)}
+.luz-brillo input{flex:1;accent-color:var(--acento)}
+.luces-nota{font-size:12px;color:var(--tenue);line-height:1.45;margin:0}
+.luces-msg{min-height:1.2em}

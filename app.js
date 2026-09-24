@@ -304,7 +304,7 @@
   var NUBE_URL = 'https://idjlewvzuzqywthrwibv.supabase.co';
   var NUBE_CLAVE = 'sb_publishable_rgLetEILYTeBPvEqWcAyrA_82D41Npt';   // clave pública (publishable)
   var nube = { sb: null, usuario: null, estado: 'apagada', msg: '', pendiente: false, reloj: null };
-  function datosParaNube() { return { version: 3, moods: moods, biblioteca: biblioteca, ejIntensidad: ejIntensidad, ultimoMood: ultimoMood, historial: historial }; }
+  function datosParaNube() { return { version: 3, moods: moods, biblioteca: biblioteca, ejIntensidad: ejIntensidad, ultimoMood: ultimoMood, historial: historial, luces: luces }; }
 
   // ---------- historial: qué ejercicios hiciste cada día ----------
   // { "2026-09-24": { grupo: "Hombro", hechos: ["Hombro|Colgarte de la barra", ...], total: 10, terminado: true } }
@@ -347,6 +347,7 @@
     if (d.ejIntensidad && typeof d.ejIntensidad === 'object' && !Array.isArray(d.ejIntensidad)) ejIntensidad = d.ejIntensidad;
     if (d.ultimoMood === null || typeof d.ultimoMood === 'string') ultimoMood = d.ultimoMood;
     if (d.historial) { mezclarHistorial(d.historial); escribirLS(LS_HIST, historial); }
+    if (d.luces && typeof d.luces === 'object' && Array.isArray(d.luces.devs)) { luces = d.luces; escribirLS(LS_LUCES, luces); }
     asegurarMoods();
     escribirLS(LS_BIBLIO, biblioteca); escribirLS(LS_MOODS, moods); escribirLS(LS_INTENS, ejIntensidad); escribirLS(LS_ULTIMO, ultimoMood);
     var a = document.activeElement;
@@ -841,7 +842,7 @@
       '<input id="mood-nuevo" type="text" maxlength="24" placeholder="Nuevo mood…" aria-label="Nombre del nuevo mood">' +
       '<button type="button" class="btn-sec" data-acc="mood-anadir">+ Añadir</button>' +
       '<span id="mood-aviso" class="aviso-cfg mono"></span></div>';
-    var vista = st.cfgVista === 'ejercicios' ? 'ejercicios' : 'biblio';
+    var vista = st.cfgVista === 'ejercicios' || st.cfgVista === 'luces' ? st.cfgVista : 'biblio';
     var filtros = '';
     if (vista === 'biblio') {
       var fm = st.filtroMood || '', fi = +st.filtroInt || 0;
@@ -856,6 +857,7 @@
     var pestanas = '<div class="cfg-tabs">' +
       '<button type="button" class="tab-mood' + (vista === 'biblio' ? ' activo' : '') + '" data-acc="cfg-vista" data-v="biblio" aria-pressed="' + (vista === 'biblio') + '">♫ Biblioteca<span>' + biblioteca.length + '</span></button>' +
       '<button type="button" class="tab-mood' + (vista === 'ejercicios' ? ' activo' : '') + '" data-acc="cfg-vista" data-v="ejercicios" aria-pressed="' + (vista === 'ejercicios') + '">Intensidad de los ejercicios</button>' +
+      '<button type="button" class="tab-mood' + (vista === 'luces' ? ' activo' : '') + '" data-acc="cfg-vista" data-v="luces" aria-pressed="' + (vista === 'luces') + '">💡 Luces</button>' +
       filtros + '</div>';
     return '<div class="pantalla config">' +
       '<div class="barra-sup"><button type="button" class="btn-sec" data-acc="volver">← Semana</button>' +
@@ -864,7 +866,7 @@
       '<button type="button" class="btn-sec" data-acc="cfg-importar">Cargar copia</button>' +
       '<input type="file" id="cfg-archivo" accept=".json,application/json" hidden></div></div>' +
       barraMoods + pestanas +
-      '<div class="panel cfg-panel">' + (vista === 'biblio' ? htmlBiblioteca() : htmlEjercicios()) + '</div>' +
+      '<div class="panel cfg-panel">' + (vista === 'biblio' ? htmlBiblioteca() : vista === 'luces' ? htmlLuces() : htmlEjercicios()) + '</div>' +
       '<div id="cfg-nube" class="cfg-nube"></div>' +
       '</div>';
   }
@@ -1102,6 +1104,7 @@
       '<button type="button" class="btn-pri" data-acc="principal">' + etiqueta + '</button>' +
       '<button type="button" class="btn-rei" data-acc="reiniciar">Reiniciar</button></div>';
     avisarMando();
+    lucesPorFase();
   }
 
   function pintar() {
@@ -1112,7 +1115,7 @@
     avisarMando();
   }
 
-  function empezar() { musicaSonandoDe = ''; st.pidiendoMood = false; st.pantalla = 'calent'; st.bloque = 0; st.hueco = 0; reiniciar(); pintar(); }
+  function empezar() { reiniciarLuces(); musicaSonandoDe = ''; st.pidiendoMood = false; st.pantalla = 'calent'; st.bloque = 0; st.hueco = 0; reiniciar(); pintar(); }
   function irABloque(i) {
     if (i < 0 || i >= bloques().length) return;
     st.bloque = i; st.hueco = 0; st.verInfo = false; reiniciar(); pintar();
@@ -1211,6 +1214,11 @@
     else if (acc === 'ej-int') { ejIntensidad[b.getAttribute('data-clave')] = +b.getAttribute('data-n'); guardarTodo(); pintar(); }
     else if (acc === 'cfg-exportar') { exportarCfg(); }
     else if (acc === 'cfg-importar') { document.getElementById('cfg-archivo').click(); }
+    else if (acc === 'luces-buscar') { buscarLuces(); }
+    else if (acc === 'luz-probar') {
+      var fp = b.getAttribute('data-f'); lucesEstado.msg = 'Probando ' + NOMBRE_FASE[fp].toLowerCase() + '…'; actualizarMsgLuces();
+      ponerColor(COLOR_FASE[fp], true).then(function (r) { lucesEstado.msg = r.error ? r.error : (r.res && r.res.every(function (x) { return x.ok; }) ? 'Listo ✓' : 'Govee no aceptó la orden (¿límite por minuto?)'); actualizarMsgLuces(); });
+    }
     else if (acc === 'principal') { botonPrincipal(); }
     else if (acc === 'musica') {
       // Se abre en una ventanita aparte (siempre la misma) para no salir de la web
@@ -1225,6 +1233,14 @@
     if (ev.target.id === 'subir-audio' && ev.target.files && ev.target.files.length) prepararSubida(ev.target.files);
     if (ev.target.id === 'filtro-mood') { st.filtroMood = ev.target.value; pintar(); }
     if (ev.target.id === 'filtro-int') { st.filtroInt = +ev.target.value; pintar(); }
+    if (ev.target.id === 'luces-activas') { luces.activas = ev.target.checked; guardarLuces(); }
+    if (ev.target.id === 'luces-brillo') { luces.brillo = +ev.target.value; guardarLuces(); var bv = document.getElementById('luces-brillo-v'); if (bv) bv.textContent = luces.brillo ? luces.brillo + '%' : 'sin cambiar'; }
+    if (ev.target.hasAttribute && ev.target.hasAttribute('data-luz')) {
+      var dv = ev.target.getAttribute('data-luz');
+      luces.devs = luces.devs.filter(function (x) { return x.device !== dv; });
+      if (ev.target.checked) luces.devs.push({ sku: ev.target.getAttribute('data-sku'), device: dv, nombre: ev.target.getAttribute('data-nombre') });
+      guardarLuces();
+    }
     if (ev.target.classList.contains('song-nombre')) {
       var cn = cancionPorId(ev.target.getAttribute('data-id')), nv = ev.target.value.trim();
       if (cn && nv) { cn.nombre = nv.slice(0, 120); guardarTodo(); }
@@ -1407,6 +1423,73 @@
   document.addEventListener('pointerdown', function () { activarAudio(); }, { once: true });
   audioEl.addEventListener('play', function () { avisarMando(); });
   audioEl.addEventListener('pause', function () { avisarMando(); });
+
+  // ---------- luces Govee: cambian de color con la fase del temporizador ----------
+  // La clave de Govee vive en Supabase (función "govee"); aquí solo se guarda qué luces usar.
+  var LS_LUCES = 'miSemana.luces.v1';
+  var luces = leerLS(LS_LUCES, null);
+  if (!luces || typeof luces !== 'object') luces = { activas: false, devs: [], brillo: 0 };
+  if (!Array.isArray(luces.devs)) luces.devs = [];
+  var COLOR_FASE = { prep: 0xE8D36A, trabajo: 0xF2913D, descanso: 0x7FB2E5, hecho: 0xF4F1EA };
+  var NOMBRE_FASE = { prep: 'Preparación', trabajo: 'Trabajo', descanso: 'Descanso', hecho: 'Completado' };
+  var lucesEstado = { encontradas: null, msg: '', buscando: false, ultimaFase: '', encendidas: false };
+  function guardarLuces() { escribirLS(LS_LUCES, luces); subirNube(); }
+  function hex(n) { return '#' + ('000000' + n.toString(16)).slice(-6).toUpperCase(); }
+  function llamarGovee(cuerpo) {
+    if (!EMBEBIDO || !nube.sb || !nube.usuario) return Promise.resolve({ error: 'Entra con tu cuenta para usar las luces' });
+    return nube.sb.functions.invoke('govee', { body: cuerpo }).then(function (r) {
+      if (r.error) {
+        var m = r.error.message || 'error';
+        if (r.error.context && r.error.context.json) return r.error.context.json().then(function (j) { return { error: (j && j.error) || m }; }, function () { return { error: m }; });
+        return { error: m };
+      }
+      return r.data || {};
+    }, function (e) { return { error: String(e && e.message || e) }; });
+  }
+  function ponerColor(rgb, encender) {
+    if (!luces.devs.length) return Promise.resolve({ error: 'No hay luces elegidas' });
+    return llamarGovee({ accion: 'color', rgb: rgb, luces: luces.devs, encender: !!encender, brillo: luces.brillo || 0 });
+  }
+  // Se llama cada vez que se repinta el temporizador: solo manda algo cuando cambia la fase
+  function lucesPorFase() {
+    if (!luces.activas || !luces.devs.length || st.pantalla !== 'calent') return;
+    var f = st.fase;
+    if (!COLOR_FASE.hasOwnProperty(f) || f === lucesEstado.ultimaFase) return;
+    lucesEstado.ultimaFase = f;
+    var enc = !lucesEstado.encendidas; lucesEstado.encendidas = true;
+    ponerColor(COLOR_FASE[f], enc).then(function (r) { if (r && r.error) lucesEstado.msg = r.error; });
+  }
+  function actualizarMsgLuces() { var el = document.querySelector('.luces-msg'); if (el) el.textContent = lucesEstado.msg; }
+  function reiniciarLuces() { lucesEstado.ultimaFase = ''; lucesEstado.encendidas = false; }
+  function buscarLuces() {
+    lucesEstado.buscando = true; lucesEstado.msg = ''; pintar();
+    llamarGovee({ accion: 'listar' }).then(function (r) {
+      lucesEstado.buscando = false;
+      if (r.error) lucesEstado.msg = r.error;
+      else { lucesEstado.encontradas = r.luces || []; if (!lucesEstado.encontradas.length) lucesEstado.msg = 'Govee no devolvió ninguna luz en tu cuenta'; }
+      if (st.pantalla === 'config') pintar();
+    });
+  }
+  function htmlLuces() {
+    var elegida = function (d) { return luces.devs.some(function (x) { return x.device === d.device; }); };
+    var lista = lucesEstado.encontradas || luces.devs.map(function (d) { return { sku: d.sku, device: d.device, nombre: d.nombre, color: true }; });
+    var filas = lista.length ? lista.map(function (d) {
+      return '<label class="luz-fila' + (d.color ? '' : ' sin-color') + '"><input type="checkbox" data-luz="' + esc(d.device) + '" data-sku="' + esc(d.sku) + '" data-nombre="' + esc(d.nombre) + '"' + (elegida(d) ? ' checked' : '') + (d.color ? '' : ' disabled') + '>' +
+        '<span class="luz-nombre">' + esc(d.nombre) + '</span><span class="luz-sku mono">' + esc(d.sku) + (d.color ? '' : ' · sin color') + '</span></label>';
+    }).join('') : '<div class="vacio">Pulsa «Buscar mis luces» para traer las luces de tu cuenta Govee.</div>';
+    var muestras = Object.keys(COLOR_FASE).map(function (f) {
+      return '<button type="button" class="luz-muestra" data-acc="luz-probar" data-f="' + f + '"><i style="background:' + hex(COLOR_FASE[f]) + '"></i>' + NOMBRE_FASE[f] + '</button>';
+    }).join('');
+    var brillo = +luces.brillo || 0;
+    return '<div class="luces">' +
+      '<div class="luces-cab"><label class="luz-switch"><input type="checkbox" id="luces-activas"' + (luces.activas ? ' checked' : '') + '> <b>Cambiar el color de las luces según la fase</b></label>' +
+      '<button type="button" class="btn-sec" data-acc="luces-buscar"' + (lucesEstado.buscando ? ' disabled' : '') + '>' + (lucesEstado.buscando ? 'Buscando…' : '⟳ Buscar mis luces') + '</button></div>' +
+      '<div class="luces-cuerpo"><div class="luces-lista"><div class="cfg-lbl">LUCES QUE SE USAN</div>' + filas + '</div>' +
+      '<div class="luces-lado"><div class="cfg-lbl">PROBAR UN COLOR</div><div class="luz-muestras">' + muestras + '</div>' +
+      '<div class="cfg-lbl">BRILLO</div><label class="luz-brillo"><input type="range" id="luces-brillo" min="0" max="100" step="5" value="' + brillo + '"><span id="luces-brillo-v" class="mono">' + (brillo ? brillo + '%' : 'sin cambiar') + '</span></label>' +
+      '<p class="luces-nota">Preparación amarillo · trabajo naranja · descanso azul · al completar, blanco. Govee limita las órdenes por minuto: solo se manda una al cambiar de fase.</p></div></div>' +
+      '<div class="luces-msg aviso-cfg">' + esc(lucesEstado.msg) + '</div></div>';
+  }
 
   escalar();
   pintar();
