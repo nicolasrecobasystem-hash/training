@@ -213,3 +213,7 @@ button:disabled{cursor:not-allowed}
 .ej-fila .n{width:280px;font-size:16px;font-weight:600}
 .ej-cuentas{font-family:var(--mono);font-size:12px;color:var(--tenue)}
 .ej-cuentas .on{color:var(--suave)}
+/* Acceso con contraseña */
+.cfg-nube input[type=password]{width:180px}
+.btn-entrar{background:var(--acento) !important;border-color:var(--acento) !important;color:var(--fondo) !important;font-weight:600}
+.btn-link{height:32px;padding:0 4px;border:none;background:transparent;color:var(--suave);font-size:13px;text-decoration:underline}

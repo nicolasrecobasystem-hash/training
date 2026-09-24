@@ -365,6 +365,30 @@
       else estadoNube('enviado');
     });
   }
+  // Entrar con correo y contraseña (la sesión queda guardada en este navegador)
+  function entrarConClave() {
+    var c = document.getElementById('nube-correo'), k = document.getElementById('nube-clave');
+    var correo = c ? c.value.trim() : '', clave = k ? k.value : '';
+    if (!nube.sb) return;
+    if (!/^\S+@\S+\.\S+$/.test(correo) || !clave) { estadoNube('fuera', 'Escribe tu correo y tu contraseña'); return; }
+    escribirLS('miSemana.correo', correo);
+    estadoNube('entrando');
+    nube.sb.auth.signInWithPassword({ email: correo, password: clave }).then(function (r) {
+      if (r.error) estadoNube('fuera', /invalid/i.test(r.error.message) ? 'Correo o contraseña incorrectos' : 'No se pudo entrar: ' + r.error.message);
+      // si entra, onAuthStateChange se encarga del resto
+    });
+  }
+  // Poner o cambiar la contraseña (con la sesión iniciada)
+  function guardarClave() {
+    var k = document.getElementById('nube-clave-nueva'), clave = k ? k.value : '';
+    if (!nube.sb || !nube.usuario) return;
+    if (clave.length < 6) { nube.msgClave = 'Mínimo 6 caracteres'; pintarNube(); return; }
+    nube.sb.auth.updateUser({ password: clave }).then(function (r) {
+      if (r.error) { nube.msgClave = 'No se pudo guardar: ' + r.error.message; pintarNube(); return; }
+      nube.cambiandoClave = false; nube.msgClave = '';
+      estadoNube('ok', 'contraseña guardada ✓ · ya puedes entrar con ella en cualquier navegador');
+    });
+  }
   function salirNube() { if (nube.sb) nube.sb.auth.signOut(); nube.usuario = null; estadoNube('fuera'); }
   function pintarNube() {
     var el = document.getElementById('cfg-nube');
@@ -372,16 +396,26 @@
     var h;
     if (nube.estado === 'local') h = '☁ Se guarda en este navegador. La sincronización en la nube funciona en la web publicada.';
     else if (nube.estado === 'conectando' || nube.estado === 'apagada') h = '☁ Conectando con la nube…';
-    else if (nube.estado === 'fuera') h = '<span>☁ Guarda tus ajustes en la nube:</span>' +
-      '<input id="nube-correo" type="email" value="nicolasrecobasystem@gmail.com" aria-label="Tu correo" autocomplete="email">' +
-      '<button type="button" class="btn-sec" data-acc="nube-entrar">Enviarme enlace de acceso</button>' +
+    else if (nube.estado === 'fuera') h = '<span>☁ Entra en tu nube:</span>' +
+      '<input id="nube-correo" type="email" value="' + esc(leerLS('miSemana.correo', 'nicolasrecobasystem@gmail.com')) + '" aria-label="Tu correo" autocomplete="username">' +
+      '<input id="nube-clave" type="password" placeholder="Contraseña" aria-label="Contraseña" autocomplete="current-password">' +
+      '<button type="button" class="btn-sec btn-entrar" data-acc="nube-clave-entrar">Entrar</button>' +
+      '<button type="button" class="btn-link" data-acc="nube-entrar">¿Sin contraseña? Enviarme enlace</button>' +
       (nube.msg ? '<span class="aviso-cfg">' + esc(nube.msg) + '</span>' : '');
+    else if (nube.estado === 'entrando') h = '☁ Entrando…';
     else if (nube.estado === 'enviando') h = '☁ Enviando enlace…';
     else if (nube.estado === 'enviado') h = '☁ Revisa tu correo y pulsa el enlace <b>en este mismo navegador</b>.';
     else h = '<span class="' + (nube.estado === 'error' ? 'aviso-cfg' : 'nube-ok') + '">☁ ' +
       (nube.usuario ? esc(nube.usuario.email) + ' · ' : '') + (nube.estado === 'sincronizando' ? 'sincronizando…' : esc(nube.msg)) + '</span>' +
-      (nube.usuario ? '<button type="button" class="btn-sec" data-acc="nube-salir">Cerrar sesión</button>' : '');
+      (nube.usuario ? (nube.cambiandoClave
+        ? '<input id="nube-clave-nueva" type="password" placeholder="Nueva contraseña (mín. 6)" aria-label="Nueva contraseña" autocomplete="new-password">' +
+          '<button type="button" class="btn-sec btn-entrar" data-acc="nube-clave-guardar">Guardar contraseña</button>' +
+          '<button type="button" class="btn-link" data-acc="nube-clave-cancelar">Cancelar</button>' +
+          (nube.msgClave ? '<span class="aviso-cfg">' + esc(nube.msgClave) + '</span>' : '')
+        : '<button type="button" class="btn-sec" data-acc="nube-clave-poner">🔑 Poner contraseña</button>' +
+          '<button type="button" class="btn-sec" data-acc="nube-salir">Cerrar sesión</button>') : '');
     el.innerHTML = h;
+    if (nube.cambiandoClave) { var nk = document.getElementById('nube-clave-nueva'); if (nk) nk.focus(); }
   }
 
   // ---------- escalado 16:9 ----------
@@ -828,6 +862,10 @@
     }
     else if (acc === 'nube-entrar') { entrarNube(); }
     else if (acc === 'nube-salir') { salirNube(); }
+    else if (acc === 'nube-clave-entrar') { entrarConClave(); }
+    else if (acc === 'nube-clave-poner') { nube.cambiandoClave = true; nube.msgClave = ''; pintarNube(); }
+    else if (acc === 'nube-clave-cancelar') { nube.cambiandoClave = false; pintarNube(); }
+    else if (acc === 'nube-clave-guardar') { guardarClave(); }
     else if (acc === 'cerrar-mood') { if (b === ev.target || b.tagName === 'BUTTON') { st.pidiendoMood = false; pintar(); } }
     else if (acc === 'mood-anadir') { anadirMood(); }
     else if (acc === 'mood-borrar') { borrarMood(+b.getAttribute('data-i')); }
@@ -886,7 +924,8 @@
   document.addEventListener('keydown', function (ev) {
     if (ev.key === 'Escape' && st.pidiendoMood) { st.pidiendoMood = false; pintar(); }
     if (ev.key === 'Enter' && ev.target.id === 'mood-nuevo') { ev.preventDefault(); anadirMood(); }
-    if (ev.key === 'Enter' && ev.target.id === 'nube-correo') { ev.preventDefault(); entrarNube(); }
+    if (ev.key === 'Enter' && (ev.target.id === 'nube-correo' || ev.target.id === 'nube-clave')) { ev.preventDefault(); entrarConClave(); }
+    if (ev.key === 'Enter' && ev.target.id === 'nube-clave-nueva') { ev.preventDefault(); guardarClave(); }
     if (ev.key === 'Enter' && ev.target.id === 'yt-nuevo') { ev.preventDefault(); anadirYouTube(); }
     if (ev.key === 'Enter' && ev.target.classList && ev.target.classList.contains('song-nombre')) ev.target.blur();
   });
