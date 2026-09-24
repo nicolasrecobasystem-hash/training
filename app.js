@@ -529,6 +529,12 @@
   }
 
   // ---------- plantillas ----------
+  // Nº de ejercicios del día a partir de sus bloques (ej. "10 · 4 bloques")
+  function cuentaEjercicios(g) {
+    var bl = bloquesDe(g), n = 0;
+    bl.forEach(function (b) { n += (b.ejercicios || []).length; });
+    return n ? n + (bl.length > 1 ? ' · ' + bl.length + ' bloques' : '') : '';
+  }
   function htmlSemana() {
     var d = DIAS[st.sel];
     var info = INFO_GRUPO[d.grupo] || {};
@@ -545,7 +551,7 @@
       '<button type="button" class="btn-sec" data-acc="config">⚙ Configuración</button></div></div>' +
       '<div class="dias">' + dias + '</div>' +
       '<div class="detalle"><div class="izq"><div class="antetitulo">' + esc(d.nombre.toUpperCase()) + '</div><div class="grande">' + esc(d.grupo.toUpperCase()) + '</div></div>' +
-      '<div class="campos">' + campo('DURACIÓN', info.duracion) + campo('EJERCICIOS', info.ejercicios) + campo('MATERIAL', info.material) + campo('ENFOQUE', info.enfoque) + '</div>' +
+      '<div class="campos">' + campo('DURACIÓN', info.duracion) + campo('EJERCICIOS', info.ejercicios || cuentaEjercicios(d.grupo)) + campo('MATERIAL', info.material) + campo('ENFOQUE', info.enfoque) + '</div>' +
       '<button type="button" class="btn-start" data-acc="start" aria-label="Empezar el entrenamiento">START</button></div>' +
       '</div>';
   }

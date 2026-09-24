@@ -14,8 +14,13 @@ const DIAS = [
 ];
 
 // Información general de cada grupo (lo que se ve al pulsar un día).
+// "ejercicios" se cuenta solo a partir de BLOQUES si no lo pones aquí.
 const INFO_GRUPO = {
-  // Ejemplo: Hombro: { duracion: '40 min', ejercicios: '7', material: 'Bandas y barra', enfoque: 'Salud del hombro' }
+  Hombro: {
+    duracion: '~50 min',
+    material: 'Bandas, barra y anclas alta, media y baja',
+    enfoque: 'Deltoides, postura y salud del hombro'
+  }
 };
 
 // Calentamiento de cada grupo: hasta 3 ejercicios.
