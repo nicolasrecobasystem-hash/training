@@ -30,7 +30,14 @@
   function leerLS(k, def) { try { var v = JSON.parse(localStorage.getItem(k)); return v == null ? def : v; } catch (e) { return def; } }
   function escribirLS(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } }
   function esEnlace(x) { return /^https?:\/\/\S+$/i.test(x); }
-  function limpiar(ls) { return (Array.isArray(ls) ? ls : [ls]).map(function (x) { return String(x || '').trim(); }).filter(esEnlace); }
+  // Un archivo subido a Supabase se guarda como "sb:<ruta en el almacén>|<nombre para mostrar>"
+  function esArchivo(x) { return /^sb:[^|]+\|.+$/.test(x); }
+  function rutaArchivo(x) { return x.slice(3, x.indexOf('|')); }
+  function nombreArchivo(x) { return x.slice(x.indexOf('|') + 1); }
+  function limpiar(ls) {
+    return (Array.isArray(ls) ? ls : [ls]).map(function (x) { return String(x || '').trim(); })
+      .filter(function (x) { return esEnlace(x) || esArchivo(x); });
+  }
   // Normaliza a { mood: [enlaces] }. Una lista suelta (sin moods) va al mood "General".
   function porMood(m) {
     var o = {};
@@ -74,6 +81,7 @@
   // Abre uno al azar (sin repetir el último si hay más de uno) en una ventanita aparte
   var ultimaMusica = '';
   function abrirMusica(ls) {
+    ls = ls.filter(esEnlace);   // la ventanita solo sirve para YouTube
     if (!ls.length) return;
     var opciones = ls.length > 1 ? ls.filter(function (x) { return x !== ultimaMusica; }) : ls;
     ultimaMusica = opciones[Math.floor(Math.random() * opciones.length)];
@@ -120,6 +128,7 @@
     '<button type="button" id="rep-mini" data-acc="rep-mini" aria-label="Cambiar el tamaño del vídeo">–</button>' +
     '<button type="button" data-acc="rep-cerrar" aria-label="Parar la música y cerrar">✕</button></div>' +
     '<div class="rep-video"><div id="yt-player"></div></div>' +
+    '<div class="rep-audio" hidden><div id="rep-cancion" class="rep-cancion"></div><audio id="rep-audio-el" controls preload="none"></audio></div>' +
     '<div id="rep-aviso" class="rep-aviso" hidden></div>';
 
   // Saca el vídeo y/o la lista de reproducción de cualquier enlace de YouTube
@@ -153,18 +162,43 @@
   }
   function pintarRep() {
     cajaRep.hidden = !rep.visible;
-    cajaRep.className = rep.mini ? 'mini' : '';
+    cajaRep.className = (rep.mini ? 'mini' : '') + (rep.modo === 'audio' ? ' audio' : '');
+    cajaRep.querySelector('.rep-video').hidden = rep.modo === 'audio';
+    cajaRep.querySelector('.rep-audio').hidden = rep.modo !== 'audio';
     document.getElementById('rep-tit').textContent = rep.etiqueta;
     document.getElementById('rep-mini').textContent = rep.mini ? '▢' : '–';
+  }
+  // Audio de tus archivos (Supabase Storage, privado): se pide un enlace temporal firmado
+  var audioEl = document.getElementById('rep-audio-el');
+  audioEl.addEventListener('ended', function () { if (rep.visible && rep.modo === 'audio') reproducir(rep.lista, rep.etiqueta); });
+  audioEl.addEventListener('error', function () { if (rep.modo === 'audio' && audioEl.src) avisoRep('No se pudo reproducir este archivo.'); });
+  function pararVideo() { try { if (rep.player && rep.player.pauseVideo) rep.player.pauseVideo(); } catch (e) {} }
+  function pararAudio() { try { audioEl.pause(); } catch (e) {} }
+  function reproducirArchivo(item) {
+    rep.modo = 'audio'; pararVideo(); pintarRep();
+    document.getElementById('rep-cancion').textContent = '♫ ' + nombreArchivo(item);
+    if (!nube.sb || !nube.usuario) { avisoRep('Entra con tu correo en Configuración para oír tus archivos.'); return; }
+    nube.sb.storage.from('musica').createSignedUrl(rutaArchivo(item), 3 * 3600).then(function (r) {
+      if (r.error || !r.data) { avisoRep('No se encontró el archivo en la nube.'); return; }
+      if (rep.actual !== item) return;   // mientras tanto se pidió otra canción
+      audioEl.src = r.data.signedUrl;
+      var pr = audioEl.play();
+      if (pr && pr.catch) pr.catch(function () { avisoRep('Pulsa ▶ para empezar la música.'); });
+    });
   }
   function reproducir(ls, etiqueta) {
     if (!ls || !ls.length) return;
     if (!EMBEBIDO) { abrirMusica(ls); return; }
+    // Sin sesión no se pueden oír los archivos: se usan solo los enlaces de YouTube
+    var disponibles = nube.usuario ? ls : ls.filter(esEnlace);
+    if (!disponibles.length) disponibles = ls;
     rep.lista = ls; rep.etiqueta = etiqueta || '♪';
-    var opciones = ls.length > 1 ? ls.filter(function (x) { return x !== rep.actual; }) : ls;
+    var opciones = disponibles.length > 1 ? disponibles.filter(function (x) { return x !== rep.actual; }) : disponibles;
     var u = opciones[Math.floor(Math.random() * opciones.length)];
     rep.actual = u; rep.visible = true;
     avisoRep(''); pintarRep();
+    if (esArchivo(u)) { reproducirArchivo(u); return; }
+    pararAudio(); rep.modo = 'video'; pintarRep();
     var d = datosYouTube(u);
     if (!d) { avisoRep('Este enlace no parece de YouTube.', u); return; }
     rep.esLista = !!d.list;   // las listas de reproducción siguen solas
@@ -190,6 +224,7 @@
   }
   function cerrarRep() {
     try { if (rep.player && rep.player.stopVideo) rep.player.stopVideo(); } catch (e) {}
+    pararAudio();
     rep.visible = false; pintarRep();
   }
 
@@ -222,7 +257,7 @@
       nube.sb.auth.onAuthStateChange(function (ev, sesion) {
         var u = sesion && sesion.user;
         setTimeout(function () {   // fuera del aviso de Supabase, como recomienda su documentación
-          if (u && (!nube.usuario || nube.usuario.id !== u.id)) { nube.usuario = u; bajarNube(); }
+          if (u && (!nube.usuario || nube.usuario.id !== u.id)) { nube.usuario = u; if (st.pantalla === 'config') pintar(); bajarNube(); }
           else if (!u) { nube.usuario = null; if (nube.estado !== 'enviado') estadoNube('fuera'); }
         }, 0);
       });
@@ -519,10 +554,11 @@
         editor += '<div class="tabs-mood">' + tabs + '</div>' +
           '<label class="cfg-lbl" for="cfg-texto">ENLACES PARA «' + esc(moodSel.toUpperCase()) + '» · UNO POR LÍNEA · SE ELIGE UNO AL AZAR</label>' +
           '<textarea id="cfg-texto" spellcheck="false" placeholder="https://www.youtube.com/watch?v=...&#10;https://youtu.be/...">' +
-          esc((mus[moodSel] || []).join('\n')) + '</textarea>' +
+          esc((mus[moodSel] || []).filter(esEnlace).join('\n')) + '</textarea>' +
+          htmlArchivos((mus[moodSel] || []).filter(esArchivo)) +
           '<div class="cfg-pie"><div id="cfg-estado" class="cfg-estado"></div>' +
           '<button type="button" class="btn-sec" data-acc="cfg-probar">♪ Probar uno al azar</button>' +
-          '<button type="button" class="btn-sec" data-acc="cfg-borrar">Borrar todos</button></div>';
+          '<button type="button" class="btn-sec" data-acc="cfg-borrar">Borrar enlaces</button></div>';
       }
     }
     return '<div class="pantalla config">' +
@@ -535,6 +571,68 @@
       '<div class="cfg-cuerpo"><div class="panel cfg-lista">' + lista + '</div><div class="panel cfg-editor">' + editor + '</div></div>' +
       '<div id="cfg-nube" class="cfg-nube"></div>' +
       '</div>';
+  }
+
+  // Lista de archivos de audio del mood abierto + botón para subir más
+  function htmlArchivos(archivos) {
+    var chips = archivos.map(function (x) {
+      return '<span class="chip chip-audio"><span>♫ ' + esc(nombreArchivo(x)) + '</span>' +
+        '<button type="button" class="chip-x" data-acc="archivo-quitar" data-item="' + esc(x) + '" aria-label="Quitar ' + esc(nombreArchivo(x)) + '">✕</button></span>';
+    }).join('');
+    var subir = !EMBEBIDO ? '<span class="cfg-nota-mini">Los archivos se suben desde la web publicada.</span>'
+      : !nube.usuario ? '<span class="cfg-nota-mini">Entra con tu correo (abajo) para subir canciones.</span>'
+      : '<label class="btn-sec btn-subir">⬆ Subir canciones<input type="file" id="subir-audio" accept="audio/*" multiple hidden></label>' +
+        '<label class="cfg-check"><input type="checkbox" id="subir-todos"> añadirlas a todos los ejercicios</label>';
+    return '<div class="cfg-archivos"><div class="cfg-lbl">ARCHIVOS DE AUDIO' + (archivos.length ? ' · ' + archivos.length : '') + '</div>' +
+      '<div class="lista-audio">' + chips + subir + '<span id="subir-estado" class="cfg-nota-mini"></span></div></div>';
+  }
+  function nombreSeguro(n) {
+    return n.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Za-z0-9._-]+/g, '_').slice(-80);
+  }
+  function subirArchivos(files) {
+    var sel = todosLosEjercicios()[st.cfgSel], m = moods[st.cfgMood];
+    var aTodos = !!(document.getElementById('subir-todos') || {}).checked;
+    var est = function (t) { var e = document.getElementById('subir-estado'); if (e) e.textContent = t; };
+    if (!sel || !m || !nube.usuario) return;
+    var lista = Array.prototype.slice.call(files), hechos = 0, fallos = 0;
+    function siguiente() {
+      if (!lista.length) {
+        guardarTodo(); pintar();
+        est(hechos + (hechos === 1 ? ' canción subida' : ' canciones subidas') + (fallos ? ' · ' + fallos + ' con error' : '') + ' ✓');
+        return;
+      }
+      var f = lista.shift();
+      if (f.size > 50 * 1024 * 1024) { fallos++; siguiente(); return; }
+      est('Subiendo ' + f.name + '… (' + (hechos + fallos + 1) + ' de ' + (hechos + fallos + lista.length + 1) + ')');
+      var ruta = nube.usuario.id + '/' + Date.now() + '-' + nombreSeguro(f.name);
+      nube.sb.storage.from('musica').upload(ruta, f, { contentType: f.type || 'audio/mpeg', upsert: false }).then(function (r) {
+        if (r.error) { fallos++; siguiente(); return; }
+        var item = 'sb:' + ruta + '|' + f.name.replace(/\.[^.]+$/, '').replace(/\|/g, ' ');
+        var destinos = aTodos ? todosLosEjercicios() : [sel];
+        destinos.forEach(function (x) {
+          var o = musicaDe(x.ej, x.grupo);
+          o[m] = (o[m] || []).concat([item]);
+          musicaGuardada[x.clave] = o;
+        });
+        hechos++; siguiente();
+      });
+    }
+    siguiente();
+  }
+  // Quita un archivo del mood abierto; si ya no se usa en ningún sitio, lo borra de la nube
+  function quitarArchivo(item) {
+    var sel = todosLosEjercicios()[st.cfgSel], m = moods[st.cfgMood];
+    if (!sel || !m) return;
+    var o = musicaDe(sel.ej, sel.grupo);
+    o[m] = (o[m] || []).filter(function (x) { return x !== item; });
+    if (!o[m].length) delete o[m];
+    musicaGuardada[sel.clave] = o;
+    var enUso = todosLosEjercicios().some(function (x) {
+      var mm = musicaDe(x.ej, x.grupo);
+      return Object.keys(mm).some(function (k) { return mm[k].indexOf(item) >= 0; });
+    });
+    if (!enUso && nube.sb && nube.usuario) nube.sb.storage.from('musica').remove([rutaArchivo(item)]);
+    guardarTodo(); pintar();
   }
 
   function lineasCfg() {
@@ -552,7 +650,8 @@
   function guardarCfg() {
     var sel = todosLosEjercicios()[st.cfgSel], m = moods[st.cfgMood];
     if (!sel || !m) return;
-    var ls = lineasCfg().filter(esEnlace), o = musicaDe(sel.ej, sel.grupo);
+    var o = musicaDe(sel.ej, sel.grupo);
+    var ls = lineasCfg().filter(esEnlace).concat((o[m] || []).filter(esArchivo));   // los archivos se conservan
     if (ls.length) o[m] = ls; else delete o[m];
     musicaGuardada[sel.clave] = o;
     var ok = guardarTodo();
@@ -689,6 +788,7 @@
     else if (acc === 'config') { reiniciar(); st.pantalla = 'config'; pintar(); }
     else if (acc === 'cfg-ej') { st.cfgSel = +b.getAttribute('data-i'); pintar(); }
     else if (acc === 'cfg-probar') { var sx = todosLosEjercicios()[st.cfgSel]; if (sx) reproducir(enlacesMusica(sx.ej, sx.grupo, moods[st.cfgMood]), '♪ Prueba · ' + (moods[st.cfgMood] || '')); }
+    else if (acc === 'archivo-quitar') { quitarArchivo(b.getAttribute('data-item')); }
     else if (acc === 'cfg-borrar') { var ta = document.getElementById('cfg-texto'); if (ta) { ta.value = ''; guardarCfg(); } }
     else if (acc === 'cfg-exportar') { exportarCfg(); }
     else if (acc === 'cfg-importar') { document.getElementById('cfg-archivo').click(); }
@@ -704,6 +804,7 @@
   app.addEventListener('input', function (ev) { if (ev.target.id === 'cfg-texto') guardarCfg(); });
   app.addEventListener('change', function (ev) {
     if (ev.target.id === 'cfg-archivo' && ev.target.files && ev.target.files[0]) importarCfg(ev.target.files[0]);
+    if (ev.target.id === 'subir-audio' && ev.target.files && ev.target.files.length) subirArchivos(ev.target.files);
   });
 
   // Esc cierra la ventana de mood · Enter añade un mood nuevo

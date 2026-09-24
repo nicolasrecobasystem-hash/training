@@ -39,3 +39,6 @@ Nube (Supabase)
   enlace de acceso". Abre el enlace del correo en ese mismo navegador. Desde entonces
   moods, música y último mood se guardan en la nube y aparecen en todos tus dispositivos.
 - Proyecto: idjlewvzuzqywthrwibv (tabla ajustes_entreno).
+- Tus canciones (MP3, M4A...): en Configuración, con la sesión iniciada, elige ejercicio
+  y mood y pulsa "Subir canciones". Se guardan en un almacén privado de Supabase
+  (bucket "musica"); solo tú puedes oírlas. Máx. 50 MB por archivo.
