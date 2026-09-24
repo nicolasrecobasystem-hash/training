@@ -540,22 +540,38 @@
     var NAR = '#F2913D', APAG = '#4A5059';
     function col(k) { return a === k ? NAR : APAG; }
     function txt(k) { return a === k ? NAR : '#9EA3AA'; }
+    // Animación de lo que se usa: dos ondas que se expanden + flecha que empuja hacia el punto
     function halo(k, cx, cy) {
-      return a === k ? '<circle cx="' + cx + '" cy="' + cy + '" r="12" fill="' + NAR + '" opacity=".22"><animate attributeName="r" values="10;17;10" dur="1.8s" repeatCount="indefinite"/></circle>' : '';
+      if (a !== k) return '';
+      function onda(ini) {
+        return '<circle cx="' + cx + '" cy="' + cy + '" r="8" stroke="' + NAR + '" stroke-width="2.5" fill="none" opacity="0">' +
+          '<animate attributeName="r" values="8;24" dur="1.6s" begin="' + ini + 's" repeatCount="indefinite"/>' +
+          '<animate attributeName="opacity" values=".9;0" dur="1.6s" begin="' + ini + 's" repeatCount="indefinite"/></circle>';
+      }
+      return onda(0) + onda(0.8);
+    }
+    function flecha(k, cy) {
+      if (a !== k) return '';
+      return '<path d="M46 ' + cy + ' l9 -7 v14 z" fill="' + NAR + '">' +
+        '<animateTransform attributeName="transform" type="translate" values="4 0;-2 0;4 0" dur=".9s" repeatCount="indefinite"/></path>';
     }
     var f = 'font-family="IBM Plex Mono, Consolas, monospace"';
     function etiqueta(k, y, nombre, sub) {
       return '<text x="68" y="' + y + '" fill="' + txt(k) + '" ' + f + ' font-size="12" font-weight="600" letter-spacing=".5">' + nombre + '</text>' +
         (sub ? '<text x="68" y="' + (y + 14) + '" fill="' + (a === k ? NAR : '#7C828A') + '" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="11">' + sub + '</text>' : '');
     }
-    function punto(k, cy) { return halo(k, 32, cy) + '<circle cx="32" cy="' + cy + '" r="8" fill="' + col(k) + '"/>'; }
+    function punto(k, cy) {
+      return halo(k, 32, cy) + '<circle cx="32" cy="' + cy + '" r="8" fill="' + col(k) + '">' +
+        (a === k ? '<animate attributeName="r" values="7;10;7" dur=".9s" repeatCount="indefinite"/>' : '') + '</circle>' + flecha(k, cy);
+    }
     var barraCol = a === 'barra' ? NAR : (a ? '#9EA3AA' : '#F4F1EA');
     return '<svg viewBox="0 0 150 380" fill="none" role="img" aria-label="Tu pared: barra arriba y anclas alta, media y baja' + (a ? '; este ejercicio usa: ' + ANCLAS[a] : '; este ejercicio no usa ancla') + '">' +
       '<rect x="6" y="8" width="52" height="352" rx="6" stroke="#4A5059" stroke-width="2"/>' +
       '<line x1="0" y1="362" x2="150" y2="362" stroke="#4A5059" stroke-width="2"/>' +
-      (a === 'barra' ? '<rect x="8" y="16" width="48" height="26" rx="6" fill="' + NAR + '" opacity=".18"><animate attributeName="opacity" values=".08;.3;.08" dur="1.8s" repeatCount="indefinite"/></rect>' : '') +
+      (a === 'barra' ? '<rect x="8" y="16" width="48" height="26" rx="6" fill="' + NAR + '" opacity=".2"><animate attributeName="opacity" values=".05;.45;.05" dur=".9s" repeatCount="indefinite"/></rect>' +
+        '<rect x="8" y="16" width="48" height="26" rx="6" stroke="' + NAR + '" stroke-width="2" fill="none"><animate attributeName="opacity" values="1;.2;1" dur=".9s" repeatCount="indefinite"/></rect>' : '') +
       '<g stroke="' + barraCol + '" stroke-width="5" stroke-linecap="round"><line x1="13" y1="34" x2="51" y2="34"/><line x1="22" y1="34" x2="22" y2="24"/><line x1="42" y1="34" x2="42" y2="24"/></g>' +
-      halo('mosqueton', 32, 43) + '<circle cx="32" cy="43" r="4" stroke="' + (a === 'mosqueton' ? NAR : '#9EA3AA') + '" stroke-width="2.5"/>' +
+      halo('mosqueton', 32, 43) + '<circle cx="32" cy="43" r="4" stroke="' + (a === 'mosqueton' ? NAR : '#9EA3AA') + '" stroke-width="2.5"/>' + flecha('mosqueton', 43) +
       etiqueta('barra', 32, 'BARRA', '') +
       '<text x="68" y="48" fill="' + (a === 'mosqueton' ? NAR : '#7C828A') + '" ' + f + ' font-size="10"' + (a === 'mosqueton' ? ' font-weight="600"' : '') + '>mosquetón</text>' +
       punto('alta', 120) + etiqueta('alta', 118, 'ALTA', 'altura oreja') +
