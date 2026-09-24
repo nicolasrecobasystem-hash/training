@@ -1431,7 +1431,7 @@
   if (!luces || typeof luces !== 'object') luces = { activas: false, devs: [], brillo: 0 };
   if (!Array.isArray(luces.devs)) luces.devs = [];
   var COLOR_FASE = { prep: 0x8000FF, trabajo: 0xFF0000, descanso: 0x0000FF, hecho: 0xFFFFFF };   // morado · rojo · azul · blanco
-  var BRILLO_FASE = { trabajo: 100, descanso: 50 };   // las demás fases usan el brillo de la pestaña Luces
+  var BRILLO_FASE = { prep: 100, trabajo: 100, descanso: 50, hecho: 100 };
   var NOMBRE_FASE = { prep: 'Preparación', trabajo: 'Trabajo', descanso: 'Descanso', hecho: 'Completado' };
   var lucesEstado = { encontradas: null, msg: '', buscando: false, ultimaFase: '', encendidas: false };
   function guardarLuces() { escribirLS(LS_LUCES, luces); subirNube(); }
@@ -1487,8 +1487,7 @@
       '<button type="button" class="btn-sec" data-acc="luces-buscar"' + (lucesEstado.buscando ? ' disabled' : '') + '>' + (lucesEstado.buscando ? 'Buscando…' : '⟳ Buscar mis luces') + '</button></div>' +
       '<div class="luces-cuerpo"><div class="luces-lista"><div class="cfg-lbl">LUCES QUE SE USAN</div>' + filas + '</div>' +
       '<div class="luces-lado"><div class="cfg-lbl">PROBAR UN COLOR</div><div class="luz-muestras">' + muestras + '</div>' +
-      '<div class="cfg-lbl">BRILLO</div><label class="luz-brillo"><input type="range" id="luces-brillo" min="0" max="100" step="5" value="' + brillo + '"><span id="luces-brillo-v" class="mono">' + (brillo ? brillo + '%' : 'sin cambiar') + '</span></label>' +
-      '<p class="luces-nota">Preparación morado · trabajo rojo al 100% · descanso azul al 50% · al completar, blanco. El brillo de aquí se usa en preparación y al completar. Govee limita las órdenes por minuto: solo se manda una al cambiar de fase.</p></div></div>' +
+      '<p class="luces-nota">Preparación morado · trabajo rojo · descanso azul al 50% · al completar, blanco. Todo al 100% salvo el descanso. Govee limita las órdenes por minuto: solo se manda una al cambiar de fase.</p></div></div>' +
       '<div class="luces-msg aviso-cfg">' + esc(lucesEstado.msg) + '</div></div>';
   }
 
