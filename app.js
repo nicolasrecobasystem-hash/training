@@ -538,16 +538,24 @@
   function htmlSemana() {
     var d = DIAS[st.sel];
     var info = INFO_GRUPO[d.grupo] || {};
+    // Fecha de hoy y fecha de cada día de esta semana (de domingo a sábado)
+    var ahora = new Date();
+    var fechaHoy = ahora.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    fechaHoy = fechaHoy.charAt(0).toUpperCase() + fechaHoy.slice(1);
+    function fechaDia(i) {
+      var f = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate() - ahora.getDay() + i);
+      return f.getDate() + ' ' + f.toLocaleDateString('es-ES', { month: 'short' }).replace('.', '');
+    }
     var dias = DIAS.map(function (x, i) {
       var cls = 'dia' + (i === st.sel ? ' activo' : '') + (i === hoy ? ' hoy' : '');
       return '<button type="button" class="' + cls + '" data-acc="dia" data-i="' + i + '" aria-pressed="' + (i === st.sel) + '" aria-label="' + esc(x.nombre + ', ' + x.grupo) + '">' +
         '<div class="cab"><div class="letra">' + esc(x.letra) + '</div>' + (i === hoy ? '<div class="etq-hoy">HOY</div>' : '') + '</div>' +
-        '<div><div class="nombre">' + esc(x.nombre) + '</div><div class="grupo">' + esc(x.grupo) + '</div></div></button>';
+        '<div><div class="nombre">' + esc(x.nombre) + ' <span class="fecha-dia">' + esc(fechaDia(i)) + '</span></div><div class="grupo">' + esc(x.grupo) + '</div></div></button>';
     }).join('');
     function campo(k, v) { return '<div class="campo"><div class="k">' + k + '</div><div class="v">' + esc(v || '[Por definir]') + '</div></div>'; }
     return '<div class="pantalla semana">' +
       '<div class="fila-sup"><div><div class="antetitulo">ELIGE UN DÍA</div><h1 class="titulo">MI SEMANA</h1></div>' +
-      '<div class="fila-der"><div class="leyenda"><i></i>HOY</div>' +
+      '<div class="fila-der"><div class="fecha-hoy">' + esc(fechaHoy) + '</div><div class="leyenda"><i></i>HOY</div>' +
       '<button type="button" class="btn-sec" data-acc="config">⚙ Configuración</button></div></div>' +
       '<div class="dias">' + dias + '</div>' +
       '<div class="detalle"><div class="izq"><div class="antetitulo">' + esc(d.nombre.toUpperCase()) + '</div><div class="grande">' + esc(d.grupo.toUpperCase()) + '</div></div>' +
