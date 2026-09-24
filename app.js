@@ -25,6 +25,8 @@
     return b && b.length ? b : [{ titulo: 'Calentamiento', ejercicios: CALENTAMIENTOS[g] || [] }];
   }
   function bloques() { return bloquesDe(DIAS[st.sel].grupo); }
+  // Ejercicios reales de un bloque (en datos.js un hueco se marca con null: sale como [Por definir])
+  function ejs(b) { return (b.ejercicios || []).filter(Boolean); }
   function bloqueActual() { return bloques()[st.bloque] || bloques()[0]; }
   function lista() { return bloqueActual().ejercicios || []; }
   function ejActual() { return lista()[st.hueco]; }
@@ -163,7 +165,7 @@
     if (typeof BLOQUES !== 'undefined') Object.keys(BLOQUES).forEach(function (g) { if (grupos.indexOf(g) < 0) grupos.push(g); });
     grupos.forEach(function (g) {
       bloquesDe(g).forEach(function (b) {
-        (b.ejercicios || []).forEach(function (e) {
+        ejs(b).forEach(function (e) {
           out.push({ grupo: g, bloque: b.titulo, ej: e, clave: g + '|' + e.nombre });
         });
       });
@@ -311,7 +313,7 @@
   function claveFecha(f) {
     return f.getFullYear() + '-' + (f.getMonth() < 9 ? '0' : '') + (f.getMonth() + 1) + '-' + (f.getDate() < 10 ? '0' : '') + f.getDate();
   }
-  function totalDe(g) { var n = 0; bloquesDe(g).forEach(function (b) { n += (b.ejercicios || []).length; }); return n; }
+  function totalDe(g) { var n = 0; bloquesDe(g).forEach(function (b) { n += ejs(b).length; }); return n; }
   function registroDe(k) { var r = historial[k]; return r && Array.isArray(r.hechos) ? r : null; }
   function estaHecho(ex, g) { var r = registroDe(claveFecha(new Date())); return !!(ex && r && r.hechos.indexOf(g + '|' + ex.nombre) >= 0); }
   function guardarHistorial() { escribirLS(LS_HIST, historial); subirNube(); }
@@ -572,7 +574,7 @@
   // Nº de ejercicios del día a partir de sus bloques (ej. "10 · 4 bloques")
   function cuentaEjercicios(g) {
     var bl = bloquesDe(g), n = 0;
-    bl.forEach(function (b) { n += (b.ejercicios || []).length; });
+    bl.forEach(function (b) { n += ejs(b).length; });
     return n ? n + (bl.length > 1 ? ' · ' + bl.length + ' bloques' : '') : '';
   }
   function htmlSemana() {
@@ -777,9 +779,9 @@
     fsTxt = fsTxt.charAt(0).toUpperCase() + fsTxt.slice(1);
     var lista = '';
     bloquesDe(gs).forEach(function (b) {
-      if (!(b.ejercicios || []).length) return;
+      if (!ejs(b).length) return;
       lista += '<div class="cfg-grupo">' + esc(b.titulo.toUpperCase()) + '</div>';
-      b.ejercicios.forEach(function (e) {
+      ejs(b).forEach(function (e) {
         var ok = rs && rs.hechos.indexOf(gs + '|' + e.nombre) >= 0;
         lista += '<div class="cal-ej' + (ok ? ' ok' : '') + '"><span class="c">' + (ok ? '✓' : '○') + '</span>' + esc(e.nombre) + '</div>';
       });

@@ -146,6 +146,42 @@ const CALENTAMIENTOS = {
       ],
       temporizador: { series: 2, reps: 10, descanso: 30, preparacion: 5 }
     }
+  ],
+  // VIERNES (Pecho) · calentamiento: los ejercicios 1 y 2 están por definir (null = hueco)
+  Pecho: [
+    null,
+    null,
+    {
+      nombre: 'Flexiones lentas',
+      indicacion: 'Baja en 3 s con el cuerpo recto como una tabla.',
+      ritmo: '3 s abajo · 1 s arriba',
+      dosis: '1 × 8', dibujo: 'flexiones', anclaNota: 'Sin ancla: en el suelo',
+      claves: [
+        ['Arriba', 'Brazos estirados, manos bajo los hombros, cuerpo como una tabla.'],
+        ['Bajar', 'En 3 s, con los codos a unos 45° del cuerpo.'],
+        ['Abajo', 'El pecho casi toca el suelo, sin apoyarte.'],
+        ['Subir', 'En 1 s soltando el aire, hasta estirar los brazos.']
+      ],
+      agarre: {
+        titulo: 'MONTAJE', dibujo: 'bienMalFlexiones',
+        puntos: [
+          ['Manos', 'Un poco más abiertas que los hombros.'],
+          ['Dedos', 'Hacia delante y la palma bien apoyada.'],
+          ['Cuerpo', 'Pies juntos y abdomen apretado.']
+        ]
+      },
+      errores: [
+        ['Cadera hundida', 'Cuerpo recto de la cabeza a los talones: la zona lumbar sufre.'],
+        ['Codos en cruz', 'Abiertos a 90° castigan el hombro. Llévalos a 45°.'],
+        ['Media repetición', 'Recorrido completo, pecho casi al suelo.'],
+        ['Cabeza caída', 'Cuello alineado con la espalda.']
+      ],
+      info: [
+        ['Para qué sirve', 'Prepara la técnica y la articulación antes de cargar con la banda.'],
+        ['Nota', 'No es una serie de fuerza: deja el esfuerzo para el bloque principal.']
+      ],
+      temporizador: { series: 1, reps: 8, descanso: 30, preparacion: 5 }
+    }
   ]
 };
 
@@ -158,6 +194,9 @@ const CALENTAMIENTOS = {
 //  (el de "descanso" sale marcado por defecto).
 // ==========================================================
 const BLOQUES = {
+  Pecho: [
+    { titulo: 'Calentamiento', ejercicios: CALENTAMIENTOS.Pecho }
+  ],
   Hombro: [
     { titulo: 'Calentamiento', ejercicios: CALENTAMIENTOS.Hombro },
     {
@@ -645,5 +684,30 @@ const DIBUJOS = {
 <svg viewBox="0 0 280 140" fill="none" role="img" aria-label="De frente. Bien: codo pegado con la toalla y antebrazo girando hacia fuera. Mal: el codo se despega para ganar recorrido"><text x="70" y="14" text-anchor="middle" fill="#7FB2E5" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✓ CODO PEGADO</text><text x="210" y="14" text-anchor="middle" fill="#F2913D" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✕ CODO FUERA</text><line x1="140" y1="10" x2="140" y2="132" stroke="#2E3238" stroke-width="2"/><line x1="24" y1="136" x2="116" y2="136" stroke="#4A5059" stroke-width="2"/><line x1="164" y1="136" x2="256" y2="136" stroke="#4A5059" stroke-width="2"/><line x1="14" y1="30" x2="14" y2="136" stroke="#4A5059" stroke-width="2"/><line x1="154" y1="30" x2="154" y2="136" stroke="#4A5059" stroke-width="2"/><line x1="16" y1="82" x2="106" y2="82" stroke="#F2913D" stroke-width="2.5"/><line x1="156" y1="82" x2="252" y2="62" stroke="#F2913D" stroke-width="2.5"/><g stroke="#F4F1EA" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><line x1="60" y1="50" x2="60" y2="106"/><polyline points="53,134 60,106 67,134"/><polyline points="50,56 70,56"/><line x1="50" y1="56" x2="46" y2="96"/><polyline points="70,56 72,82 106,82"/></g><circle cx="60" cy="40" r="9" fill="#F4F1EA"/><circle cx="56.76" cy="39.1" r="1.3" fill="#16181B"/><circle cx="63.24" cy="39.1" r="1.3" fill="#16181B"/><rect x="73" y="68" width="7" height="12" rx="2" fill="#7FB2E5"/><g stroke="#F4F1EA" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><line x1="200" y1="50" x2="200" y2="106"/><polyline points="193,134 200,106 207,134"/><polyline points="190,56 210,56"/><line x1="190" y1="56" x2="186" y2="96"/><polyline points="210,56 230,76 252,62"/></g><circle cx="200" cy="40" r="9" fill="#F4F1EA"/><circle cx="196.76" cy="39.1" r="1.3" fill="#16181B"/><circle cx="203.24" cy="39.1" r="1.3" fill="#16181B"/></svg>`,
 
   bienMalDominadas: `
-<svg viewBox="0 0 280 140" fill="none" role="img" aria-label="Bien: codos rectos, solo se mueven hombros y omóplatos. Mal: codos doblados, eso es media dominada"><text x="70" y="14" text-anchor="middle" fill="#7FB2E5" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✓ CODOS RECTOS</text><text x="210" y="14" text-anchor="middle" fill="#F2913D" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✕ CODOS DOBLADOS</text><line x1="140" y1="10" x2="140" y2="132" stroke="#2E3238" stroke-width="2"/><line x1="24" y1="136" x2="116" y2="136" stroke="#4A5059" stroke-width="2"/><line x1="164" y1="136" x2="256" y2="136" stroke="#4A5059" stroke-width="2"/><line x1="36" y1="26" x2="104" y2="26" stroke="#9EA3AA" stroke-width="4" stroke-linecap="round"/><line x1="176" y1="26" x2="244" y2="26" stroke="#9EA3AA" stroke-width="4" stroke-linecap="round"/><g stroke="#F4F1EA" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><polyline points="58,26 60,62 80,62 82,26"/><line x1="70" y1="62" x2="70" y2="106"/><polyline points="63,130 70,106 77,130"/><polyline points="196,26 184,46 200,62 220,62 236,46 224,26"/><line x1="210" y1="62" x2="210" y2="106"/><polyline points="203,130 210,106 217,130"/></g><circle cx="70" cy="52" r="9" fill="#F4F1EA"/><circle cx="66.76" cy="51.1" r="1.3" fill="#16181B"/><circle cx="73.24" cy="51.1" r="1.3" fill="#16181B"/><circle cx="210" cy="44" r="9" fill="#F4F1EA"/><circle cx="206.76" cy="43.1" r="1.3" fill="#16181B"/><circle cx="213.24" cy="43.1" r="1.3" fill="#16181B"/></svg>`
+<svg viewBox="0 0 280 140" fill="none" role="img" aria-label="Bien: codos rectos, solo se mueven hombros y omóplatos. Mal: codos doblados, eso es media dominada"><text x="70" y="14" text-anchor="middle" fill="#7FB2E5" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✓ CODOS RECTOS</text><text x="210" y="14" text-anchor="middle" fill="#F2913D" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✕ CODOS DOBLADOS</text><line x1="140" y1="10" x2="140" y2="132" stroke="#2E3238" stroke-width="2"/><line x1="24" y1="136" x2="116" y2="136" stroke="#4A5059" stroke-width="2"/><line x1="164" y1="136" x2="256" y2="136" stroke="#4A5059" stroke-width="2"/><line x1="36" y1="26" x2="104" y2="26" stroke="#9EA3AA" stroke-width="4" stroke-linecap="round"/><line x1="176" y1="26" x2="244" y2="26" stroke="#9EA3AA" stroke-width="4" stroke-linecap="round"/><g stroke="#F4F1EA" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><polyline points="58,26 60,62 80,62 82,26"/><line x1="70" y1="62" x2="70" y2="106"/><polyline points="63,130 70,106 77,130"/><polyline points="196,26 184,46 200,62 220,62 236,46 224,26"/><line x1="210" y1="62" x2="210" y2="106"/><polyline points="203,130 210,106 217,130"/></g><circle cx="70" cy="52" r="9" fill="#F4F1EA"/><circle cx="66.76" cy="51.1" r="1.3" fill="#16181B"/><circle cx="73.24" cy="51.1" r="1.3" fill="#16181B"/><circle cx="210" cy="44" r="9" fill="#F4F1EA"/><circle cx="206.76" cy="43.1" r="1.3" fill="#16181B"/><circle cx="213.24" cy="43.1" r="1.3" fill="#16181B"/></svg>`,
+
+  flexiones: `
+<svg viewBox="0 200 240 220" fill="none" role="img" aria-label="Flexión de perfil: desde brazos estirados y cuerpo recto como una tabla, baja en 3 segundos hasta que el pecho casi toca el suelo con los codos hacia atrás, y sube en 1 segundo">
+<line x1="10" y1="404" x2="230" y2="404" stroke="#4A5059" stroke-width="2"/>
+<g stroke="#F4F1EA" stroke-linecap="round" stroke-linejoin="round">
+<polyline points="80,330 215,396" stroke-width="13"><animate attributeName="points" values="80,330 215,396;86,380 215,396;86,380 215,396;80,330 215,396;80,330 215,396" keyTimes="0;0.652;0.717;0.935;1" dur="4.6s" repeatCount="indefinite"/></polyline>
+<polyline points="80,402 80,366 80,330" stroke-width="11"><animate attributeName="points" values="80,402 80,366 80,330;80,402 108,380 86,380;80,402 108,380 86,380;80,402 80,366 80,330;80,402 80,366 80,330" keyTimes="0;0.652;0.717;0.935;1" dur="4.6s" repeatCount="indefinite"/></polyline>
+</g>
+<g><animateTransform attributeName="transform" type="translate" values="0 0;5 48;5 48;0 0;0 0" keyTimes="0;0.652;0.717;0.935;1" dur="4.6s" repeatCount="indefinite"/>
+<polygon points="44,318 35,324 44,328" fill="#F4F1EA"/><circle cx="60" cy="318" r="19" fill="#F4F1EA"/></g>
+<text x="120" y="244" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">cuerpo recto como una tabla</text>
+<text x="120" y="260" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">3 s abajo · 1 s arriba</text>
+<text x="120" y="222" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Mono, Consolas, monospace" font-size="11">DE PERFIL</text>
+</svg>`,
+
+  bienMalFlexiones: `
+<svg viewBox="0 0 280 140" fill="none" role="img" aria-label="De perfil. Bien: cuerpo recto de la cabeza a los talones. Mal: cadera hundida, la zona lumbar sufre"><text x="70" y="14" text-anchor="middle" fill="#7FB2E5" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✓ UNA TABLA</text><text x="210" y="14" text-anchor="middle" fill="#F2913D" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✕ CADERA HUNDIDA</text><line x1="140" y1="10" x2="140" y2="132" stroke="#2E3238" stroke-width="2"/><line x1="20" y1="120" x2="120" y2="120" stroke="#4A5059" stroke-width="2"/><line x1="160" y1="120" x2="260" y2="120" stroke="#4A5059" stroke-width="2"/>
+<g stroke="#F4F1EA" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+<line x1="40" y1="118" x2="40" y2="88"/><line x1="40" y1="88" x2="116" y2="116"/>
+<line x1="180" y1="118" x2="180" y2="88"/><polyline points="180,88 216,110 256,116"/></g>
+<line x1="40" y1="88" x2="116" y2="116" stroke="#7FB2E5" stroke-width="1.5" stroke-dasharray="3 4" opacity=".7"/>
+<line x1="180" y1="88" x2="256" y2="116" stroke="#9EA3AA" stroke-width="1.5" stroke-dasharray="3 4" opacity=".7"/>
+<polygon points="24,79 18,83 24,86" fill="#F4F1EA"/><circle cx="32" cy="80" r="9" fill="#F4F1EA"/>
+<polygon points="164,79 158,83 164,86" fill="#F4F1EA"/><circle cx="172" cy="80" r="9" fill="#F4F1EA"/>
+</svg>`
 };

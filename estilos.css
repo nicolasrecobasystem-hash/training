@@ -322,6 +322,6 @@ button:disabled{cursor:not-allowed}
 .cal-stats b{font-family:var(--display);font-size:30px;font-weight:400;line-height:1;color:var(--acento)}
 .cal-stats span{font-size:12px;color:var(--suave)}
 /* Relojes Miami · Madrid, pequeños y siempre visibles */
-#relojes{position:absolute;top:7px;left:50%;transform:translateX(-50%);z-index:6;display:flex;gap:8px;align-items:center;font-family:var(--mono);font-size:11px;letter-spacing:.08em;color:var(--tenue);pointer-events:none;white-space:nowrap}
-#relojes b{font-weight:500;color:var(--suave)}
+#relojes{position:absolute;top:8px;left:50%;transform:translateX(-50%);z-index:6;display:flex;gap:10px;align-items:center;font-family:var(--mono);font-size:13px;letter-spacing:.08em;color:var(--suave);pointer-events:none;white-space:nowrap}
+#relojes b{font-weight:600;color:var(--texto,#F4F1EA)}
 #relojes .sep{opacity:.6}
