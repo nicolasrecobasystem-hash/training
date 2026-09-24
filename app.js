@@ -24,7 +24,9 @@
     var b = (typeof BLOQUES !== 'undefined' && BLOQUES[g]) || null;
     return b && b.length ? b : [{ titulo: 'Calentamiento', ejercicios: CALENTAMIENTOS[g] || [] }];
   }
-  function bloques() { return bloquesDe(DIAS[st.sel].grupo); }
+  // Clave de la rutina de un día: su 'rutina' si la tiene (dos días con el mismo grupo), si no su grupo
+  function claveDe(d) { return d.rutina || d.grupo; }
+  function bloques() { return bloquesDe(claveDe(DIAS[st.sel])); }
   // Ejercicios reales de un bloque (en datos.js un hueco se marca con null: sale como [Por definir])
   function ejs(b) { return (b.ejercicios || []).filter(Boolean); }
   function bloqueActual() { return bloques()[st.bloque] || bloques()[0]; }
@@ -38,7 +40,7 @@
   // del mood elegido y de la intensidad del ejercicio.
   var LS_MOODS = 'miSemana.moods.v1', LS_BIBLIO = 'miSemana.biblioteca.v1', LS_INTENS = 'miSemana.intensidad.v1';
   var INTENSIDADES = ['', 'Baja', 'Media', 'Alta'];
-  var INTENSIDAD_BLOQUE = { 'Calentamiento': 1, 'Principal': 3, 'Posterior y estabilidad': 2, 'Final': 2, 'Final en la barra': 2 };   // por defecto; se cambia por ejercicio en Configuración
+  var INTENSIDAD_BLOQUE = { 'Calentamiento': 1, 'Principal': 3, 'Principal · Fuerza': 3, 'Principal · Volumen': 3, 'Principal · Dominadas': 3, 'Accesorios': 2, 'Complementarios': 2, 'Posterior y estabilidad': 2, 'Final': 2, 'Final en la barra': 2 };   // por defecto; se cambia por ejercicio en Configuración
   function leerLS(k, def) { try { var v = JSON.parse(localStorage.getItem(k)); return v == null ? def : v; } catch (e) { return def; } }
   function escribirLS(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } }
   function esEnlace(x) { return /^https?:\/\/\S+$/i.test(x); }
@@ -147,7 +149,7 @@
   // No se repite en las series siguientes; con "♪ Otra canción" cambias cuando quieras.
   var musicaSonandoDe = '';
   function arrancarMusica(forzar) {
-    var ex = ejActual(), g = DIAS[st.sel].grupo;
+    var ex = ejActual(), g = claveDe(DIAS[st.sel]);
     if (!ex) return;
     var k = g + '|' + ex.nombre;
     if (!forzar && musicaSonandoDe === k) return;
@@ -538,8 +540,8 @@
     if (st.serie < c.series) fase('descanso', descansoActual());
     else {
       st.fase = 'hecho'; st.corriendo = false; st.quedan = 0;
-      var yaEstaba = estaHecho(ejActual(), DIAS[st.sel].grupo);
-      marcarHecho(ejActual(), DIAS[st.sel].grupo, true);
+      var yaEstaba = estaHecho(ejActual(), claveDe(DIAS[st.sel]));
+      marcarHecho(ejActual(), claveDe(DIAS[st.sel]), true);
       if (yaEstaba) pintarTemporizador(); else pintar();
     }
   }
@@ -581,7 +583,7 @@
   }
   function htmlSemana() {
     var d = DIAS[st.sel];
-    var info = INFO_GRUPO[d.grupo] || {};
+    var info = INFO_GRUPO[claveDe(d)] || INFO_GRUPO[d.grupo] || {};
     // Fecha de hoy y fecha de cada día de esta semana (de domingo a sábado)
     var ahora = new Date();
     var fechaHoy = ahora.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
@@ -610,8 +612,8 @@
       '<button type="button" class="btn-sec" data-acc="calendario">📅 Calendario</button>' +
       '<button type="button" class="btn-sec" data-acc="config">⚙ Configuración</button></div></div>' +
       '<div class="dias">' + dias + '</div>' +
-      '<div class="detalle"><div class="izq"><div class="antetitulo">' + esc(d.nombre.toUpperCase()) + '</div><div class="grande">' + esc(d.grupo.toUpperCase()) + '</div></div>' +
-      '<div class="campos">' + campo('DURACIÓN', info.duracion) + campo('EJERCICIOS', info.ejercicios || cuentaEjercicios(d.grupo)) + campo('MATERIAL', info.material) + campo('ENFOQUE', info.enfoque) + '</div>' +
+      '<div class="detalle"><div class="izq"><div class="antetitulo">' + esc(d.nombre.toUpperCase() + (d.rutina && d.rutina.indexOf(' · ') > 0 ? ' · ' + d.rutina.split(' · ')[1].toUpperCase() : '')) + '</div><div class="grande">' + esc(d.grupo.toUpperCase()) + '</div></div>' +
+      '<div class="campos">' + campo('DURACIÓN', info.duracion) + campo('EJERCICIOS', info.ejercicios || cuentaEjercicios(claveDe(d))) + campo('MATERIAL', info.material) + campo('ENFOQUE', info.enfoque) + '</div>' +
       '<button type="button" class="btn-start" data-acc="start" aria-label="Empezar el entrenamiento">START</button></div>' +
       '</div>';
   }
@@ -680,7 +682,7 @@
     var nMenu = Math.max(1, l.length);
     var menu = Array.apply(null, Array(nMenu)).map(function (_, i) {
       var e = l[i];
-      var hc = estaHecho(e, d.grupo);
+      var hc = estaHecho(e, claveDe(d));
       var cls = 'hueco' + (e ? ' lleno' : '') + (i === st.hueco ? ' activo' : '') + (hc ? ' hecho' : '');
       return '<button type="button" class="' + cls + '" data-acc="hueco" data-i="' + i + '" aria-pressed="' + (i === st.hueco) + '">' +
         '<div class="num">' + (hc ? '✓' : (i + 1)) + '</div>' +
@@ -696,10 +698,10 @@
       p1 = '<div class="p-cab"><div class="p-nombre">' + esc(ex.nombre.toUpperCase()) + '</div><div class="p-dosis">' + esc(ex.dosis) +
         (hayInfo ? '<button type="button" class="btn-info' + (st.verInfo ? ' on' : '') + '" data-acc="info" aria-pressed="' + !!st.verInfo + '" aria-label="Qué trabaja y cómo progresar">ⓘ</button>' : '') + '</div></div>' +
         '<div class="p-ind"><span>' + esc(ex.indicacion || '') + '</span>' +
-        (enlacesMusica(ex, d.grupo, st.mood).length ? '<button type="button" class="btn-musica" data-acc="musica" aria-label="Poner otra canción de este ejercicio">' +
-          (musicaSonandoDe === d.grupo + '|' + ex.nombre ? '♪ Otra canción' : '♪ Música') + '</button>' : '') + '</div>' +
+        (enlacesMusica(ex, claveDe(d), st.mood).length ? '<button type="button" class="btn-musica" data-acc="musica" aria-label="Poner otra canción de este ejercicio">' +
+          (musicaSonandoDe === claveDe(d) + '|' + ex.nombre ? '♪ Otra canción' : '♪ Música') + '</button>' : '') + '</div>' +
         '<div class="p-fila">' + (ex.ritmo ? '<div class="p-ritmo">RITMO · ' + esc(ex.ritmo.toUpperCase()) + '</div>' : '<span></span>') +
-          (estaHecho(ex, d.grupo)
+          (estaHecho(ex, claveDe(d))
             ? '<button type="button" class="btn-hecho on" data-acc="hecho" aria-pressed="true" title="Pulsa para desmarcar">✓ Hecho hoy</button>'
             : '<button type="button" class="btn-hecho" data-acc="hecho" aria-pressed="false">Marcar hecho</button>') + '</div>' +
         (st.verInfo && hayInfo
@@ -764,19 +766,19 @@
     for (var i = 0; i < 42; i++) {
       var f = new Date(ini.getFullYear(), ini.getMonth(), ini.getDate() + i), k = claveFecha(f);
       var fuera = f.getMonth() !== m.getMonth(), r = registroDe(k);
-      var g = r ? r.grupo : DIAS[f.getDay()].grupo, tot = r ? (r.total || totalDe(g)) : totalDe(g);
+      var g = r ? r.grupo : claveDe(DIAS[f.getDay()]), tot = r ? (r.total || totalDe(g)) : totalDe(g);
       var n = r ? r.hechos.length : 0, estado = !r || !n ? (r && r.terminado ? 'ok' : '') : (n >= tot || r.terminado ? 'ok' : 'medio');
       if (!fuera && estado) entrenosMes++;
       var pasado = k < hoyK;
       var cls = 'cal-dia' + (fuera ? ' fuera' : '') + (k === hoyK ? ' hoy' : '') + (k === st.calSel ? ' sel' : '') +
         (estado ? ' ' + estado : (pasado ? ' vacio-dia' : ''));
       celdas += '<button type="button" class="' + cls + '" data-acc="cal-dia" data-k="' + k + '" aria-pressed="' + (k === st.calSel) + '">' +
-        '<span class="n">' + f.getDate() + '</span><span class="g">' + esc(g) + '</span>' +
+        '<span class="n">' + f.getDate() + '</span><span class="g">' + esc(String(g).split(' · ')[0]) + '</span>' +
         (estado === 'ok' ? '<span class="marca">✓</span>' : estado === 'medio' ? '<span class="marca">' + n + '/' + tot + '</span>' : '') + '</button>';
     }
     // Detalle del día elegido
     var sel = st.calSel || hoyK, ps = sel.split('-'), fs = new Date(+ps[0], +ps[1] - 1, +ps[2]);
-    var rs = registroDe(sel), gs = rs ? rs.grupo : DIAS[fs.getDay()].grupo;
+    var rs = registroDe(sel), gs = rs ? rs.grupo : claveDe(DIAS[fs.getDay()]);
     var fsTxt = fs.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
     fsTxt = fsTxt.charAt(0).toUpperCase() + fsTxt.slice(1);
     var lista = '';
@@ -811,7 +813,7 @@
     return '<div class="velo" data-acc="cerrar-fin"><div class="modal fin" role="dialog" aria-modal="true" aria-labelledby="tit-fin">' +
       '<div class="antetitulo">' + esc(d.nombre.toUpperCase() + ' · ' + d.grupo.toUpperCase()) + '</div>' +
       '<h2 class="titulo-m" id="tit-fin">¡ENTRENO COMPLETADO!</h2>' +
-      '<p class="fin-txt">' + bloquesDe(d.grupo).map(function (b) { return esc(b.titulo); }).join(' · ') + '</p>' +
+      '<p class="fin-txt">' + bloquesDe(claveDe(d)).map(function (b) { return esc(b.titulo); }).join(' · ') + '</p>' +
       '<div class="modal-pie"><button type="button" class="btn-pri" data-acc="cerrar-fin">Volver a la semana</button></div></div></div>';
   }
   function htmlMood() {
@@ -1156,11 +1158,11 @@
     else if (acc === 'info') { st.verInfo = !st.verInfo; pintar(); }
     else if (acc === 'bloque') { irABloque(+b.getAttribute('data-i')); }
     else if (acc === 'terminar') {
-      var kf = claveFecha(new Date()), gf = DIAS[st.sel].grupo, rf = registroDe(kf) || { grupo: gf, hechos: [] };
+      var kf = claveFecha(new Date()), gf = claveDe(DIAS[st.sel]), rf = registroDe(kf) || { grupo: gf, hechos: [] };
       rf.grupo = gf; rf.total = totalDe(gf); rf.terminado = true; historial[kf] = rf; guardarHistorial();
       reiniciar(); cerrarRep(); st.pantalla = 'semana'; st.completado = true; pintar();
     }
-    else if (acc === 'hecho') { var eh = ejActual(), gh = DIAS[st.sel].grupo; marcarHecho(eh, gh, !estaHecho(eh, gh)); pintar(); }
+    else if (acc === 'hecho') { var eh = ejActual(), gh = claveDe(DIAS[st.sel]); marcarHecho(eh, gh, !estaHecho(eh, gh)); pintar(); }
     else if (acc === 'calendario') { reiniciar(); cerrarRep(); st.pantalla = 'calendario'; st.calMes = null; st.calSel = claveFecha(new Date()); pintar(); }
     else if (acc === 'cal-mes') { var cm = calMes(); st.calMes = new Date(cm.getFullYear(), cm.getMonth() + (+b.getAttribute('data-d')), 1); pintar(); }
     else if (acc === 'cal-hoy') { st.calMes = null; st.calSel = claveFecha(new Date()); pintar(); }
@@ -1336,7 +1338,7 @@
     mando.reloj = setTimeout(function () { mando.reloj = null; enviarEstado(); }, espera);
   }
   function estadoParaMando() {
-    var d = DIAS[st.sel], g = d.grupo, bs = bloques(), b = bloqueActual(), l = lista(), ex = ejActual(), c = cfg();
+    var d = DIAS[st.sel], g = claveDe(d), bs = bloques(), b = bloqueActual(), l = lista(), ex = ejActual(), c = cfg();
     var sig = '';
     if (st.pantalla === 'calent') {
       if (l[st.hueco + 1] !== undefined) sig = l[st.hueco + 1] ? l[st.hueco + 1].nombre : '[Por definir]';
@@ -1404,12 +1406,12 @@
       case 'reiniciar': if (enCalent) { reiniciar(); pintarTemporizador(); } break;
       case 'sig': if (enCalent) moverEjercicio(1); break;
       case 'ant': if (enCalent) moverEjercicio(-1); break;
-      case 'hecho': if (enCalent && ejActual()) { var g = DIAS[st.sel].grupo; marcarHecho(ejActual(), g, !estaHecho(ejActual(), g)); pintar(); } break;
+      case 'hecho': if (enCalent && ejActual()) { var g = claveDe(DIAS[st.sel]); marcarHecho(ejActual(), g, !estaHecho(ejActual(), g)); pintar(); } break;
       case 'cancion': if (enCalent) arrancarMusica(true); else if (rep.visible) reproducir(rep.lista, rep.etiqueta); break;
       case 'pausa-musica': pausarMusica(); break;
       case 'terminar':
         if (enCalent) {
-          var kf = claveFecha(new Date()), gf = DIAS[st.sel].grupo, rf = registroDe(kf) || { grupo: gf, hechos: [] };
+          var kf = claveFecha(new Date()), gf = claveDe(DIAS[st.sel]), rf = registroDe(kf) || { grupo: gf, hechos: [] };
           rf.grupo = gf; rf.total = totalDe(gf); rf.terminado = true; historial[kf] = rf; guardarHistorial();
           reiniciar(); cerrarRep(); st.pantalla = 'semana'; st.completado = true; pintar();
         }
