@@ -33,3 +33,9 @@ Música dentro de la web (reproductor embebido)
   pasan solos: usa "Descargar copia" aquí y "Cargar copia" en la web publicada.
 - Botones del reproductor: "⏭ Otra" cambia de canción, "–"/"▢" cambia el tamaño
   y "✕" para la música. Al acabar una canción, pone otra al azar del mismo mood.
+
+Nube (Supabase)
+- En la web publicada, en Configuración, abajo: escribe tu correo y pulsa "Enviarme
+  enlace de acceso". Abre el enlace del correo en ese mismo navegador. Desde entonces
+  moods, música y último mood se guardan en la nube y aparecen en todos tus dispositivos.
+- Proyecto: idjlewvzuzqywthrwibv (tabla ajustes_entreno).

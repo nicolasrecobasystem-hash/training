@@ -163,3 +163,10 @@ button:disabled{cursor:not-allowed}
 .rep-aviso{padding:8px 12px;font-size:13px;line-height:1.35;color:var(--amarillo)}
 .rep-aviso[hidden]{display:none}
 .rep-aviso a{color:var(--azul)}
+/* Último mood elegido y barra de la nube en Configuración */
+.mood.ultimo{border-color:var(--acento)}
+.cfg-nube{flex-shrink:0;min-height:34px;display:flex;align-items:center;flex-wrap:wrap;gap:10px;font-size:13px;color:var(--tenue)}
+.cfg-nube input{height:32px;width:240px;padding:0 12px;background:var(--fondo);border:1px solid var(--linea2);border-radius:8px;color:var(--texto);font-family:var(--sans);font-size:14px}
+.cfg-nube input:focus{outline:3px solid var(--azul);outline-offset:2px}
+.cfg-nube .btn-sec{height:32px;font-size:13px}
+.nube-ok{color:var(--suave)}

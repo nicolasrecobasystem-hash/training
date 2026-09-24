@@ -49,7 +49,14 @@
     Object.keys(viejo || {}).forEach(function (k) { var l = limpiar(viejo[k]); if (l.length) musicaGuardada[k] = { General: l }; });
   }
   function asegurarMoods(o) { Object.keys(o).forEach(function (m) { if (moods.indexOf(m) < 0) moods.push(m); }); }
-  function guardarTodo() { var a = escribirLS(LS_MUSICA, musicaGuardada), b = escribirLS(LS_MOODS, moods); return a && b; }
+  // Último mood elegido ('' = Ninguno, null = nunca elegido): sale marcado al pulsar START
+  var LS_ULTIMO = 'miSemana.ultimoMood.v1';
+  var ultimoMood = leerLS(LS_ULTIMO, null);
+  function guardarTodo() {
+    var a = escribirLS(LS_MUSICA, musicaGuardada), b = escribirLS(LS_MOODS, moods);
+    subirNube();   // y a la nube, si hay sesión
+    return a && b;
+  }
   // { mood: [enlaces] } de un ejercicio
   function musicaDe(e, grupo) {
     if (!e) return {};
@@ -184,6 +191,103 @@
   function cerrarRep() {
     try { if (rep.player && rep.player.stopVideo) rep.player.stopVideo(); } catch (e) {}
     rep.visible = false; pintarRep();
+  }
+
+  // ---------- nube (Supabase): moods, música y último mood en todos tus dispositivos ----------
+  // Solo en la web publicada. Entras una vez por navegador con un enlace a tu correo.
+  // Al entrar, manda lo que haya en la nube; si la nube está vacía, sube lo de este navegador.
+  var NUBE_URL = 'https://idjlewvzuzqywthrwibv.supabase.co';
+  var NUBE_CLAVE = 'sb_publishable_rgLetEILYTeBPvEqWcAyrA_82D41Npt';   // clave pública (publishable)
+  var nube = { sb: null, usuario: null, estado: 'apagada', msg: '', pendiente: false, reloj: null };
+  function datosParaNube() { return { moods: moods, musica: musicaGuardada, ultimoMood: ultimoMood }; }
+  function aplicarDeNube(d) {
+    if (!d || typeof d !== 'object') return;
+    if (Array.isArray(d.moods)) moods = d.moods.filter(function (m) { return typeof m === 'string' && m.trim(); });
+    if (d.musica && typeof d.musica === 'object' && !Array.isArray(d.musica)) musicaGuardada = d.musica;
+    if (d.ultimoMood === null || typeof d.ultimoMood === 'string') ultimoMood = d.ultimoMood;
+    escribirLS(LS_MUSICA, musicaGuardada); escribirLS(LS_MOODS, moods); escribirLS(LS_ULTIMO, ultimoMood);
+    var a = document.activeElement;
+    var escribiendo = a && (a.tagName === 'TEXTAREA' || a.tagName === 'INPUT');
+    if (!escribiendo && st.pantalla !== 'calent') pintar();
+  }
+  function estadoNube(e, msg) { nube.estado = e; nube.msg = msg || ''; pintarNube(); }
+  function iniciarNube() {
+    if (!EMBEBIDO) { estadoNube('local'); return; }
+    estadoNube('conectando');
+    var sc = document.createElement('script');
+    sc.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js';
+    sc.onload = function () {
+      try { nube.sb = window.supabase.createClient(NUBE_URL, NUBE_CLAVE); }
+      catch (e) { estadoNube('error', 'No se pudo conectar con la nube'); return; }
+      nube.sb.auth.onAuthStateChange(function (ev, sesion) {
+        var u = sesion && sesion.user;
+        setTimeout(function () {   // fuera del aviso de Supabase, como recomienda su documentación
+          if (u && (!nube.usuario || nube.usuario.id !== u.id)) { nube.usuario = u; bajarNube(); }
+          else if (!u) { nube.usuario = null; if (nube.estado !== 'enviado') estadoNube('fuera'); }
+        }, 0);
+      });
+    };
+    sc.onerror = function () { estadoNube('error', 'Sin conexión con la nube: se usa lo guardado en este navegador'); };
+    document.head.appendChild(sc);
+  }
+  function bajarNube() {
+    if (!nube.sb || !nube.usuario) return;
+    estadoNube('sincronizando');
+    nube.sb.from('ajustes_entreno').select('datos').eq('user_id', nube.usuario.id).maybeSingle().then(function (r) {
+      if (r.error) {
+        estadoNube('error', r.error.code === 'PGRST205' ? 'falta crear la tabla en Supabase (script SQL)' : 'no se pudo leer la nube');
+        return;
+      }
+      if (r.data && r.data.datos && Object.keys(r.data.datos).length) { aplicarDeNube(r.data.datos); estadoNube('ok', 'sincronizado ✓'); }
+      else subirNube(true);   // primera vez: sube lo que hay en este navegador
+    });
+  }
+  function subirNube(ya) {
+    if (!nube.sb || !nube.usuario) return;
+    nube.pendiente = true;
+    clearTimeout(nube.reloj);
+    nube.reloj = setTimeout(function () {
+      estadoNube('sincronizando');
+      nube.sb.from('ajustes_entreno').upsert({ user_id: nube.usuario.id, datos: datosParaNube(), actualizado: new Date().toISOString() })
+        .then(function (r) {
+          if (r.error) { estadoNube('error', 'no se pudo guardar en la nube; se reintentará'); return; }
+          nube.pendiente = false; estadoNube('ok', 'guardado en la nube ✓');
+        });
+    }, ya ? 0 : 800);
+  }
+  window.addEventListener('online', function () { if (nube.pendiente) subirNube(true); });
+  // Al volver a la pestaña, trae los cambios hechos en otro dispositivo
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'visible' && nube.usuario && !nube.pendiente) bajarNube();
+  });
+  function entrarNube() {
+    var inp = document.getElementById('nube-correo');
+    var correo = inp ? inp.value.trim() : '';
+    if (!nube.sb) return;
+    if (!/^\S+@\S+\.\S+$/.test(correo)) { estadoNube('fuera', 'Escribe un correo válido'); return; }
+    estadoNube('enviando');
+    nube.sb.auth.signInWithOtp({ email: correo, options: { emailRedirectTo: location.origin + location.pathname } }).then(function (r) {
+      if (r.error) estadoNube('fuera', 'No se pudo enviar el enlace: ' + r.error.message);
+      else estadoNube('enviado');
+    });
+  }
+  function salirNube() { if (nube.sb) nube.sb.auth.signOut(); nube.usuario = null; estadoNube('fuera'); }
+  function pintarNube() {
+    var el = document.getElementById('cfg-nube');
+    if (!el) return;
+    var h;
+    if (nube.estado === 'local') h = '☁ Se guarda en este navegador. La sincronización en la nube funciona en la web publicada.';
+    else if (nube.estado === 'conectando' || nube.estado === 'apagada') h = '☁ Conectando con la nube…';
+    else if (nube.estado === 'fuera') h = '<span>☁ Guarda tus ajustes en la nube:</span>' +
+      '<input id="nube-correo" type="email" value="nicolasrecobasystem@gmail.com" aria-label="Tu correo" autocomplete="email">' +
+      '<button type="button" class="btn-sec" data-acc="nube-entrar">Enviarme enlace de acceso</button>' +
+      (nube.msg ? '<span class="aviso-cfg">' + esc(nube.msg) + '</span>' : '');
+    else if (nube.estado === 'enviando') h = '☁ Enviando enlace…';
+    else if (nube.estado === 'enviado') h = '☁ Revisa tu correo y pulsa el enlace <b>en este mismo navegador</b>.';
+    else h = '<span class="' + (nube.estado === 'error' ? 'aviso-cfg' : 'nube-ok') + '">☁ ' +
+      (nube.usuario ? esc(nube.usuario.email) + ' · ' : '') + (nube.estado === 'sincronizando' ? 'sincronizando…' : esc(nube.msg)) + '</span>' +
+      (nube.usuario ? '<button type="button" class="btn-sec" data-acc="nube-salir">Cerrar sesión</button>' : '');
+    el.innerHTML = h;
   }
 
   // ---------- escalado 16:9 ----------
@@ -366,9 +470,10 @@
     function cuenta(m) { var n = 0; l.forEach(function (e) { n += enlacesMusica(e, d.grupo, m).length; }); return n; }
     function txt(n) { return n ? n + (n === 1 ? ' canción' : ' canciones') : 'sin canciones'; }
     var botones = moods.map(function (m, i) {
-      return '<button type="button" class="mood" data-acc="mood" data-i="' + i + '"><span class="n">' + esc(m) + '</span><span class="c">' + txt(cuenta(m)) + '</span></button>';
+      var ult = ultimoMood === m;
+      return '<button type="button" class="mood' + (ult ? ' ultimo' : '') + '" data-acc="mood" data-i="' + i + '"><span class="n">' + esc(m) + '</span><span class="c">' + txt(cuenta(m)) + (ult ? ' · la última vez' : '') + '</span></button>';
     }).join('') +
-      '<button type="button" class="mood ninguno" data-acc="mood" data-i="-1"><span class="n">Ninguno</span><span class="c">todas mezcladas · ' + txt(cuenta(null)) + '</span></button>';
+      '<button type="button" class="mood ninguno' + (ultimoMood === '' ? ' ultimo' : '') + '" data-acc="mood" data-i="-1"><span class="n">Ninguno</span><span class="c">todas mezcladas · ' + txt(cuenta(null)) + (ultimoMood === '' ? ' · la última vez' : '') + '</span></button>';
     return '<div class="velo" data-acc="cerrar-mood"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="tit-mood">' +
       '<div class="antetitulo">' + esc(d.nombre.toUpperCase() + ' · ' + d.grupo.toUpperCase()) + '</div>' +
       '<h2 class="titulo-m" id="tit-mood">¿CON QUÉ MOOD ENTRENAS?</h2>' +
@@ -428,7 +533,7 @@
       '<input type="file" id="cfg-archivo" accept=".json,application/json" hidden></div></div>' +
       barraMoods +
       '<div class="cfg-cuerpo"><div class="panel cfg-lista">' + lista + '</div><div class="panel cfg-editor">' + editor + '</div></div>' +
-      '<div class="cfg-nota">Se guarda solo, en este navegador. Usa "Descargar copia" para tener los enlaces a salvo o pasarlos a otro ordenador.</div>' +
+      '<div id="cfg-nube" class="cfg-nube"></div>' +
       '</div>';
   }
 
@@ -546,9 +651,9 @@
 
   function pintar() {
     vista.innerHTML = st.pantalla === 'semana' ? htmlSemana() + (st.pidiendoMood ? htmlMood() : '') : (st.pantalla === 'config' ? htmlConfig() : htmlCalentamiento());
-    if (st.pidiendoMood) { var f = app.querySelector('.mood'); if (f) f.focus(); }
+    if (st.pidiendoMood) { var f = vista.querySelector('.mood.ultimo') || vista.querySelector('.mood'); if (f) f.focus(); }
     if (st.pantalla === 'calent') pintarTemporizador();
-    if (st.pantalla === 'config') actualizarEstadoCfg();
+    if (st.pantalla === 'config') { actualizarEstadoCfg(); pintarNube(); }
   }
 
   function empezar() { musicaSonandoDe = ''; st.pidiendoMood = false; st.pantalla = 'calent'; st.hueco = 0; reiniciar(); pintar(); }
@@ -563,7 +668,14 @@
       // Pregunta el mood antes de empezar (si no hay moods, empieza directamente)
       if (moods.length) { st.pidiendoMood = true; pintar(); } else { st.mood = null; empezar(); }
     }
-    else if (acc === 'mood') { var mi = +b.getAttribute('data-i'); st.mood = mi < 0 ? null : moods[mi]; empezar(); }
+    else if (acc === 'mood') {
+      var mi = +b.getAttribute('data-i');
+      st.mood = mi < 0 ? null : moods[mi];
+      ultimoMood = st.mood || ''; escribirLS(LS_ULTIMO, ultimoMood); subirNube();
+      empezar();
+    }
+    else if (acc === 'nube-entrar') { entrarNube(); }
+    else if (acc === 'nube-salir') { salirNube(); }
     else if (acc === 'cerrar-mood') { if (b === ev.target || b.tagName === 'BUTTON') { st.pidiendoMood = false; pintar(); } }
     else if (acc === 'cfg-mood') { st.cfgMood = +b.getAttribute('data-i'); pintar(); }
     else if (acc === 'mood-anadir') { anadirMood(); }
@@ -598,6 +710,7 @@
   document.addEventListener('keydown', function (ev) {
     if (ev.key === 'Escape' && st.pidiendoMood) { st.pidiendoMood = false; pintar(); }
     if (ev.key === 'Enter' && ev.target.id === 'mood-nuevo') { ev.preventDefault(); anadirMood(); }
+    if (ev.key === 'Enter' && ev.target.id === 'nube-correo') { ev.preventDefault(); entrarNube(); }
   });
 
   // Barra espaciadora = iniciar / pausar en la pantalla de calentamiento
@@ -609,4 +722,5 @@
 
   escalar();
   pintar();
+  iniciarNube();
 })();
