@@ -534,6 +534,43 @@
       '</div>';
   }
 
+  // ---------- TU PARED: esquema del equipo con el ancla que usa el ejercicio ----------
+  var ANCLAS = { barra: 'Barra', mosqueton: 'Mosquetón de la barra', alta: 'Ancla alta', media: 'Ancla media', baja: 'Ancla baja' };
+  function svgPared(a) {
+    var NAR = '#F2913D', APAG = '#4A5059';
+    function col(k) { return a === k ? NAR : APAG; }
+    function txt(k) { return a === k ? NAR : '#9EA3AA'; }
+    function halo(k, cx, cy) {
+      return a === k ? '<circle cx="' + cx + '" cy="' + cy + '" r="12" fill="' + NAR + '" opacity=".22"><animate attributeName="r" values="10;17;10" dur="1.8s" repeatCount="indefinite"/></circle>' : '';
+    }
+    var f = 'font-family="IBM Plex Mono, Consolas, monospace"';
+    function etiqueta(k, y, nombre, sub) {
+      return '<text x="68" y="' + y + '" fill="' + txt(k) + '" ' + f + ' font-size="12" font-weight="600" letter-spacing=".5">' + nombre + '</text>' +
+        (sub ? '<text x="68" y="' + (y + 14) + '" fill="' + (a === k ? NAR : '#7C828A') + '" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="11">' + sub + '</text>' : '');
+    }
+    function punto(k, cy) { return halo(k, 32, cy) + '<circle cx="32" cy="' + cy + '" r="8" fill="' + col(k) + '"/>'; }
+    var barraCol = a === 'barra' ? NAR : (a ? '#9EA3AA' : '#F4F1EA');
+    return '<svg viewBox="0 0 150 380" fill="none" role="img" aria-label="Tu pared: barra arriba y anclas alta, media y baja' + (a ? '; este ejercicio usa: ' + ANCLAS[a] : '; este ejercicio no usa ancla') + '">' +
+      '<rect x="6" y="8" width="52" height="352" rx="6" stroke="#4A5059" stroke-width="2"/>' +
+      '<line x1="0" y1="362" x2="150" y2="362" stroke="#4A5059" stroke-width="2"/>' +
+      (a === 'barra' ? '<rect x="8" y="16" width="48" height="26" rx="6" fill="' + NAR + '" opacity=".18"><animate attributeName="opacity" values=".08;.3;.08" dur="1.8s" repeatCount="indefinite"/></rect>' : '') +
+      '<g stroke="' + barraCol + '" stroke-width="5" stroke-linecap="round"><line x1="13" y1="34" x2="51" y2="34"/><line x1="22" y1="34" x2="22" y2="24"/><line x1="42" y1="34" x2="42" y2="24"/></g>' +
+      halo('mosqueton', 32, 43) + '<circle cx="32" cy="43" r="4" stroke="' + (a === 'mosqueton' ? NAR : '#9EA3AA') + '" stroke-width="2.5"/>' +
+      etiqueta('barra', 32, 'BARRA', '') +
+      '<text x="68" y="48" fill="' + (a === 'mosqueton' ? NAR : '#7C828A') + '" ' + f + ' font-size="10"' + (a === 'mosqueton' ? ' font-weight="600"' : '') + '>mosquetón</text>' +
+      punto('alta', 120) + etiqueta('alta', 118, 'ALTA', 'altura oreja') +
+      punto('media', 205) + etiqueta('media', 203, 'MEDIA', 'cintura') +
+      punto('baja', 315) + etiqueta('baja', 313, 'BAJA', 'pantorrilla') +
+      '</svg>';
+  }
+  function htmlPared(ex) {
+    var a = ex && ANCLAS[ex.ancla] ? ex.ancla : '';
+    var uso = !ex ? '' : a ? 'Usa: <b>' + esc(ANCLAS[a]) + '</b>' : esc(ex.anclaNota || 'No usa ancla');
+    return '<div class="panel p-pared"><div class="p-tit">TU PARED</div>' +
+      '<div class="pared-fig">' + svgPared(ex ? a : '') + '</div>' +
+      (uso ? '<div class="pared-uso' + (a ? ' on' : '') + '">' + uso + '</div>' : '') + '</div>';
+  }
+
   function htmlCalentamiento() {
     var d = DIAS[st.sel], l = lista(), ex = ejActual();
     function vacio(t) { return '<div class="vacio">' + t + '</div>'; }
@@ -586,7 +623,8 @@
       '<div class="mono dia-lbl">' + esc(d.nombre.toUpperCase() + ' · ' + d.grupo.toUpperCase()) + '</div>' +
       '<div class="puntos"><i class="on"></i><i></i><i></i><i></i></div></div></div>' +
       '<div class="menu-ej">' + menu + '</div>' +
-      '<div class="cuerpo"><div class="panel p-fig">' + p1 + '</div><div class="panel p-ag">' + p2 + '</div><div class="panel p-err">' + p3 + '</div></div>' +
+      '<div class="cuerpo"><div class="panel p-fig">' + p1 + '</div>' + htmlPared(ex) +
+      '<div class="panel p-ag">' + p2 + '</div><div class="panel p-err">' + p3 + '</div></div>' +
       '<div class="pie"><div id="zona-temp" style="flex-grow:1;display:flex"></div>' +
       '<button type="button" class="btn-sig" disabled>Siguiente →</button></div>' +
       '</div>';

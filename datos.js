@@ -26,6 +26,9 @@ const INFO_GRUPO = {
 //      · reps: número            -> ejercicio por repeticiones (botón "Serie hecha")
 //  - agarre (opcional): { dibujo, puntos: [[título, texto], ...] } -> panel AGARRE
 //  - errores (opcional): [[error, cómo corregirlo], ...] -> panel ERRORES COMUNES
+//  - ancla (opcional): qué parte de tu pared usa -> se resalta en el panel TU PARED.
+//      'barra' · 'mosqueton' · 'alta' (altura oreja) · 'media' (cintura) · 'baja' (pantorrilla)
+//    anclaNota (opcional): texto si no usa ancla (ej.: la banda va en las manos).
 //  - intensidad (opcional): 1 baja · 2 media · 3 alta. Si no se pone, la del bloque
 //    (calentamiento = baja). También se cambia en ⚙ Configuración → Intensidad.
 //    Al entrenar suena una canción de tu biblioteca con el mood elegido y esta intensidad.
@@ -40,6 +43,7 @@ const CALENTAMIENTOS = {
         // 'Energía': ['https://www.youtube.com/watch?v=...'],
       },
       dibujo: 'colgado',
+      ancla: 'barra',
       claves: [
         ['Agarre', 'Mangos paralelos, palmas enfrentadas.'],
         ['Brazos', 'Totalmente estirados. No tires hacia arriba.'],
@@ -71,6 +75,7 @@ const CALENTAMIENTOS = {
         // 'Energía': ['https://www.youtube.com/watch?v=...'],
       },
       dibujo: 'pullApart',
+      anclaNota: 'Sin ancla: la banda va en tus manos',
       claves: [
         ['Posición', 'De pie, pies a la anchura de las caderas, rodillas suaves.'],
         ['Brazos', 'Al frente, a la altura del pecho, casi rectos.'],
