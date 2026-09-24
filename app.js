@@ -1217,7 +1217,7 @@
     else if (acc === 'luces-buscar') { buscarLuces(); }
     else if (acc === 'luz-probar') {
       var fp = b.getAttribute('data-f'); lucesEstado.msg = 'Probando ' + NOMBRE_FASE[fp].toLowerCase() + '…'; actualizarMsgLuces();
-      ponerColor(COLOR_FASE[fp], true).then(function (r) { lucesEstado.msg = r.error ? r.error : (r.res && r.res.every(function (x) { return x.ok; }) ? 'Listo ✓' : 'Govee no aceptó la orden (¿límite por minuto?)'); actualizarMsgLuces(); });
+      ponerColor(COLOR_FASE[fp], true, BRILLO_FASE[fp]).then(function (r) { lucesEstado.msg = r.error ? r.error : (r.res && r.res.every(function (x) { return x.ok; }) ? 'Listo ✓' : 'Govee no aceptó la orden (¿límite por minuto?)'); actualizarMsgLuces(); });
     }
     else if (acc === 'principal') { botonPrincipal(); }
     else if (acc === 'musica') {
@@ -1430,7 +1430,8 @@
   var luces = leerLS(LS_LUCES, null);
   if (!luces || typeof luces !== 'object') luces = { activas: false, devs: [], brillo: 0 };
   if (!Array.isArray(luces.devs)) luces.devs = [];
-  var COLOR_FASE = { prep: 0xE8D36A, trabajo: 0xF2913D, descanso: 0x7FB2E5, hecho: 0xF4F1EA };
+  var COLOR_FASE = { prep: 0x8000FF, trabajo: 0xFF0000, descanso: 0x0000FF, hecho: 0xFFFFFF };   // morado · rojo · azul · blanco
+  var BRILLO_FASE = { trabajo: 100, descanso: 50 };   // las demás fases usan el brillo de la pestaña Luces
   var NOMBRE_FASE = { prep: 'Preparación', trabajo: 'Trabajo', descanso: 'Descanso', hecho: 'Completado' };
   var lucesEstado = { encontradas: null, msg: '', buscando: false, ultimaFase: '', encendidas: false };
   function guardarLuces() { escribirLS(LS_LUCES, luces); subirNube(); }
@@ -1446,9 +1447,9 @@
       return r.data || {};
     }, function (e) { return { error: String(e && e.message || e) }; });
   }
-  function ponerColor(rgb, encender) {
+  function ponerColor(rgb, encender, brillo) {
     if (!luces.devs.length) return Promise.resolve({ error: 'No hay luces elegidas' });
-    return llamarGovee({ accion: 'color', rgb: rgb, luces: luces.devs, encender: !!encender, brillo: luces.brillo || 0 });
+    return llamarGovee({ accion: 'color', rgb: rgb, luces: luces.devs, encender: !!encender, brillo: brillo || luces.brillo || 0 });
   }
   // Se llama cada vez que se repinta el temporizador: solo manda algo cuando cambia la fase
   function lucesPorFase() {
@@ -1457,7 +1458,7 @@
     if (!COLOR_FASE.hasOwnProperty(f) || f === lucesEstado.ultimaFase) return;
     lucesEstado.ultimaFase = f;
     var enc = !lucesEstado.encendidas; lucesEstado.encendidas = true;
-    ponerColor(COLOR_FASE[f], enc).then(function (r) { if (r && r.error) lucesEstado.msg = r.error; });
+    ponerColor(COLOR_FASE[f], enc, BRILLO_FASE[f]).then(function (r) { if (r && r.error) lucesEstado.msg = r.error; });
   }
   function actualizarMsgLuces() { var el = document.querySelector('.luces-msg'); if (el) el.textContent = lucesEstado.msg; }
   function reiniciarLuces() { lucesEstado.ultimaFase = ''; lucesEstado.encendidas = false; }
@@ -1478,7 +1479,7 @@
         '<span class="luz-nombre">' + esc(d.nombre) + '</span><span class="luz-sku mono">' + esc(d.sku) + (d.color ? '' : ' · sin color') + '</span></label>';
     }).join('') : '<div class="vacio">Pulsa «Buscar mis luces» para traer las luces de tu cuenta Govee.</div>';
     var muestras = Object.keys(COLOR_FASE).map(function (f) {
-      return '<button type="button" class="luz-muestra" data-acc="luz-probar" data-f="' + f + '"><i style="background:' + hex(COLOR_FASE[f]) + '"></i>' + NOMBRE_FASE[f] + '</button>';
+      return '<button type="button" class="luz-muestra" data-acc="luz-probar" data-f="' + f + '"><i style="background:' + hex(COLOR_FASE[f]) + '"></i>' + NOMBRE_FASE[f] + (BRILLO_FASE[f] ? ' · ' + BRILLO_FASE[f] + '%' : '') + '</button>';
     }).join('');
     var brillo = +luces.brillo || 0;
     return '<div class="luces">' +
@@ -1487,7 +1488,7 @@
       '<div class="luces-cuerpo"><div class="luces-lista"><div class="cfg-lbl">LUCES QUE SE USAN</div>' + filas + '</div>' +
       '<div class="luces-lado"><div class="cfg-lbl">PROBAR UN COLOR</div><div class="luz-muestras">' + muestras + '</div>' +
       '<div class="cfg-lbl">BRILLO</div><label class="luz-brillo"><input type="range" id="luces-brillo" min="0" max="100" step="5" value="' + brillo + '"><span id="luces-brillo-v" class="mono">' + (brillo ? brillo + '%' : 'sin cambiar') + '</span></label>' +
-      '<p class="luces-nota">Preparación amarillo · trabajo naranja · descanso azul · al completar, blanco. Govee limita las órdenes por minuto: solo se manda una al cambiar de fase.</p></div></div>' +
+      '<p class="luces-nota">Preparación morado · trabajo rojo al 100% · descanso azul al 50% · al completar, blanco. El brillo de aquí se usa en preparación y al completar. Govee limita las órdenes por minuto: solo se manda una al cambiar de fase.</p></div></div>' +
       '<div class="luces-msg aviso-cfg">' + esc(lucesEstado.msg) + '</div></div>';
   }
 
