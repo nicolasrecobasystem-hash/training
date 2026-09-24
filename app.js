@@ -301,7 +301,41 @@
   var NUBE_URL = 'https://idjlewvzuzqywthrwibv.supabase.co';
   var NUBE_CLAVE = 'sb_publishable_rgLetEILYTeBPvEqWcAyrA_82D41Npt';   // clave pública (publishable)
   var nube = { sb: null, usuario: null, estado: 'apagada', msg: '', pendiente: false, reloj: null };
-  function datosParaNube() { return { version: 3, moods: moods, biblioteca: biblioteca, ejIntensidad: ejIntensidad, ultimoMood: ultimoMood }; }
+  function datosParaNube() { return { version: 3, moods: moods, biblioteca: biblioteca, ejIntensidad: ejIntensidad, ultimoMood: ultimoMood, historial: historial }; }
+
+  // ---------- historial: qué ejercicios hiciste cada día ----------
+  // { "2026-09-24": { grupo: "Hombro", hechos: ["Hombro|Colgarte de la barra", ...], total: 10, terminado: true } }
+  var LS_HIST = 'miSemana.historial.v1';
+  var historial = leerLS(LS_HIST, null);
+  if (!historial || typeof historial !== 'object' || Array.isArray(historial)) historial = {};
+  function claveFecha(f) {
+    return f.getFullYear() + '-' + (f.getMonth() < 9 ? '0' : '') + (f.getMonth() + 1) + '-' + (f.getDate() < 10 ? '0' : '') + f.getDate();
+  }
+  function totalDe(g) { var n = 0; bloquesDe(g).forEach(function (b) { n += (b.ejercicios || []).length; }); return n; }
+  function registroDe(k) { var r = historial[k]; return r && Array.isArray(r.hechos) ? r : null; }
+  function estaHecho(ex, g) { var r = registroDe(claveFecha(new Date())); return !!(ex && r && r.hechos.indexOf(g + '|' + ex.nombre) >= 0); }
+  function guardarHistorial() { escribirLS(LS_HIST, historial); subirNube(); }
+  function marcarHecho(ex, g, valor) {
+    if (!ex) return;
+    var k = claveFecha(new Date()), r = registroDe(k) || { grupo: g, hechos: [] };
+    var id = g + '|' + ex.nombre, i = r.hechos.indexOf(id);
+    if (valor && i < 0) r.hechos.push(id);
+    if (!valor && i >= 0) r.hechos.splice(i, 1);
+    r.grupo = g; r.total = totalDe(g);
+    if (r.hechos.length || r.terminado) historial[k] = r; else delete historial[k];
+    guardarHistorial();
+  }
+  // Mezcla el historial de la nube con el de este navegador (no se pierde nada)
+  function mezclarHistorial(otro) {
+    if (!otro || typeof otro !== 'object') return;
+    Object.keys(otro).forEach(function (k) {
+      var o = otro[k]; if (!o || !Array.isArray(o.hechos)) return;
+      var r = registroDe(k);
+      if (!r) { historial[k] = { grupo: o.grupo, hechos: o.hechos.slice(), total: o.total, terminado: !!o.terminado }; return; }
+      o.hechos.forEach(function (h) { if (r.hechos.indexOf(h) < 0) r.hechos.push(h); });
+      r.terminado = r.terminado || !!o.terminado; r.total = Math.max(r.total || 0, o.total || 0);
+    });
+  }
   function aplicarDeNube(d) {
     if (!d || typeof d !== 'object') return;
     if (Array.isArray(d.moods)) moods = d.moods.filter(function (m) { return typeof m === 'string' && m.trim(); });
@@ -309,6 +343,7 @@
     else if (d.musica && typeof d.musica === 'object') migrarAntiguo(d.musica);   // datos de la versión anterior
     if (d.ejIntensidad && typeof d.ejIntensidad === 'object' && !Array.isArray(d.ejIntensidad)) ejIntensidad = d.ejIntensidad;
     if (d.ultimoMood === null || typeof d.ultimoMood === 'string') ultimoMood = d.ultimoMood;
+    if (d.historial) { mezclarHistorial(d.historial); escribirLS(LS_HIST, historial); }
     asegurarMoods();
     escribirLS(LS_BIBLIO, biblioteca); escribirLS(LS_MOODS, moods); escribirLS(LS_INTENS, ejIntensidad); escribirLS(LS_ULTIMO, ultimoMood);
     var a = document.activeElement;
@@ -497,7 +532,12 @@
     var c = cfg() || { series: 1, descanso: 30 };
     pitido(880, 0.3, 3);
     if (st.serie < c.series) fase('descanso', descansoActual());
-    else { st.fase = 'hecho'; st.corriendo = false; st.quedan = 0; pintarTemporizador(); }
+    else {
+      st.fase = 'hecho'; st.corriendo = false; st.quedan = 0;
+      var yaEstaba = estaHecho(ejActual(), DIAS[st.sel].grupo);
+      marcarHecho(ejActual(), DIAS[st.sel].grupo, true);
+      if (yaEstaba) pintarTemporizador(); else pintar();
+    }
   }
   function descansoActual() {
     var c = cfg() || {};
@@ -546,16 +586,24 @@
       var f = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate() - ahora.getDay() + i);
       return f.getDate() + ' ' + f.toLocaleDateString('es-ES', { month: 'short' }).replace('.', '');
     }
+    function progresoDia(i) {
+      var f = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate() - ahora.getDay() + i);
+      var r = registroDe(claveFecha(f));
+      if (!r) return '';
+      var tot = r.total || totalDe(r.grupo), n = r.hechos.length;
+      return n >= tot || r.terminado ? '<div class="prog-dia ok">✓</div>' : '<div class="prog-dia">' + n + '/' + tot + '</div>';
+    }
     var dias = DIAS.map(function (x, i) {
       var cls = 'dia' + (i === st.sel ? ' activo' : '') + (i === hoy ? ' hoy' : '');
       return '<button type="button" class="' + cls + '" data-acc="dia" data-i="' + i + '" aria-pressed="' + (i === st.sel) + '" aria-label="' + esc(x.nombre + ', ' + x.grupo) + '">' +
-        '<div class="cab"><div class="letra">' + esc(x.letra) + '</div>' + (i === hoy ? '<div class="etq-hoy">HOY</div>' : '') + '</div>' +
+        '<div class="cab"><div class="letra">' + esc(x.letra) + '</div><div class="cab-der">' + (i === hoy ? '<div class="etq-hoy">HOY</div>' : '') + progresoDia(i) + '</div></div>' +
         '<div><div class="nombre">' + esc(x.nombre) + ' <span class="fecha-dia">' + esc(fechaDia(i)) + '</span></div><div class="grupo">' + esc(x.grupo) + '</div></div></button>';
     }).join('');
     function campo(k, v) { return '<div class="campo"><div class="k">' + k + '</div><div class="v">' + esc(v || '[Por definir]') + '</div></div>'; }
     return '<div class="pantalla semana">' +
       '<div class="fila-sup"><div><div class="antetitulo">ELIGE UN DÍA</div><h1 class="titulo">MI SEMANA</h1></div>' +
       '<div class="fila-der"><div class="fecha-hoy">' + esc(fechaHoy) + '</div><div class="leyenda"><i></i>HOY</div>' +
+      '<button type="button" class="btn-sec" data-acc="calendario">📅 Calendario</button>' +
       '<button type="button" class="btn-sec" data-acc="config">⚙ Configuración</button></div></div>' +
       '<div class="dias">' + dias + '</div>' +
       '<div class="detalle"><div class="izq"><div class="antetitulo">' + esc(d.nombre.toUpperCase()) + '</div><div class="grande">' + esc(d.grupo.toUpperCase()) + '</div></div>' +
@@ -628,9 +676,10 @@
     var nMenu = Math.max(1, l.length);
     var menu = Array.apply(null, Array(nMenu)).map(function (_, i) {
       var e = l[i];
-      var cls = 'hueco' + (e ? ' lleno' : '') + (i === st.hueco ? ' activo' : '');
+      var hc = estaHecho(e, d.grupo);
+      var cls = 'hueco' + (e ? ' lleno' : '') + (i === st.hueco ? ' activo' : '') + (hc ? ' hecho' : '');
       return '<button type="button" class="' + cls + '" data-acc="hueco" data-i="' + i + '" aria-pressed="' + (i === st.hueco) + '">' +
-        '<div class="num">' + (i + 1) + '</div>' +
+        '<div class="num">' + (hc ? '✓' : (i + 1)) + '</div>' +
         '<div class="n">' + esc(e ? e.nombre : '[Ejercicio]') + '</div>' +
         '<div class="d">' + esc(e ? e.dosis : '[Series × reps]') + '</div></button>';
     }).join('');
@@ -645,7 +694,10 @@
         '<div class="p-ind"><span>' + esc(ex.indicacion || '') + '</span>' +
         (enlacesMusica(ex, d.grupo, st.mood).length ? '<button type="button" class="btn-musica" data-acc="musica" aria-label="Poner otra canción de este ejercicio">' +
           (musicaSonandoDe === d.grupo + '|' + ex.nombre ? '♪ Otra canción' : '♪ Música') + '</button>' : '') + '</div>' +
-        (ex.ritmo ? '<div class="p-ritmo">RITMO · ' + esc(ex.ritmo.toUpperCase()) + '</div>' : '') +
+        '<div class="p-fila">' + (ex.ritmo ? '<div class="p-ritmo">RITMO · ' + esc(ex.ritmo.toUpperCase()) + '</div>' : '<span></span>') +
+          (estaHecho(ex, d.grupo)
+            ? '<button type="button" class="btn-hecho on" data-acc="hecho" aria-pressed="true" title="Pulsa para desmarcar">✓ Hecho hoy</button>'
+            : '<button type="button" class="btn-hecho" data-acc="hecho" aria-pressed="false">Marcar hecho</button>') + '</div>' +
         (st.verInfo && hayInfo
           ? '<div class="info-lista">' + ex.info.map(function (x) {
               return '<div class="info-item"><div class="k">' + esc(x[0].toUpperCase()) + '</div><div class="v">' + esc(x[1]) + '</div></div>';
@@ -691,6 +743,65 @@
   }
 
   // Ventana "¿Con qué mood entrenas?" al pulsar START
+  function calMes() { var h = new Date(); return st.calMes || new Date(h.getFullYear(), h.getMonth(), 1); }
+  function rachaActual() {
+    var f = new Date(), n = 0;
+    if (!registroDe(claveFecha(f))) f.setDate(f.getDate() - 1);   // hoy aún no cuenta
+    while (registroDe(claveFecha(f)) && registroDe(claveFecha(f)).hechos.length) { n++; f.setDate(f.getDate() - 1); }
+    return n;
+  }
+  function htmlCalendario() {
+    var m = calMes(), hoyK = claveFecha(new Date());
+    var nomMes = m.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
+    nomMes = nomMes.charAt(0).toUpperCase() + nomMes.slice(1);
+    var ini = new Date(m.getFullYear(), m.getMonth(), 1 - m.getDay());   // la semana empieza en domingo
+    var celdas = ['D', 'L', 'M', 'M', 'J', 'V', 'S'].map(function (l) { return '<div class="cal-cab">' + l + '</div>'; }).join('');
+    var entrenosMes = 0;
+    for (var i = 0; i < 42; i++) {
+      var f = new Date(ini.getFullYear(), ini.getMonth(), ini.getDate() + i), k = claveFecha(f);
+      var fuera = f.getMonth() !== m.getMonth(), r = registroDe(k);
+      var g = r ? r.grupo : DIAS[f.getDay()].grupo, tot = r ? (r.total || totalDe(g)) : totalDe(g);
+      var n = r ? r.hechos.length : 0, estado = !r || !n ? (r && r.terminado ? 'ok' : '') : (n >= tot || r.terminado ? 'ok' : 'medio');
+      if (!fuera && estado) entrenosMes++;
+      var pasado = k < hoyK;
+      var cls = 'cal-dia' + (fuera ? ' fuera' : '') + (k === hoyK ? ' hoy' : '') + (k === st.calSel ? ' sel' : '') +
+        (estado ? ' ' + estado : (pasado ? ' vacio-dia' : ''));
+      celdas += '<button type="button" class="' + cls + '" data-acc="cal-dia" data-k="' + k + '" aria-pressed="' + (k === st.calSel) + '">' +
+        '<span class="n">' + f.getDate() + '</span><span class="g">' + esc(g) + '</span>' +
+        (estado === 'ok' ? '<span class="marca">✓</span>' : estado === 'medio' ? '<span class="marca">' + n + '/' + tot + '</span>' : '') + '</button>';
+    }
+    // Detalle del día elegido
+    var sel = st.calSel || hoyK, ps = sel.split('-'), fs = new Date(+ps[0], +ps[1] - 1, +ps[2]);
+    var rs = registroDe(sel), gs = rs ? rs.grupo : DIAS[fs.getDay()].grupo;
+    var fsTxt = fs.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
+    fsTxt = fsTxt.charAt(0).toUpperCase() + fsTxt.slice(1);
+    var lista = '';
+    bloquesDe(gs).forEach(function (b) {
+      if (!(b.ejercicios || []).length) return;
+      lista += '<div class="cfg-grupo">' + esc(b.titulo.toUpperCase()) + '</div>';
+      b.ejercicios.forEach(function (e) {
+        var ok = rs && rs.hechos.indexOf(gs + '|' + e.nombre) >= 0;
+        lista += '<div class="cal-ej' + (ok ? ' ok' : '') + '"><span class="c">' + (ok ? '✓' : '○') + '</span>' + esc(e.nombre) + '</div>';
+      });
+    });
+    if (!lista) lista = '<div class="cfg-nota-mini">Este día aún no tiene rutina cargada.</div>';
+    var nHechos = rs ? rs.hechos.length : 0, totS = rs ? (rs.total || totalDe(gs)) : totalDe(gs);
+    var resumen = nHechos ? nHechos + ' de ' + totS + ' ejercicios' + (rs.terminado ? ' · terminado' : '') : (sel > hoyK ? 'Pendiente' : 'Sin entreno');
+    return '<div class="pantalla calendario">' +
+      '<div class="barra-sup"><button type="button" class="btn-sec" data-acc="volver">← Semana</button>' +
+      '<div class="cab-paso"><span class="antetitulo">TU PROGRESO</span><h2 class="titulo-m">CALENDARIO</h2></div>' +
+      '<div class="barra-der"><button type="button" class="btn-sec" data-acc="cal-mes" data-d="-1" aria-label="Mes anterior">‹</button>' +
+      '<div class="cal-mes">' + esc(nomMes) + '</div>' +
+      '<button type="button" class="btn-sec" data-acc="cal-mes" data-d="1" aria-label="Mes siguiente">›</button>' +
+      '<button type="button" class="btn-sec" data-acc="cal-hoy">Hoy</button></div></div>' +
+      '<div class="cal-cuerpo"><div class="panel cal-grid">' + celdas + '</div>' +
+      '<div class="panel cal-detalle"><div class="antetitulo">' + esc(fsTxt.toUpperCase()) + '</div>' +
+      '<div class="cal-grupo">' + esc(gs.toUpperCase()) + '</div><div class="cal-res">' + esc(resumen) + '</div>' +
+      '<div class="cal-lista">' + lista + '</div>' +
+      '<div class="cal-stats"><div><b>' + rachaActual() + '</b><span>días seguidos</span></div><div><b>' + entrenosMes + '</b><span>entrenos este mes</span></div></div>' +
+      '</div></div></div>';
+  }
+
   function htmlCompletado() {
     var d = DIAS[st.sel];
     return '<div class="velo" data-acc="cerrar-fin"><div class="modal fin" role="dialog" aria-modal="true" aria-labelledby="tit-fin">' +
@@ -987,7 +1098,7 @@
   }
 
   function pintar() {
-    vista.innerHTML = st.pantalla === 'semana' ? htmlSemana() + (st.pidiendoMood ? htmlMood() : '') + (st.completado ? htmlCompletado() : '') : (st.pantalla === 'config' ? htmlConfig() + (st.subida ? htmlSubida() : '') : htmlCalentamiento());
+    vista.innerHTML = st.pantalla === 'semana' ? htmlSemana() + (st.pidiendoMood ? htmlMood() : '') + (st.completado ? htmlCompletado() : '') : (st.pantalla === 'config' ? htmlConfig() + (st.subida ? htmlSubida() : '') : st.pantalla === 'calendario' ? htmlCalendario() : htmlCalentamiento());
     if (st.pidiendoMood) { var f = vista.querySelector('.mood.ultimo') || vista.querySelector('.mood'); if (f) f.focus(); }
     if (st.pantalla === 'calent') pintarTemporizador();
     if (st.pantalla === 'config') { actualizarEstadoCfg(); pintarNube(); }
@@ -1033,7 +1144,16 @@
     else if (acc === 'anterior') { irABloque(st.bloque - 1); }
     else if (acc === 'info') { st.verInfo = !st.verInfo; pintar(); }
     else if (acc === 'bloque') { irABloque(+b.getAttribute('data-i')); }
-    else if (acc === 'terminar') { reiniciar(); cerrarRep(); st.pantalla = 'semana'; st.completado = true; pintar(); }
+    else if (acc === 'terminar') {
+      var kf = claveFecha(new Date()), gf = DIAS[st.sel].grupo, rf = registroDe(kf) || { grupo: gf, hechos: [] };
+      rf.grupo = gf; rf.total = totalDe(gf); rf.terminado = true; historial[kf] = rf; guardarHistorial();
+      reiniciar(); cerrarRep(); st.pantalla = 'semana'; st.completado = true; pintar();
+    }
+    else if (acc === 'hecho') { var eh = ejActual(), gh = DIAS[st.sel].grupo; marcarHecho(eh, gh, !estaHecho(eh, gh)); pintar(); }
+    else if (acc === 'calendario') { reiniciar(); cerrarRep(); st.pantalla = 'calendario'; st.calMes = null; st.calSel = claveFecha(new Date()); pintar(); }
+    else if (acc === 'cal-mes') { var cm = calMes(); st.calMes = new Date(cm.getFullYear(), cm.getMonth() + (+b.getAttribute('data-d')), 1); pintar(); }
+    else if (acc === 'cal-hoy') { st.calMes = null; st.calSel = claveFecha(new Date()); pintar(); }
+    else if (acc === 'cal-dia') { st.calSel = b.getAttribute('data-k'); pintar(); }
     else if (acc === 'cerrar-fin') { if (b === ev.target || b.tagName === 'BUTTON') { st.completado = false; pintar(); } }
     else if (acc === 'desc') { st.desc = +b.getAttribute('data-s'); pintarTemporizador(); }
     else if (acc === 'dur') { st.dur = +b.getAttribute('data-s'); st.quedan = st.dur; st.total = st.dur; pintarTemporizador(); }
