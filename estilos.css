@@ -257,3 +257,19 @@ button:disabled{cursor:not-allowed}
 .btn-sig.fin{align-items:center;font-size:17px}
 .pastilla{white-space:nowrap}
 .t-dur span{white-space:nowrap}
+/* Ritmo, información extra (ⓘ) y Anterior */
+.p-ritmo{flex-shrink:0;align-self:flex-start;padding:3px 8px;border:1px solid var(--linea2);border-radius:6px;font-family:var(--mono);font-size:11px;letter-spacing:.06em;color:var(--suave)}
+.btn-info{margin-left:10px;width:28px;height:28px;border:1px solid var(--linea2);border-radius:14px;background:transparent;color:var(--suave);font-size:15px;vertical-align:middle}
+.btn-info.on,.btn-info:hover{border-color:var(--acento);color:var(--acento)}
+.info-lista{flex-grow:1;display:flex;flex-direction:column;justify-content:center;gap:18px;padding:0 6px}
+.info-item .k{font-family:var(--mono);font-size:12px;letter-spacing:.12em;color:var(--acento)}
+.info-item .v{margin-top:4px;font-size:16px;line-height:1.45;color:#E4E2DC}
+.btn-ant{flex-shrink:0;align-self:center;height:52px;padding:0 16px;border:1px solid var(--linea2);border-radius:12px;background:transparent;color:var(--texto);font-size:15px}
+/* Arrastrar y soltar canciones */
+.panel.cfg-panel{position:relative}
+.cfg-panel.soltando::after{content:"Suelta aquí tus canciones";position:absolute;inset:8px;display:flex;align-items:center;justify-content:center;border:3px dashed var(--acento);border-radius:14px;background:rgba(31,34,39,.94);color:var(--acento);font-family:var(--display);font-size:34px;z-index:2;letter-spacing:.02em;pointer-events:none}
+.btn-ant{width:52px;padding:0;font-size:22px}
+.temporizador{min-width:0;gap:16px}
+.t-medio{min-width:0}
+.t-estado{width:148px}
+.btn-pri{min-width:130px}

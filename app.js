@@ -36,7 +36,7 @@
   // del mood elegido y de la intensidad del ejercicio.
   var LS_MOODS = 'miSemana.moods.v1', LS_BIBLIO = 'miSemana.biblioteca.v1', LS_INTENS = 'miSemana.intensidad.v1';
   var INTENSIDADES = ['', 'Baja', 'Media', 'Alta'];
-  var INTENSIDAD_BLOQUE = { 'Calentamiento': 1, 'Principal': 3, 'Posterior y estabilidad': 2, 'Final': 2 };   // por defecto; se cambia por ejercicio en Configuración
+  var INTENSIDAD_BLOQUE = { 'Calentamiento': 1, 'Principal': 3, 'Posterior y estabilidad': 2, 'Final': 2, 'Final en la barra': 2 };   // por defecto; se cambia por ejercicio en Configuración
   function leerLS(k, def) { try { var v = JSON.parse(localStorage.getItem(k)); return v == null ? def : v; } catch (e) { return def; } }
   function escribirLS(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } }
   function esEnlace(x) { return /^https?:\/\/\S+$/i.test(x); }
@@ -507,7 +507,7 @@
     parar();
     var c = cfg();
     if (c && c.opciones && c.opciones.indexOf(st.dur) < 0) st.dur = c.opciones[0];
-    if (c && c.descansos && c.descansos.indexOf(st.desc) < 0) st.desc = c.descansos[0];
+    if (c && c.descansos && c.descansos.indexOf(st.desc) < 0) st.desc = c.descansos.indexOf(c.descanso) >= 0 ? c.descanso : c.descansos[0];
     st.fase = 'espera'; st.corriendo = false; st.pausado = false; st.serie = 1; st.quedan = st.dur; st.total = st.dur;
   }
   function botonPrincipal() {
@@ -625,18 +625,25 @@
     var p1;
     if (ex) {
       var fig = ex.dibujo && DIBUJOS[ex.dibujo] ? '<div class="fig">' + DIBUJOS[ex.dibujo] + '</div>' : vacio('[Dibujo]');
-      p1 = '<div class="p-cab"><div class="p-nombre">' + esc(ex.nombre.toUpperCase()) + '</div><div class="p-dosis">' + esc(ex.dosis) + '</div></div>' +
+      var hayInfo = ex.info && ex.info.length;
+      p1 = '<div class="p-cab"><div class="p-nombre">' + esc(ex.nombre.toUpperCase()) + '</div><div class="p-dosis">' + esc(ex.dosis) +
+        (hayInfo ? '<button type="button" class="btn-info' + (st.verInfo ? ' on' : '') + '" data-acc="info" aria-pressed="' + !!st.verInfo + '" aria-label="Qué trabaja y cómo progresar">ⓘ</button>' : '') + '</div></div>' +
         '<div class="p-ind"><span>' + esc(ex.indicacion || '') + '</span>' +
         (enlacesMusica(ex, d.grupo, st.mood).length ? '<button type="button" class="btn-musica" data-acc="musica" aria-label="Poner otra canción de este ejercicio">' +
           (musicaSonandoDe === d.grupo + '|' + ex.nombre ? '♪ Otra canción' : '♪ Música') + '</button>' : '') + '</div>' +
-        '<div class="con">' + fig + '<div class="claves">' + (ex.claves || []).map(claveHtml).join('') + '</div></div>';
+        (ex.ritmo ? '<div class="p-ritmo">RITMO · ' + esc(ex.ritmo.toUpperCase()) + '</div>' : '') +
+        (st.verInfo && hayInfo
+          ? '<div class="info-lista">' + ex.info.map(function (x) {
+              return '<div class="info-item"><div class="k">' + esc(x[0].toUpperCase()) + '</div><div class="v">' + esc(x[1]) + '</div></div>';
+            }).join('') + '</div>'
+          : '<div class="con">' + fig + '<div class="claves">' + (ex.claves || []).map(claveHtml).join('') + '</div></div>');
     } else {
       p1 = vacio('[Dibujo del ejercicio]');
     }
 
     // Panel 2: detalle del agarre
     var ag = ex && ex.agarre;
-    var p2 = '<div class="p-tit">AGARRE</div>' + (ag
+    var p2 = '<div class="p-tit">' + esc(ag && ag.titulo ? ag.titulo : 'AGARRE') + '</div>' + (ag
       ? (ag.dibujo && DIBUJOS[ag.dibujo] ? '<div class="ag-fig">' + DIBUJOS[ag.dibujo] + '</div>' : '') +
         '<div class="ag-puntos">' + (ag.puntos || []).map(claveHtml).join('') + '</div>'
       : vacio('[Por definir]'));
@@ -662,6 +669,7 @@
       '<div class="cuerpo"><div class="panel p-fig">' + p1 + '</div>' + htmlPared(ex) +
       '<div class="panel p-ag">' + p2 + '</div><div class="panel p-err">' + p3 + '</div></div>' +
       '<div class="pie"><div id="zona-temp" style="flex-grow:1;display:flex"></div>' +
+      (st.bloque > 0 ? '<button type="button" class="btn-ant" data-acc="anterior" aria-label="Anterior: ' + esc(bloques()[st.bloque - 1].titulo) + '" title="Anterior: ' + esc(bloques()[st.bloque - 1].titulo) + '">←</button>' : '') +
       (st.bloque < bloques().length - 1
         ? '<button type="button" class="btn-sig on" data-acc="siguiente" aria-label="Siguiente: ' + esc(bloques()[st.bloque + 1].titulo) + '"><span class="sig-k">SIGUIENTE →</span><span class="sig-n">' + esc(bloques()[st.bloque + 1].titulo) + '</span></button>'
         : '<button type="button" class="btn-sig on fin" data-acc="terminar">Terminar ✓</button>') + '</div>' +
@@ -743,7 +751,7 @@
   function htmlBiblioteca() {
     var herr = '<div class="biblio-herr">' +
       (EMBEBIDO && nube.usuario
-        ? '<label class="btn-sec btn-subir">⬆ Subir canciones<input type="file" id="subir-audio" accept="audio/*" multiple hidden></label>'
+        ? '<label class="btn-sec btn-subir">⬆ Subir canciones<input type="file" id="subir-audio" accept="audio/*" multiple hidden></label><span class="cfg-nota-mini">o arrástralas aquí</span>'
         : '<span class="cfg-nota-mini">' + (EMBEBIDO ? 'Entra con tu correo (abajo) para subir tus archivos.' : 'Los archivos se suben desde la web publicada.') + '</span>') +
       '<input id="yt-nuevo" type="url" placeholder="Pega un enlace de YouTube…" aria-label="Enlace de YouTube">' +
       '<button type="button" class="btn-sec" data-acc="yt-anadir">+ Añadir</button>' +
@@ -948,7 +956,7 @@
   function empezar() { musicaSonandoDe = ''; st.pidiendoMood = false; st.pantalla = 'calent'; st.bloque = 0; st.hueco = 0; reiniciar(); pintar(); }
   function irABloque(i) {
     if (i < 0 || i >= bloques().length) return;
-    st.bloque = i; st.hueco = 0; reiniciar(); pintar();
+    st.bloque = i; st.hueco = 0; st.verInfo = false; reiniciar(); pintar();
   }
 
   // ---------- eventos ----------
@@ -980,8 +988,10 @@
     else if (acc === 'rep-otra') { reproducir(rep.lista, rep.etiqueta); }
     else if (acc === 'rep-mini') { rep.mini = !rep.mini; pintarRep(); }
     else if (acc === 'rep-cerrar') { cerrarRep(); }
-    else if (acc === 'hueco') { st.hueco = +b.getAttribute('data-i'); reiniciar(); pintar(); }
+    else if (acc === 'hueco') { st.hueco = +b.getAttribute('data-i'); st.verInfo = false; reiniciar(); pintar(); }
     else if (acc === 'siguiente') { irABloque(st.bloque + 1); }
+    else if (acc === 'anterior') { irABloque(st.bloque - 1); }
+    else if (acc === 'info') { st.verInfo = !st.verInfo; pintar(); }
     else if (acc === 'bloque') { irABloque(+b.getAttribute('data-i')); }
     else if (acc === 'terminar') { reiniciar(); cerrarRep(); st.pantalla = 'semana'; st.completado = true; pintar(); }
     else if (acc === 'cerrar-fin') { if (b === ev.target || b.tagName === 'BUTTON') { st.completado = false; pintar(); } }
@@ -1040,6 +1050,39 @@
       var cn = cancionPorId(ev.target.getAttribute('data-id')), nv = ev.target.value.trim();
       if (cn && nv) { cn.nombre = nv.slice(0, 120); guardarTodo(); }
     }
+  });
+
+  // Arrastrar y soltar canciones en Configuración (Biblioteca)
+  function esAudio(f) { return /^audio\//.test(f.type) || /\.(mp3|m4a|aac|wav|ogg|oga|flac|webm|opus)$/i.test(f.name); }
+  function llevaArchivos(ev) { var t = ev.dataTransfer && ev.dataTransfer.types; return !!t && Array.prototype.indexOf.call(t, 'Files') >= 0; }
+  var arrastres = 0;
+  function marcarSoltar(on) {
+    var pnl = document.querySelector('.cfg-panel');
+    if (pnl) pnl.classList.toggle('soltando', on);
+  }
+  // Fuera de Configuración, que soltar un archivo no haga que el navegador lo abra
+  window.addEventListener('dragover', function (ev) { if (llevaArchivos(ev)) ev.preventDefault(); });
+  window.addEventListener('drop', function (ev) { if (llevaArchivos(ev)) ev.preventDefault(); });
+  app.addEventListener('dragenter', function (ev) {
+    if (st.pantalla !== 'config' || !llevaArchivos(ev)) return;
+    arrastres++; marcarSoltar(true);
+  });
+  app.addEventListener('dragleave', function (ev) {
+    if (st.pantalla !== 'config' || !llevaArchivos(ev)) return;
+    arrastres = Math.max(0, arrastres - 1); if (!arrastres) marcarSoltar(false);
+  });
+  app.addEventListener('dragover', function (ev) {
+    if (st.pantalla !== 'config' || !llevaArchivos(ev)) return;
+    ev.preventDefault(); ev.dataTransfer.dropEffect = 'copy';
+  });
+  app.addEventListener('drop', function (ev) {
+    if (st.pantalla !== 'config' || !llevaArchivos(ev)) return;
+    ev.preventDefault(); arrastres = 0; marcarSoltar(false);
+    var fs = Array.prototype.filter.call(ev.dataTransfer.files || [], esAudio);
+    if (st.cfgVista !== 'biblio') { st.cfgVista = 'biblio'; pintar(); }
+    if (!fs.length) { actualizarEstadoCfg('<span class="aviso-cfg">Solo se pueden soltar archivos de audio (MP3, M4A…)</span>'); return; }
+    if (!EMBEBIDO || !nube.usuario) { actualizarEstadoCfg('<span class="aviso-cfg">Entra con tu correo (abajo) para subir canciones</span>'); return; }
+    subirArchivos(fs);
   });
 
   // Esc cierra la ventana de mood · Enter añade un mood nuevo
