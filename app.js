@@ -674,7 +674,7 @@
         var on = c.moods.indexOf(m) >= 0;
         return '<button type="button" class="pill-mood' + (on ? ' on' : '') + '" data-acc="song-mood" data-id="' + id + '" data-m="' + esc(m) + '" aria-pressed="' + on + '">' + esc(m) + '</button>';
       }).join('');
-      return '<div class="cancion">' +
+      return '<div class="cancion' + (c.moods.length ? '' : ' sin-mood') + '">' +
         '<span class="icono" title="' + (arch ? 'Archivo' : 'YouTube') + '">' + (arch ? '♫' : '▶') + '</span>' +
         '<input class="song-nombre" data-id="' + id + '" value="' + esc(c.nombre) + '" maxlength="120" aria-label="Nombre de la canción">' +
         '<div class="moods-fila">' + (pills || '<span class="cfg-nota-mini">Crea un mood arriba</span>') + '</div>' +
@@ -684,7 +684,17 @@
     }).join('');
     var vacio = !biblioteca.length ? '<div class="vacio">Tu biblioteca está vacía: sube canciones o pega enlaces de YouTube.</div>'
       : '<div class="vacio">Ninguna canción con ese filtro.</div>';
-    return herr + '<div class="biblio-lista">' + (filas || vacio) + '</div>';
+    var sinMood = biblioteca.filter(function (c) { return !c.moods.length; }).length;
+    var aviso = sinMood && moods.length
+      ? '<div class="biblio-aviso">⚠ ' + sinMood + (sinMood === 1 ? ' canción no tiene' : ' canciones no tienen') +
+        ' mood: solo suenan con «Ninguno». Toca el mood en cada una (se pone naranja) o usa la barra de abajo.</div>' : '';
+    var masivo = visibles.length > 1
+      ? '<div class="biblio-masivo"><span class="cfg-lbl">A LAS ' + visibles.length + ' DE LA LISTA:</span>' +
+        moods.map(function (m) { return '<button type="button" class="pill-mood" data-acc="masivo-mood" data-m="' + esc(m) + '">+ ' + esc(m) + '</button>'; }).join('') +
+        '<span class="cfg-lbl sep">INTENSIDAD</span>' +
+        [1, 2, 3].map(function (n) { return '<button type="button" class="pill-int n' + n + ' suelta" data-acc="masivo-int" data-n="' + n + '">' + INTENSIDADES[n] + '</button>'; }).join('') +
+        '</div>' : '';
+    return herr + aviso + masivo + '<div class="biblio-lista">' + (filas || vacio) + '</div>';
   }
   // Intensidad de cada ejercicio y cuántas canciones le tocan por mood
   function htmlEjercicios() {
@@ -704,7 +714,10 @@
       '<div class="biblio-lista">' + (filas || '<div class="vacio">Todavía no hay ejercicios cargados.</div>') + '</div>';
   }
   function actualizarEstadoCfg(msg) { var el = document.getElementById('cfg-estado'); if (el) el.innerHTML = msg || ''; }
-  function moodsDelFiltro() { return st.filtroMood && st.filtroMood !== '-' ? [st.filtroMood] : []; }
+  function moodsDelFiltro() {
+    if (st.filtroMood && st.filtroMood !== '-') return [st.filtroMood];
+    return moods.length === 1 ? [moods[0]] : [];
+  }
   function anadirYouTube() {
     var inp = document.getElementById('yt-nuevo'), u = inp ? inp.value.trim() : '';
     if (!esEnlace(u) || !datosYouTube(u)) { actualizarEstadoCfg('<span class="aviso-cfg">Pega un enlace de YouTube válido</span>'); return; }
@@ -897,6 +910,16 @@
     else if (acc === 'song-probar') { var cp = cancionPorId(b.getAttribute('data-id')); if (cp) reproducir([cp.item], '♪ Prueba · ' + cp.nombre); }
     else if (acc === 'song-quitar') { quitarCancion(b.getAttribute('data-id')); }
     else if (acc === 'yt-anadir') { anadirYouTube(); }
+    else if (acc === 'masivo-mood' || acc === 'masivo-int') {
+      var fm2 = st.filtroMood || '', fi2 = +st.filtroInt || 0;
+      var vis = biblioteca.filter(function (c) {
+        return (!fm2 || (fm2 === '-' ? !c.moods.length : c.moods.indexOf(fm2) >= 0)) && (!fi2 || c.intensidad === fi2);
+      });
+      if (acc === 'masivo-mood') { var mm2 = b.getAttribute('data-m'); vis.forEach(function (c) { if (c.moods.indexOf(mm2) < 0) c.moods.push(mm2); }); }
+      else { var nn2 = +b.getAttribute('data-n'); vis.forEach(function (c) { c.intensidad = nn2; }); }
+      guardarTodo(); pintar();
+      actualizarEstadoCfg('Aplicado a ' + vis.length + ' canciones ✓');
+    }
     else if (acc === 'ej-int') { ejIntensidad[b.getAttribute('data-clave')] = +b.getAttribute('data-n'); guardarTodo(); pintar(); }
     else if (acc === 'cfg-exportar') { exportarCfg(); }
     else if (acc === 'cfg-importar') { document.getElementById('cfg-archivo').click(); }

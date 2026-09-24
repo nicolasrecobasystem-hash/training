@@ -217,3 +217,14 @@ button:disabled{cursor:not-allowed}
 .cfg-nube input[type=password]{width:180px}
 .btn-entrar{background:var(--acento) !important;border-color:var(--acento) !important;color:var(--fondo) !important;font-weight:600}
 .btn-link{height:32px;padding:0 4px;border:none;background:transparent;color:var(--suave);font-size:13px;text-decoration:underline}
+/* Aviso de canciones sin mood y barra para aplicar a todas */
+.biblio-aviso{flex-shrink:0;padding:8px 12px;border:1px solid #6B5E2A;border-radius:10px;background:rgba(232,211,106,.08);color:var(--amarillo);font-size:13px}
+.biblio-masivo{flex-shrink:0;display:flex;align-items:center;flex-wrap:wrap;gap:8px}
+.biblio-masivo .sep{margin-left:10px}
+.pill-int.suelta{border:1px solid var(--linea2);border-radius:8px}
+.pill-int.suelta.n1:hover{background:var(--azul);color:var(--fondo)}
+.pill-int.suelta.n2:hover{background:var(--amarillo);color:var(--fondo)}
+.pill-int.suelta.n3:hover{background:var(--acento);color:var(--fondo)}
+.pill-mood:hover{border-color:var(--acento);color:var(--texto)}
+.cancion.sin-mood{border-left:3px solid var(--amarillo)}
+.biblio-lista{scrollbar-color:var(--linea2) transparent}
