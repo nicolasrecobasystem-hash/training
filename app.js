@@ -1217,7 +1217,7 @@
     else if (acc === 'luces-buscar') { buscarLuces(); }
     else if (acc === 'luz-probar') {
       var fp = b.getAttribute('data-f'); lucesEstado.msg = 'Probando ' + NOMBRE_FASE[fp].toLowerCase() + '…'; actualizarMsgLuces();
-      ponerColor(COLOR_FASE[fp], true, BRILLO_FASE[fp]).then(function (r) { lucesEstado.msg = r.error ? r.error : (r.res && r.res.every(function (x) { return x.ok; }) ? 'Listo ✓' : 'Govee no aceptó la orden (¿límite por minuto?)'); actualizarMsgLuces(); });
+      ponerColor(COLOR_FASE[fp], true, BRILLO_FASE[fp], PULSO_FASE[fp]).then(function (r) { lucesEstado.msg = r.error ? r.error : (r.res && r.res.every(function (x) { return x.ok; }) ? 'Listo ✓' : 'Govee no aceptó la orden (¿límite por minuto?)'); actualizarMsgLuces(); });
     }
     else if (acc === 'principal') { botonPrincipal(); }
     else if (acc === 'musica') {
@@ -1432,6 +1432,7 @@
   if (!Array.isArray(luces.devs)) luces.devs = [];
   var COLOR_FASE = { prep: 0x8000FF, trabajo: 0xFF0000, descanso: 0x0000FF, espera: 0xFFFFFF, hecho: 0xFFFFFF };   // morado · rojo · azul · blanco
   var BRILLO_FASE = { prep: 100, trabajo: 100, descanso: 50, espera: 100, hecho: 100 };
+  var PULSO_FASE = { espera: 5, hecho: 5 };   // al llegar al blanco, la intensidad sube y baja 5 veces
   var NOMBRE_FASE = { prep: 'Preparación', trabajo: 'Trabajo', descanso: 'Descanso', espera: 'Siguiente serie', hecho: 'Completado' };
   var lucesEstado = { encontradas: null, msg: '', buscando: false, ultimaFase: '', encendidas: false };
   function guardarLuces() { escribirLS(LS_LUCES, luces); subirNube(); }
@@ -1447,9 +1448,9 @@
       return r.data || {};
     }, function (e) { return { error: String(e && e.message || e) }; });
   }
-  function ponerColor(rgb, encender, brillo) {
+  function ponerColor(rgb, encender, brillo, pulso) {
     if (!luces.devs.length) return Promise.resolve({ error: 'No hay luces elegidas' });
-    return llamarGovee({ accion: 'color', rgb: rgb, luces: luces.devs, encender: !!encender, brillo: brillo || luces.brillo || 0 });
+    return llamarGovee({ accion: 'color', rgb: rgb, luces: luces.devs, encender: !!encender, brillo: brillo || luces.brillo || 0, pulso: pulso || 0 });
   }
   // Se llama cada vez que se repinta el temporizador: solo manda algo cuando cambia la fase
   function lucesPorFase() {
@@ -1459,7 +1460,7 @@
     if (!COLOR_FASE.hasOwnProperty(f) || f === lucesEstado.ultimaFase) return;
     lucesEstado.ultimaFase = f;
     var enc = !lucesEstado.encendidas; lucesEstado.encendidas = true;
-    ponerColor(COLOR_FASE[f], enc, BRILLO_FASE[f]).then(function (r) { if (r && r.error) lucesEstado.msg = r.error; });
+    ponerColor(COLOR_FASE[f], enc, BRILLO_FASE[f], PULSO_FASE[f]).then(function (r) { if (r && r.error) lucesEstado.msg = r.error; });
   }
   function actualizarMsgLuces() { var el = document.querySelector('.luces-msg'); if (el) el.textContent = lucesEstado.msg; }
   function reiniciarLuces() { lucesEstado.ultimaFase = ''; lucesEstado.encendidas = false; }
@@ -1488,7 +1489,7 @@
       '<button type="button" class="btn-sec" data-acc="luces-buscar"' + (lucesEstado.buscando ? ' disabled' : '') + '>' + (lucesEstado.buscando ? 'Buscando…' : '⟳ Buscar mis luces') + '</button></div>' +
       '<div class="luces-cuerpo"><div class="luces-lista"><div class="cfg-lbl">LUCES QUE SE USAN</div>' + filas + '</div>' +
       '<div class="luces-lado"><div class="cfg-lbl">PROBAR UN COLOR</div><div class="luz-muestras">' + muestras + '</div>' +
-      '<p class="luces-nota">Preparación morado · trabajo rojo · descanso azul al 50% · siguiente serie y al completar, blanco. Todo al 100% salvo el descanso. Govee limita las órdenes por minuto: solo se manda una al cambiar de fase.</p></div></div>' +
+      '<p class="luces-nota">Preparación morado · trabajo rojo · descanso azul al 50% · siguiente serie y al completar, blanco con 5 pulsos. Todo al 100% salvo el descanso. Govee limita las órdenes por minuto: solo se manda una al cambiar de fase.</p></div></div>' +
       '<div class="luces-msg aviso-cfg">' + esc(lucesEstado.msg) + '</div></div>';
   }
 

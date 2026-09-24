@@ -47,13 +47,25 @@ Deno.serve(async (req) => {
     const rgb = Math.max(0, Math.min(0xFFFFFF, Number(cuerpo.rgb) | 0));
     const orden = (sku: string, device: string, capability: unknown) =>
       fetch(API + '/device/control', { method: 'POST', headers: cab, body: JSON.stringify({ requestId: crypto.randomUUID(), payload: { sku, device, capability } }) })
-        .then(async (r) => ({ ok: r.ok, status: r.status, d: await r.json().catch(() => null) }));
+        .then(async (r) => {
+          const d = await r.json().catch(() => null);
+          const code = d && typeof d.code === 'number' ? d.code : r.status;   // Govee a veces responde 200 con el error dentro
+          return { ok: r.ok && code === 200, status: code };
+        });
+    const espera = (ms: number) => new Promise((ok) => setTimeout(ok, ms));
+    const brillo = (x: any, v: number) => orden(x.sku, x.device, { type: 'devices.capabilities.range', instance: 'brightness', value: v });
     const res = await Promise.all(devs.map(async (x) => {
       const pasos = [];
       if (cuerpo.encender) pasos.push(await orden(x.sku, x.device, { type: 'devices.capabilities.on_off', instance: 'powerSwitch', value: 1 }));
       pasos.push(await orden(x.sku, x.device, { type: 'devices.capabilities.color_setting', instance: 'colorRgb', value: rgb }));
       const b = Number(cuerpo.brillo);
-      if (b >= 1 && b <= 100) pasos.push(await orden(x.sku, x.device, { type: 'devices.capabilities.range', instance: 'brightness', value: Math.round(b) }));
+      if (b >= 1 && b <= 100) pasos.push(await brillo(x, Math.round(b)));
+      // Pulso: sube y baja la intensidad N veces (p. ej. al terminar el descanso)
+      const n = Math.min(8, Number(cuerpo.pulso) | 0);
+      for (let i = 0; i < n; i++) {
+        await espera(250); pasos.push(await brillo(x, 15));
+        await espera(250); pasos.push(await brillo(x, b >= 1 && b <= 100 ? Math.round(b) : 100));
+      }
       return { device: x.device, ok: pasos.every((p) => p.ok), estados: pasos.map((p) => p.status) };
     }));
     return json({ res });
