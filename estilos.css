@@ -325,3 +325,4 @@ button:disabled{cursor:not-allowed}
 #relojes{position:absolute;top:8px;left:50%;transform:translateX(-50%);z-index:6;display:flex;gap:10px;align-items:center;font-family:var(--mono);font-size:13px;letter-spacing:.08em;color:var(--suave);pointer-events:none;white-space:nowrap}
 #relojes b{font-weight:600;color:var(--texto,#F4F1EA)}
 #relojes .sep{opacity:.6}
+#relojes .mando-on{color:var(--azul)}

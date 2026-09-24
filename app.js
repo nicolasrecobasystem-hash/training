@@ -236,6 +236,7 @@
     cajaRep.querySelector('.rep-audio').hidden = rep.modo !== 'audio';
     document.getElementById('rep-tit').textContent = rep.etiqueta;
     document.getElementById('rep-mini').textContent = rep.mini ? '▢' : '–';
+    avisarMando();
   }
   // Audio de tus archivos (Supabase Storage, privado): se pide un enlace temporal firmado
   var audioEl = document.getElementById('rep-audio-el');
@@ -280,7 +281,7 @@
           events: {
             onReady: function (e) { try { e.target.playVideo(); } catch (x) {} },
             // Al acabar una canción suelta, pone otra al azar de la misma lista
-            onStateChange: function (e) { if (e.data === 0 && !rep.esLista && rep.visible) reproducir(rep.lista, rep.etiqueta); },
+            onStateChange: function (e) { avisarMando(); if (e.data === 0 && !rep.esLista && rep.visible) reproducir(rep.lista, rep.etiqueta); },
             onError: function () { avisoRep('Este vídeo no se deja reproducir fuera de YouTube.', rep.actual); }
           }
         });
@@ -364,7 +365,7 @@
       nube.sb.auth.onAuthStateChange(function (ev, sesion) {
         var u = sesion && sesion.user;
         setTimeout(function () {   // fuera del aviso de Supabase, como recomienda su documentación
-          if (u && (!nube.usuario || nube.usuario.id !== u.id)) { nube.usuario = u; if (st.pantalla === 'config') pintar(); bajarNube(); }
+          if (u && (!nube.usuario || nube.usuario.id !== u.id)) { nube.usuario = u; if (st.pantalla === 'config') pintar(); bajarNube(); conectarMando(); }
           else if (!u) { nube.usuario = null; if (nube.estado !== 'enviado') estadoNube('fuera'); }
         }, 0);
       });
@@ -1062,6 +1063,10 @@
     r.readAsText(archivo);
   }
 
+  // Texto del botón principal (lo usa también el mando de la tableta)
+  function etiquetaPrincipal(c) {
+    return (c.reps && st.fase === 'trabajo') ? 'Serie hecha ✓' : st.corriendo ? 'Pausar' : (st.pausado ? 'Continuar' : (st.fase === 'hecho' ? 'Repetir' : (st.serie > 1 ? 'Iniciar serie ' + st.serie : 'Iniciar')));
+  }
   function pintarTemporizador() {
     var zona = document.getElementById('zona-temp');
     if (!zona) return;
@@ -1073,7 +1078,7 @@
     var tiempo = Math.floor(mostrado / 60) + ':' + (mostrado % 60 < 10 ? '0' : '') + (mostrado % 60);
     if (c.reps && (st.fase === 'espera' || st.fase === 'trabajo' || st.fase === 'hecho')) tiempo = c.reps + '<small>REPS</small>';
     var pct = (st.fase === 'espera' || (c.reps && st.fase === 'trabajo')) ? 100 : (st.fase === 'hecho' ? 0 : Math.round(st.quedan / Math.max(1, st.total) * 100));
-    var etiqueta = (c.reps && st.fase === 'trabajo') ? 'Serie hecha ✓' : st.corriendo ? 'Pausar' : (st.pausado ? 'Continuar' : (st.fase === 'hecho' ? 'Repetir' : (st.serie > 1 ? 'Iniciar serie ' + st.serie : 'Iniciar')));
+    var etiqueta = etiquetaPrincipal(c);
     var col = colores[st.fase];
     var pastillas = '';
     if (c.reps) {
@@ -1096,6 +1101,7 @@
       '<div class="t-medio"><div class="t-barra"><i style="width:' + pct + '%;background:' + col + '"></i></div>' + pastillas + '</div>' +
       '<button type="button" class="btn-pri" data-acc="principal">' + etiqueta + '</button>' +
       '<button type="button" class="btn-rei" data-acc="reiniciar">Reiniciar</button></div>';
+    avisarMando();
   }
 
   function pintar() {
@@ -1103,6 +1109,7 @@
     if (st.pidiendoMood) { var f = vista.querySelector('.mood.ultimo') || vista.querySelector('.mood'); if (f) f.focus(); }
     if (st.pantalla === 'calent') pintarTemporizador();
     if (st.pantalla === 'config') { actualizarEstadoCfg(); pintarNube(); }
+    avisarMando();
   }
 
   function empezar() { musicaSonandoDe = ''; st.pidiendoMood = false; st.pantalla = 'calent'; st.bloque = 0; st.hueco = 0; reiniciar(); pintar(); }
@@ -1285,10 +1292,121 @@
     try { return new Date().toLocaleTimeString('es-ES', { timeZone: zona, hour: '2-digit', minute: '2-digit' }); } catch (e) { return '--:--'; }
   }
   function pintarRelojes() {
-    relojes.innerHTML = '<span>MIAMI <b>' + horaEn('America/New_York') + '</b></span><span class="sep">·</span><span>MADRID <b>' + horaEn('Europe/Madrid') + '</b></span>';
+    relojes.innerHTML = '<span>MIAMI <b>' + horaEn('America/New_York') + '</b></span><span class="sep">·</span><span>MADRID <b>' + horaEn('Europe/Madrid') + '</b></span>' +
+      (mando && mandoConectado() ? '<span class="sep">·</span><span class="mando-on">📱 MANDO</span>' : '');
   }
   pintarRelojes();
   setInterval(pintarRelojes, 15000);
+
+  // ---------- mando (tableta): la pantalla grande manda su estado y obedece las órdenes ----------
+  // La tableta abre mando.html con la misma cuenta. Se hablan por un canal de Supabase Realtime
+  // (broadcast, sin tablas): esta pantalla es la que manda de verdad (temporizador, música, historial).
+  var mando = { canal: null, listo: false, ultimo: 0, reloj: null, envioEn: 0 };
+  function conectarMando() {
+    if (!nube.sb || !nube.usuario || mando.canal) return;
+    mando.canal = nube.sb.channel('mando-' + nube.usuario.id, { config: { broadcast: { self: false } } });
+    mando.canal
+      .on('broadcast', { event: 'cmd' }, function (m) { mando.ultimo = Date.now(); pintarRelojes(); ejecutarMando((m && m.payload) || {}); })
+      .on('broadcast', { event: 'hola' }, function () { mando.ultimo = Date.now(); pintarRelojes(); enviarEstado(); })
+      .subscribe(function (s) { mando.listo = s === 'SUBSCRIBED'; if (mando.listo) enviarEstado(); });
+    setInterval(function () { enviarEstado(); pintarRelojes(); }, 5000);   // latido: la tableta sabe que sigues ahí
+  }
+  function mandoConectado() { return mando.listo && Date.now() - mando.ultimo < 25000; }
+  // Como mucho ~4 envíos por segundo: el temporizador ya repinta 1 vez por segundo
+  function avisarMando() {
+    if (!mando || !mando.listo) return;
+    if (mando.reloj) return;
+    var espera = Math.max(0, 250 - (Date.now() - mando.envioEn));
+    mando.reloj = setTimeout(function () { mando.reloj = null; enviarEstado(); }, espera);
+  }
+  function estadoParaMando() {
+    var d = DIAS[st.sel], g = d.grupo, bs = bloques(), b = bloqueActual(), l = lista(), ex = ejActual(), c = cfg();
+    var sig = '';
+    if (st.pantalla === 'calent') {
+      if (l[st.hueco + 1] !== undefined) sig = l[st.hueco + 1] ? l[st.hueco + 1].nombre : '[Por definir]';
+      else if (bs[st.bloque + 1]) sig = bs[st.bloque + 1].titulo;
+    }
+    var nombreCancion = '';
+    if (rep.visible && rep.actual) { var cc = cancionPorItem(rep.actual); nombreCancion = cc ? cc.nombre : (esArchivo(rep.actual) ? nombreArchivo(rep.actual) : 'YouTube'); }
+    return {
+      t: Date.now(), pantalla: st.pantalla, dia: d.nombre, grupo: g, pidiendoMood: !!st.pidiendoMood, mood: st.mood,
+      moods: moods.map(function (m) { return { n: m, c: biblioteca.filter(function (x) { return x.moods.indexOf(m) >= 0; }).length }; }),
+      ultimoMood: ultimoMood,
+      bloque: { titulo: b ? b.titulo : '', i: st.bloque, n: bs.length }, hueco: st.hueco, nHuecos: l.length,
+      ej: ex ? { nombre: ex.nombre, dosis: ex.dosis || '', dibujo: ex.dibujo || '', indicacion: ex.indicacion || '', ritmo: ex.ritmo || '', hecho: estaHecho(ex, g) } : null,
+      siguiente: sig, ultimo: st.pantalla === 'calent' && !sig,
+      temp: c ? { fase: st.fase, quedan: st.fase === 'espera' ? st.dur : st.quedan, total: st.total, serie: st.serie, series: c.series, reps: c.reps || 0,
+        corriendo: st.corriendo, pausado: st.pausado, lado: c.lado || '', descanso: descansoActual(), etiqueta: etiquetaPrincipal(c) } : null,
+      musica: { sonando: !!rep.visible, pausada: musicaPausada(), nombre: nombreCancion, hay: !!(ex && enlacesMusica(ex, g, st.mood).length) }
+    };
+  }
+  function enviarEstado() {
+    if (!mando.listo || !mando.canal) return;
+    mando.envioEn = Date.now();
+    try { mando.canal.send({ type: 'broadcast', event: 'estado', payload: estadoParaMando() }); } catch (e) {}
+  }
+  function musicaPausada() {
+    if (!rep.visible) return false;
+    try {
+      if (rep.modo === 'audio') return audioEl.paused;
+      if (rep.player && rep.player.getPlayerState) return rep.player.getPlayerState() !== 1 && rep.player.getPlayerState() !== 3;
+    } catch (e) {}
+    return false;
+  }
+  function pausarMusica() {
+    if (!rep.visible) { arrancarMusica(true); return; }
+    try {
+      if (rep.modo === 'audio') { if (audioEl.paused) audioEl.play(); else audioEl.pause(); }
+      else if (rep.player) { if (musicaPausada()) rep.player.playVideo(); else rep.player.pauseVideo(); }
+    } catch (e) {}
+    setTimeout(enviarEstado, 300);
+  }
+  // Ejercicio siguiente / anterior (dentro del bloque y, al acabarlo, al bloque de al lado)
+  function moverEjercicio(paso) {
+    var n = lista().length;
+    if (st.hueco + paso >= 0 && st.hueco + paso < n) { st.hueco += paso; st.verInfo = false; reiniciar(); pintar(); return; }
+    var nb = st.bloque + paso;
+    if (nb < 0 || nb >= bloques().length) return;
+    st.bloque = nb; st.hueco = paso > 0 ? 0 : Math.max(0, (bloques()[nb].ejercicios || []).length - 1); st.verInfo = false; reiniciar(); pintar();
+  }
+  function ejecutarMando(o) {
+    var enCalent = st.pantalla === 'calent';
+    switch (o.accion) {
+      case 'start':
+        if (st.pantalla !== 'semana') { reiniciar(); st.pantalla = 'semana'; }
+        if (typeof o.dia === 'number' && DIAS[o.dia]) st.sel = o.dia;
+        st.completado = false;
+        if (moods.length) { st.pidiendoMood = true; pintar(); } else { st.mood = null; empezar(); }
+        break;
+      case 'dia': if (DIAS[o.i]) { st.sel = o.i; if (st.pantalla === 'semana') pintar(); } break;
+      case 'mood':
+        st.mood = o.i < 0 ? null : (moods[o.i] || null);
+        ultimoMood = st.mood || ''; escribirLS(LS_ULTIMO, ultimoMood); subirNube();
+        empezar(); break;
+      case 'cancelar-mood': st.pidiendoMood = false; pintar(); break;
+      case 'principal': if (enCalent && cfg()) botonPrincipal(); break;
+      case 'reiniciar': if (enCalent) { reiniciar(); pintarTemporizador(); } break;
+      case 'sig': if (enCalent) moverEjercicio(1); break;
+      case 'ant': if (enCalent) moverEjercicio(-1); break;
+      case 'hecho': if (enCalent && ejActual()) { var g = DIAS[st.sel].grupo; marcarHecho(ejActual(), g, !estaHecho(ejActual(), g)); pintar(); } break;
+      case 'cancion': if (enCalent) arrancarMusica(true); else if (rep.visible) reproducir(rep.lista, rep.etiqueta); break;
+      case 'pausa-musica': pausarMusica(); break;
+      case 'terminar':
+        if (enCalent) {
+          var kf = claveFecha(new Date()), gf = DIAS[st.sel].grupo, rf = registroDe(kf) || { grupo: gf, hechos: [] };
+          rf.grupo = gf; rf.total = totalDe(gf); rf.terminado = true; historial[kf] = rf; guardarHistorial();
+          reiniciar(); cerrarRep(); st.pantalla = 'semana'; st.completado = true; pintar();
+        }
+        break;
+      case 'semana': reiniciar(); cerrarRep(); st.pantalla = 'semana'; st.pidiendoMood = false; pintar(); break;
+    }
+    enviarEstado();
+  }
+  // El navegador solo deja sonar música y pitidos si has tocado esta pantalla alguna vez:
+  // con el primer toque se "desbloquea" el sonido para que luego el mando pueda ponerlo.
+  document.addEventListener('pointerdown', function () { activarAudio(); }, { once: true });
+  audioEl.addEventListener('play', function () { avisarMando(); });
+  audioEl.addEventListener('pause', function () { avisarMando(); });
 
   escalar();
   pintar();

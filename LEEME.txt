@@ -49,3 +49,13 @@ Biblioteca de música
 - En Configuración → Intensidad de los ejercicios eliges la intensidad de cada ejercicio.
 - Al entrenar suena una canción al azar del mood elegido con la intensidad del ejercicio
   (si no hay ninguna de esa intensidad, suena otra del mismo mood).
+
+MANDO PARA LA TABLETA (mando.html)
+- En la tableta (en vertical) abre: https://nicolasrecobasystem-hash.github.io/training/mando.html
+  y entra con la misma cuenta (correo y contraseña).
+- En la pantalla grande abre la app normal con la misma cuenta. Arriba verás "📱 MANDO" cuando la tableta está conectada.
+- Desde la tableta: elegir día, START, mood, Iniciar/Pausar/Serie hecha, Reiniciar, Anterior/Siguiente/Terminar,
+  pausar la música y cambiar de canción. Se ve la animación, el contador, la serie y la hora de Miami y Madrid.
+- La pantalla grande es la que cuenta el tiempo, pone la música y guarda el historial.
+- Toca la pantalla grande una vez al empezar: los navegadores no dejan sonar música ni pitidos hasta que la tocas.
+- Van por un canal de Supabase Realtime (sin tablas nuevas).
