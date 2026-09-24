@@ -1275,6 +1275,20 @@
     }
   });
 
+  // ---------- relojes: Miami y Madrid, siempre visibles (fuera de la vista que se repinta) ----------
+  var relojes = document.createElement('div');
+  relojes.id = 'relojes';
+  relojes.setAttribute('aria-label', 'Hora en Miami y en Madrid');
+  app.appendChild(relojes);
+  function horaEn(zona) {
+    try { return new Date().toLocaleTimeString('es-ES', { timeZone: zona, hour: '2-digit', minute: '2-digit' }); } catch (e) { return '--:--'; }
+  }
+  function pintarRelojes() {
+    relojes.innerHTML = '<span>MIAMI <b>' + horaEn('America/New_York') + '</b></span><span class="sep">·</span><span>MADRID <b>' + horaEn('Europe/Madrid') + '</b></span>';
+  }
+  pintarRelojes();
+  setInterval(pintarRelojes, 15000);
+
   escalar();
   pintar();
   iniciarNube();
