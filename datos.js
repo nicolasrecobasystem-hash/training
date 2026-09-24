@@ -98,6 +98,35 @@ const CALENTAMIENTOS = {
         ['Volver de golpe', 'Controla la vuelta: la banda no manda.']
       ],
       temporizador: { series: 2, reps: 15, descanso: 30, preparacion: 5 }
+    },
+    {
+      nombre: 'Dislocaciones con banda',
+      indicacion: 'Arco completo con brazos rectos. Ritmo: 2 s ida · 2 s vuelta.',
+      dosis: '2 × 10',
+      dibujo: 'dislocaciones',
+      anclaNota: 'Sin ancla: la banda va en tus manos',
+      claves: [
+        ['Posición', 'De pie, banda delante de los muslos, palmas hacia atrás.'],
+        ['Brazos', 'Codos estirados todo el tiempo y abdomen apretado.'],
+        ['Recorrido', 'Por delante, encima de la cabeza, hasta la espalda baja.'],
+        ['Vuelta', 'Por el mismo arco hasta delante. Ida y vuelta = 1 rep.']
+      ],
+      agarre: {
+        dibujo: 'agarreDislocaciones',
+        puntos: [
+          ['Banda', 'La más liviana que tengas: buscas movilidad, no fuerza.'],
+          ['Dónde', 'Por la parte recta de la banda, no por las asas.'],
+          ['Anchura', 'Manos muy separadas: tensa pero sin esfuerzo.'],
+          ['Dificultad', 'Más separadas = más fácil. Más juntas = más difícil.']
+        ]
+      },
+      errores: [
+        ['Doblar los codos', 'Si no pasa con los brazos rectos, separa más las manos.'],
+        ['Sacar las costillas', 'Al pasar por arriba no arquees la espalda baja.'],
+        ['Ir con rebote', 'Lento y continuo: 2 s de ida y 2 s de vuelta.'],
+        ['Forzar el paso', 'Si no pasa suave, separa más las manos. Nunca a tirones.']
+      ],
+      temporizador: { series: 2, reps: 10, descanso: 30, preparacion: 5 }
     }
   ]
 };
@@ -181,5 +210,43 @@ const DIBUJOS = {
 </g>
 <text x="140" y="98" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" letter-spacing="1">PALMAS ABAJO</text>
 <text x="140" y="134" text-anchor="middle" fill="#F2913D" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" letter-spacing="1">MÁS JUNTAS = MÁS DIFÍCIL</text>
+</svg>`,
+  // Dislocaciones de perfil: los brazos rectos giran delante → arriba → detrás y vuelven (animado, 2 s + 2 s)
+  dislocaciones: `
+<svg viewBox="0 0 240 420" fill="none" role="img" aria-label="Figura de perfil: los brazos rectos con la banda suben por delante, pasan por encima de la cabeza hasta detrás de la cadera y vuelven por el mismo camino">
+<line x1="10" y1="412" x2="230" y2="412" stroke="#4A5059" stroke-width="2"/>
+<circle cx="120" cy="130" r="112" stroke="#F2913D" stroke-width="2" stroke-dasharray="5 6" opacity=".55"/>
+<g stroke="#F4F1EA" stroke-width="13" stroke-linecap="round" stroke-linejoin="round">
+<line x1="120" y1="118" x2="120" y2="250"/>
+<polyline points="120,250 118,330 116,398 136,398"/>
+</g>
+<circle cx="120" cy="92" r="22" fill="#F4F1EA"/>
+<g>
+<animateTransform attributeName="transform" type="rotate" values="-20 120 130;-180 120 130;-340 120 130;-180 120 130;-20 120 130" keyTimes="0;0.25;0.5;0.75;1" dur="4s" repeatCount="indefinite"/>
+<line x1="120" y1="130" x2="120" y2="236" stroke="#F4F1EA" stroke-width="12" stroke-linecap="round"/>
+<circle cx="120" cy="242" r="9" fill="#F2913D"/>
+</g>
+<text x="200" y="262" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">1 · delante</text>
+<text x="120" y="12" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">2 · arriba</text>
+<text x="40" y="262" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">3 · detrás</text>
+</svg>`,
+
+  // Arriba del todo: bien (V ancha, brazos rectos) frente a mal (manos juntas, codos doblados)
+  agarreDislocaciones: `
+<svg viewBox="0 0 280 140" fill="none" role="img" aria-label="Arriba del todo. Bien: brazos rectos en V ancha con la banda tensa. Mal: manos juntas y codos doblados">
+<text x="70" y="14" text-anchor="middle" fill="#7FB2E5" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✓ BIEN · V ANCHA</text>
+<text x="210" y="14" text-anchor="middle" fill="#F2913D" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✕ MAL · JUNTAS</text>
+<line x1="140" y1="10" x2="140" y2="132" stroke="#2E3238" stroke-width="2"/>
+<line x1="38" y1="31" x2="102" y2="31" stroke="#F2913D" stroke-width="3"/>
+<g stroke="#F4F1EA" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+<polyline points="38,31 70,76 102,31"/>
+<line x1="70" y1="76" x2="70" y2="112"/><polyline points="63,134 70,112 77,134"/>
+<polyline points="203,34 190,58 210,76 230,58 217,34"/>
+<line x1="210" y1="76" x2="210" y2="112"/><polyline points="203,134 210,112 217,134"/>
+</g>
+<line x1="203" y1="34" x2="217" y2="34" stroke="#F2913D" stroke-width="3"/>
+<circle cx="70" cy="62" r="9" fill="#F4F1EA"/><circle cx="210" cy="62" r="9" fill="#F4F1EA"/>
+<line x1="30" y1="136" x2="110" y2="136" stroke="#4A5059" stroke-width="2"/>
+<line x1="170" y1="136" x2="250" y2="136" stroke="#4A5059" stroke-width="2"/>
 </svg>`
 };
