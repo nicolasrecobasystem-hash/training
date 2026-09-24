@@ -131,6 +131,66 @@ const CALENTAMIENTOS = {
   ]
 };
 
+// ==========================================================
+//  BLOQUES DEL DÍA: el orden de la sesión ("Siguiente →" pasa al siguiente).
+//  Cada bloque: titulo, nota (opcional, se ve junto al título) y ejercicios
+//  (misma estructura que el calentamiento). Los que aún no tienen dibujo,
+//  claves, agarre o errores salen como [Por definir].
+//  temporizador con repeticiones: reps (número o texto, ej. '8–12'), lado
+//  (ej. 'por brazo') y descansos: [segundos...] para elegir el descanso.
+// ==========================================================
+const BLOQUES = {
+  Hombro: [
+    { titulo: 'Calentamiento', ejercicios: CALENTAMIENTOS.Hombro },
+    {
+      titulo: 'Principal', nota: 'Descanso 60–90 s',
+      ejercicios: [
+        {
+          nombre: 'Press militar con banda', indicacion: 'Pisando la banda.', dosis: '4 × 8–12',
+          anclaNota: 'Sin ancla: pisas la banda',
+          temporizador: { series: 4, reps: '8–12', descanso: 60, descansos: [60, 75, 90], preparacion: 5 }
+        },
+        {
+          nombre: 'Elevaciones laterales', indicacion: 'De costado al ancla baja, la banda cruza por delante del cuerpo.',
+          dosis: '3 × 12–15 por brazo', ancla: 'baja',
+          temporizador: { series: 3, reps: '12–15', lado: 'por brazo', descanso: 60, descansos: [60, 75, 90], preparacion: 5 }
+        },
+        {
+          nombre: 'Elevación en Y', indicacion: 'Desde el ancla baja.', dosis: '3 × 12', ancla: 'baja',
+          temporizador: { series: 3, reps: 12, descanso: 60, descansos: [60, 75, 90], preparacion: 5 }
+        }
+      ]
+    },
+    {
+      titulo: 'Posterior y estabilidad', nota: 'Descanso ~45 s',
+      ejercicios: [
+        {
+          nombre: 'Face pull', indicacion: 'Desde el ancla alta.', dosis: '3 × 15', ancla: 'alta',
+          temporizador: { series: 3, reps: 15, descanso: 45, preparacion: 5 }
+        },
+        {
+          nombre: 'Pájaros', indicacion: 'Desde el ancla media.', dosis: '3 × 15', ancla: 'media',
+          temporizador: { series: 3, reps: 15, descanso: 45, preparacion: 5 }
+        },
+        {
+          nombre: 'Rotación externa', indicacion: 'Desde el ancla media.', dosis: '2 × 15 por brazo', ancla: 'media',
+          temporizador: { series: 2, reps: 15, lado: 'por brazo', descanso: 45, preparacion: 5 }
+        }
+      ]
+    },
+    {
+      titulo: 'Final',
+      ejercicios: [
+        {
+          nombre: 'Dominadas escapulares', indicacion: 'Colgado de la barra, solo se mueven las escápulas.',
+          dosis: '2 × 6–8', ancla: 'barra',
+          temporizador: { series: 2, reps: '6–8', descanso: 60, preparacion: 5 }
+        }
+      ]
+    }
+  ]
+};
+
 // Dibujos (SVG). Se pueden añadir más con otro nombre.
 const DIBUJOS = {
   colgado: `
