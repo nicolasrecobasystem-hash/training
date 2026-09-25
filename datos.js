@@ -43,6 +43,11 @@ const INFO_GRUPO = {
     duracion: '~50 min',
     material: 'Bandas, barra, banda de ayuda y anclas baja y alta',
     enfoque: 'Bíceps y antebrazo'
+  },
+  'Espalda · Volumen': {
+    duracion: '~55 min',
+    material: 'Barra, bandas, banda de ayuda y anclas media y alta',
+    enfoque: 'Espalda con muchas repeticiones'
   }
 };
 
@@ -454,6 +459,101 @@ const CALENTAMIENTOS = {
         ['Nota', 'Deberías acabar sin sensación de cansancio.']
       ],
       temporizador: { series: 1, reps: 15, lado: 'por brazo', descanso: 30, preparacion: 5 }
+    }
+  ],
+  // MARTES · Espalda con foco en volumen · calentamiento
+  'Espalda · Volumen': [
+    {
+      nombre: 'Colgarte de la barra',
+      indicacion: 'Mangos paralelos y brazos estirados: deja caer el peso, cuerpo quieto.',
+      dosis: '2 × 20 s', dibujo: 'colgado', ancla: 'barra',
+      claves: [
+        ['Subir', 'Apoya el peso poco a poco desde la silla.'],
+        ['Brazos', 'Estirados, pies al aire.'],
+        ['Cuerpo', 'Recto y quieto, piernas juntas. Relaja los hombros.'],
+        ['Bajar', 'Apoyando los pies en la silla.']
+      ],
+      agarre: {
+        dibujo: 'agarreNeutro',
+        puntos: [
+          ['Silla', 'Firme, debajo de la barra.'],
+          ['Mangos', 'Paralelos, palmas enfrentadas.'],
+          ['Manos secas', 'Sécatelas antes de colgarte.']
+        ]
+      },
+      errores: [
+        ['Balancearse', 'Cuerpo vertical y quieto: si oscilas, apoya un pie y vuelve a empezar.'],
+        ['Doblar los codos', 'Brazos estirados.'],
+        ['Soltarse de golpe', 'Baja por la silla.'],
+        ['Aguantar con dolor', 'Un pinchazo en el hombro: para.']
+      ],
+      info: [
+        ['Para qué sirve', 'Descomprime y prepara hombros, codos y agarre.'],
+        ['Nota', 'Es calentamiento: sin llegar al límite.']
+      ],
+      temporizador: { series: 2, opciones: [20, 25], descanso: 30, preparacion: 5 }
+    },
+    {
+      nombre: 'Dominadas escapulares',
+      indicacion: 'Colgado con los codos rectos: baja los hombros y junta los omóplatos.',
+      ritmo: 'Pausa 1 s arriba',
+      dosis: '2 × 6', dibujo: 'dominadasEsc', ancla: 'barra',
+      claves: [
+        ['Pasivo', 'Hombros subidos hacia las orejas.'],
+        ['Activo', 'Baja los hombros y junta los omóplatos, sin doblar los codos.'],
+        ['Pausa', 'Aguanta 1 s arriba.'],
+        ['Volver', 'Despacio al pasivo.']
+      ],
+      agarre: {
+        titulo: 'MONTAJE', dibujo: 'bienMalDominadas',
+        puntos: [
+          ['Subir', 'Con la silla.'],
+          ['Mangos', 'Paralelos.'],
+          ['Brazos', 'Totalmente estirados.']
+        ]
+      },
+      errores: [
+        ['Doblar los codos', 'Solo se mueven hombros y omóplatos: si no, es media dominada.'],
+        ['Balancearse', 'Para y vuelve a empezar.'],
+        ['Movimiento corto', 'Recorrido completo.'],
+        ['Ir rápido', 'Pausa real arriba.']
+      ],
+      info: [
+        ['Para qué sirve', 'Activa la espalda para las dominadas asistidas.'],
+        ['Nota', 'Pocas y limpias.']
+      ],
+      temporizador: { series: 2, reps: 6, descanso: 30, preparacion: 5 }
+    },
+    {
+      nombre: 'Pull-aparts con banda',
+      indicacion: 'Brazos al frente a la altura del pecho; abre hasta que la banda toque el pecho.',
+      ritmo: '1 s abrir · 2 s volver',
+      dosis: '2 × 15', dibujo: 'pullApart', anclaNota: 'Sin ancla: la banda va en tus manos',
+      claves: [
+        ['Inicio', 'Brazos al frente, codos casi rectos.'],
+        ['Abrir', 'Hasta tocar el pecho.'],
+        ['Pausa', 'Aguanta 1 s juntando los omóplatos.'],
+        ['Volver', 'Controlando la banda.']
+      ],
+      agarre: {
+        titulo: 'MONTAJE', dibujo: 'agarreBanda',
+        puntos: [
+          ['Banda', 'Liviana.'],
+          ['Manos', 'Al ancho de los hombros.'],
+          ['Si no llega', 'Si no llega al pecho, separa más las manos.']
+        ]
+      },
+      errores: [
+        ['Hombros a las orejas', 'Brazos rectos en cruz y hombros bajos, codos sin doblar.'],
+        ['Arquear la espalda', 'El tronco no se mueve.'],
+        ['Soltar de golpe', 'Controla la vuelta.'],
+        ['Bajar los brazos', 'Siempre a la altura del pecho.']
+      ],
+      info: [
+        ['Para qué sirve', 'Activa la espalda alta antes del volumen de remo y dominadas.'],
+        ['Nota', 'Calentamiento: sin fatiga.']
+      ],
+      temporizador: { series: 2, reps: 15, descanso: 30, preparacion: 5 }
     }
   ],
   // VIERNES · Pecho (fuerza) · calentamiento
@@ -1234,6 +1334,242 @@ const BLOQUES = {
             ['Cómo progresar', 'Banda más dura o 40 s.']
           ],
           temporizador: { series: 2, opciones: [20, 30, 40], porDefecto: 30, lado: 'por brazo', descanso: 30, preparacion: 5 }
+        }
+      ]
+    }
+  ],
+  // MARTES · Espalda con foco en volumen
+  'Espalda · Volumen': [
+    { titulo: 'Calentamiento', ejercicios: CALENTAMIENTOS['Espalda · Volumen'] },
+    {
+      titulo: 'Principal · Volumen', nota: 'Descanso 60–90 s',
+      ejercicios: [
+        {
+          nombre: 'Dominadas asistidas',
+          indicacion: 'Con más ayuda que el sábado: muchas repeticiones completas, barbilla sobre la barra.',
+          ritmo: '2 s bajar',
+          dosis: '4 × 8–10', dibujo: 'dominadaAsistida', ancla: 'barra',
+          claves: [
+            ['Abajo', 'Brazos estirados y hombros bajos, banda bajo el pie.'],
+            ['Subir', 'Hasta pasar la barbilla en cada repetición.'],
+            ['Bajar', 'En 2 s, con una pausa breve abajo.'],
+            ['Salir', 'Desde la silla, sal de la banda con cuidado.']
+          ],
+          agarre: {
+            titulo: 'MONTAJE', dibujo: 'bienMalAsistida',
+            puntos: [
+              ['Banda', 'Más gruesa que el sábado: hoy buscas repeticiones.'],
+              ['Colocación', 'Ahorcada en la barra.'],
+              ['Mangos', 'Paralelos.']
+            ]
+          },
+          errores: [
+            ['Balancearse', 'Subida vertical y controlada, sin rebote de la banda.'],
+            ['Rebotar abajo', 'Pausa breve abajo.'],
+            ['Soltar la banda', 'Nunca estirada.'],
+            ['Media repetición', 'Recorrido completo.']
+          ],
+          info: [
+            ['Por qué distinto al sábado', 'El sábado es fuerza; hoy, muchas repeticiones completas para sumar práctica.'],
+            ['Cómo progresar', 'Con 4 × 10, pasa a una banda más fina.']
+          ],
+          temporizador: { series: 4, reps: '8–10', descanso: 90, descansos: [60, 90, 120], preparacion: 5 }
+        },
+        {
+          nombre: 'Remo a una mano',
+          indicacion: 'Mirando al ancla media: codo atrás pegado al costado, pausa 1 s.',
+          ritmo: 'Pausa 1 s atrás · 2 s volver',
+          dosis: '4 × 12–15 c/brazo', dibujo: 'remo', ancla: 'media',
+          claves: [
+            ['Inicio', 'Brazo estirado hacia el ancla, pecho fuera y hombro bajo.'],
+            ['Tirar', 'Codo atrás, pegado al costado.'],
+            ['Pausa', '1 s juntando el omóplato; vuelve en 2 s.'],
+            ['Cambio', 'Termina y cambia de brazo, sin descanso: eso es 1 serie.']
+          ],
+          agarre: {
+            titulo: 'MONTAJE', dibujo: 'bienMalRemo',
+            puntos: [
+              ['Ancla', 'Banda en el ancla media.'],
+              ['Pies', 'Pie contrario adelantado.'],
+              ['Tensión', 'Retrocede hasta tener tensión.']
+            ]
+          },
+          errores: [
+            ['Echarse atrás', 'Tronco quieto: el codo va atrás, no el cuerpo.'],
+            ['Codo abierto', 'Pegado al costado.'],
+            ['Girar el tronco', 'Hombros hacia la pared.'],
+            ['Sin pausa', 'Junta el omóplato 1 s.']
+          ],
+          info: [
+            ['Qué trabaja', 'Dorsal, romboides y trapecio medio.'],
+            ['Cómo progresar', 'Retrocede o usa una banda más dura.']
+          ],
+          temporizador: { series: 4, reps: '12–15', lado: 'por brazo', descanso: 60, descansos: [45, 60, 75], preparacion: 5 }
+        },
+        {
+          nombre: 'Jalón a una mano',
+          indicacion: 'De rodillas bajo la barra: el codo baja hasta las costillas.',
+          ritmo: '1 s tirar · 2 s volver',
+          dosis: '3 × 15 c/brazo', dibujo: 'jalon', ancla: 'mosqueton',
+          claves: [
+            ['Inicio', 'De rodillas, brazo estirado hacia el mosquetón.'],
+            ['Tirar', 'Baja el hombro y lleva el codo a las costillas.'],
+            ['Pausa', 'Aprieta 1 s y vuelve en 2 s.'],
+            ['Cambio', 'Termina y cambia de brazo, sin descanso: eso es 1 serie.']
+          ],
+          agarre: {
+            titulo: 'MONTAJE', dibujo: 'bienMalJalon',
+            puntos: [
+              ['Banda', 'En el mosquetón central.'],
+              ['Posición', 'De rodillas, mano libre en la cadera.'],
+              ['Tensión', 'Con el brazo estirado.']
+            ]
+          },
+          errores: [
+            ['Echarse atrás', 'Tronco recto: trabaja el brazo.'],
+            ['Tirar con la mano', 'Piensa en el codo.'],
+            ['Girar el tronco', 'Hombros al frente.'],
+            ['Soltar arriba', 'Controla la vuelta.']
+          ],
+          info: [
+            ['Qué trabaja', 'Dorsal con el gesto de la dominada.'],
+            ['Cómo progresar', 'Banda más dura cuando los 3 × 15 sean fáciles.']
+          ],
+          temporizador: { series: 3, reps: 15, lado: 'por brazo', descanso: 60, descansos: [45, 60, 75], preparacion: 5 }
+        }
+      ]
+    },
+    {
+      titulo: 'Complementarios', nota: 'Descanso 45 s',
+      ejercicios: [
+        {
+          nombre: 'Pullover a una mano',
+          indicacion: 'Brazo recto apuntando al ancla alta: bájalo en arco hasta el muslo.',
+          ritmo: 'Pausa 1 s abajo · 2 s volver',
+          dosis: '3 × 15 c/brazo', dibujo: 'pullover', ancla: 'alta',
+          claves: [
+            ['Inicio', 'Brazo recto hacia el ancla alta, algo inclinado.'],
+            ['Bajar', 'Con el brazo recto, hasta el muslo.'],
+            ['Pausa', 'Aprieta 1 s y vuelve en 2 s.'],
+            ['Cambio', 'Termina y cambia de brazo, sin descanso: eso es 1 serie.']
+          ],
+          agarre: {
+            titulo: 'MONTAJE', dibujo: 'bienMalPullover',
+            puntos: [
+              ['Ancla', 'Banda en el ancla alta.'],
+              ['Postura', 'Algo inclinado hacia delante.'],
+              ['Mano libre', 'En la cadera.']
+            ]
+          },
+          errores: [
+            ['Doblar el codo', 'Brazo recto en arco: con el codo doblado es un remo.'],
+            ['Encoger el hombro', 'Hombro bajo.'],
+            ['Mover el tronco', 'La inclinación es fija.'],
+            ['Subir rápido', 'Controla la vuelta.']
+          ],
+          info: [
+            ['Qué trabaja', 'Dorsal aislado.'],
+            ['Cómo progresar', 'Retrocede un paso.']
+          ],
+          temporizador: { series: 3, reps: 15, lado: 'por brazo', descanso: 45, descansos: [30, 45, 60], preparacion: 5 }
+        },
+        {
+          nombre: 'Pájaro a una mano',
+          indicacion: 'De costado al ancla media: abre el brazo casi recto hacia fuera y atrás.',
+          ritmo: '1 s abrir · 2 s volver',
+          dosis: '3 × 15 c/brazo', dibujo: 'pajaros', ancla: 'media',
+          claves: [
+            ['Inicio', 'De costado, la mano lejana agarra la banda por delante.'],
+            ['Brazo', 'Casi recto, hombro bajo.'],
+            ['Abrir', 'Hacia fuera y atrás; vuelve en 2 s.'],
+            ['Cambio', 'Termina y cambia de lado, sin descanso: eso es 1 serie.']
+          ],
+          agarre: {
+            titulo: 'MONTAJE', dibujo: 'bienMalPajaros',
+            puntos: [
+              ['Ancla', 'Banda en el ancla media.'],
+              ['Posición', 'De costado, agarra con la mano más alejada.'],
+              ['Tensión', 'Con el brazo por delante.']
+            ]
+          },
+          errores: [
+            ['Doblar el codo', 'Brazo casi recto: con el codo doblado es un remo.'],
+            ['Banda dura', 'Liviana y con recorrido.'],
+            ['Girar el tronco', 'Quieto, de costado.'],
+            ['Subir el hombro', 'Lejos de la oreja.']
+          ],
+          info: [
+            ['Qué trabaja', 'Deltoide posterior y romboides.'],
+            ['Cómo progresar', 'Aléjate un poco más.']
+          ],
+          temporizador: { series: 3, reps: 15, lado: 'por brazo', descanso: 45, descansos: [30, 45, 60], preparacion: 5 }
+        },
+        {
+          nombre: 'Face pull a una mano',
+          indicacion: 'Tira hacia la cara con el codo alto hasta dejar la mano junto a la oreja.',
+          ritmo: 'Pausa 1 s arriba',
+          dosis: '3 × 15 c/brazo', dibujo: 'facePull', ancla: 'alta',
+          claves: [
+            ['Inicio', 'Brazo estirado hacia el ancla alta, pecho fuera.'],
+            ['Hombro', 'Bajo antes de tirar.'],
+            ['Tirar', 'Con el codo alto; pausa 1 s con la mano junto a la oreja.'],
+            ['Cambio', 'Termina y cambia de brazo, sin descanso: eso es 1 serie.']
+          ],
+          agarre: {
+            titulo: 'MONTAJE', dibujo: 'bienMalFace',
+            puntos: [
+              ['Ancla', 'Banda en el ancla alta.'],
+              ['Mano', 'Un asa, palma hacia abajo.'],
+              ['Posición', 'Paso atrás; mano libre en la cadera.']
+            ]
+          },
+          errores: [
+            ['Codo bajo', 'Codo a la altura del hombro: si baja, es un remo.'],
+            ['Girar el tronco', 'Hombros hacia la pared.'],
+            ['Subir el hombro', 'Lejos de la oreja.'],
+            ['Ir rápido', 'Pausa arriba.']
+          ],
+          info: [
+            ['Qué trabaja', 'Deltoide posterior y rotadores. Postura.'],
+            ['Cómo progresar', 'Paso atrás o banda más dura.']
+          ],
+          temporizador: { series: 3, reps: 15, lado: 'por brazo', descanso: 45, descansos: [30, 45, 60], preparacion: 5 }
+        }
+      ]
+    },
+    {
+      titulo: 'Final en la barra', nota: 'Descanso 90 s',
+      ejercicios: [
+        {
+          nombre: 'Negativa larga',
+          indicacion: 'Desde arriba, baja en 10 s a velocidad constante. Una por serie.',
+          ritmo: 'Bajada en 10 s',
+          dosis: '2 × 1', dibujo: 'negativaLarga', ancla: 'barra',
+          claves: [
+            ['Arriba', 'Desde la silla, barbilla sobre la barra.'],
+            ['Bajar', 'Durante 10 s sin parar, contando en voz alta.'],
+            ['Abajo', 'Brazos estirados; a la silla.'],
+            ['Una', 'Una sola repetición por serie.']
+          ],
+          agarre: {
+            titulo: 'MONTAJE', dibujo: 'bienMalNegativa',
+            puntos: [
+              ['Silla', 'Debajo de la barra.'],
+              ['Mangos', 'Paralelos.'],
+              ['Contar', 'Cuenta en voz alta hasta 10.']
+            ]
+          },
+          errores: [
+            ['Caer de golpe', 'Velocidad igual en todo el recorrido, también en el último tramo.'],
+            ['Frenar solo arriba', 'El tramo final también cuenta.'],
+            ['Sin silla', 'Siempre silla.'],
+            ['Aguantar el aire', 'Respira.']
+          ],
+          info: [
+            ['Para qué sirve', 'Mucho tiempo bajo tensión en el gesto de la dominada.'],
+            ['Cómo progresar', 'Apunta tu tiempo y súbelo hasta 15 s.']
+          ],
+          temporizador: { series: 2, reps: 1, descanso: 90, descansos: [60, 90, 120], preparacion: 5 }
         }
       ]
     }

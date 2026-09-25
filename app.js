@@ -554,7 +554,7 @@
     var c = cfg();
     var ejK = ejActual() ? ejActual().nombre : '';
     if (c && c.opciones && (c.opciones.indexOf(st.dur) < 0 || st.durDe !== ejK)) { st.dur = c.porDefecto || c.opciones[0]; st.durDe = ejK; }   // al cambiar de ejercicio, su duración por defecto
-    if (c && c.descansos && c.descansos.indexOf(st.desc) < 0) st.desc = c.descansos.indexOf(c.descanso) >= 0 ? c.descanso : c.descansos[0];
+    if (c && c.descansos && (c.descansos.indexOf(st.desc) < 0 || st.descDe !== ejK)) st.descDe = ejK, st.desc = c.descansos.indexOf(c.descanso) >= 0 ? c.descanso : c.descansos[0];
     st.fase = 'espera'; st.corriendo = false; st.pausado = false; st.serie = 1; st.quedan = st.dur; st.total = st.dur;
   }
   function botonPrincipal() {
