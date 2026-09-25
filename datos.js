@@ -33,6 +33,11 @@ const INFO_GRUPO = {
     duracion: '~55 min',
     material: 'Barra, bandas, banda de ayuda y anclas media y alta',
     enfoque: 'Dominadas: sumar repeticiones completas'
+  },
+  'Pecho · Volumen': {
+    duracion: '~50 min',
+    material: 'Suelo, silla, bandas y anclas media, alta y baja',
+    enfoque: 'Volumen de pecho: muchas repeticiones limpias'
   }
 };
 
@@ -40,7 +45,7 @@ const INFO_GRUPO = {
 //  - dibujo: nombre de un dibujo de DIBUJOS (abajo)
 //  - claves: indicaciones que salen junto al dibujo
 //  - temporizador (opcional): series, descanso y preparación, más UNA de estas dos:
-//      · opciones: [segundos...]  -> ejercicio por tiempo (cuenta atrás)
+//      · opciones: [segundos...]  -> ejercicio por tiempo (cuenta atrás); porDefecto: la que sale marcada
 //      · reps: número            -> ejercicio por repeticiones (botón "Serie hecha")
 //  - agarre (opcional): { dibujo, puntos: [[título, texto], ...] } -> panel AGARRE
 //  - errores (opcional): [[error, cómo corregirlo], ...] -> panel ERRORES COMUNES
@@ -253,6 +258,102 @@ const CALENTAMIENTOS = {
         ['Nota', 'Sin fatiga: al terminar deberías sentirte más fuerte, no cansado.']
       ],
       temporizador: { series: 1, reps: 15, lado: 'por brazo', descanso: 30, preparacion: 5 }
+    }
+  ],
+  // DOMINGO · Pecho con foco en volumen · calentamiento
+  'Pecho · Volumen': [
+    {
+      nombre: 'Pull-aparts con banda',
+      indicacion: 'Brazos al frente a la altura del pecho; abre hasta que la banda toque el pecho.',
+      ritmo: '1 s abrir · 2 s volver',
+      dosis: '2 × 15', dibujo: 'pullApart', anclaNota: 'Sin ancla: la banda va en tus manos',
+      claves: [
+        ['Inicio', 'Brazos al frente, codos casi rectos.'],
+        ['Abrir', 'Hasta tocar el pecho, soltando el aire.'],
+        ['Pausa', 'Aguanta 1 s juntando los omóplatos.'],
+        ['Volver', 'Controlando la banda.']
+      ],
+      agarre: {
+        titulo: 'MONTAJE', dibujo: 'agarreBanda',
+        puntos: [
+          ['Banda', 'Liviana.'],
+          ['Manos', 'Al ancho de los hombros, palmas hacia abajo.'],
+          ['Si no llega', 'Si no llega al pecho, separa más las manos.']
+        ]
+      },
+      errores: [
+        ['Hombros a las orejas', 'Brazos rectos en cruz y hombros bajos, codos sin doblar.'],
+        ['Arquear la espalda', 'El tronco no se mueve.'],
+        ['Soltar de golpe', 'Controla la vuelta.'],
+        ['Bajar los brazos', 'Siempre a la altura del pecho.']
+      ],
+      info: [
+        ['Por qué en día de pecho', 'Activa la espalda alta, que estabiliza los hombros en las flexiones.'],
+        ['Nota', 'Hoy hay muchas repeticiones de empuje: este equilibrio importa.']
+      ],
+      temporizador: { series: 2, reps: 15, descanso: 30, preparacion: 5 }
+    },
+    {
+      nombre: 'Flexiones escapulares',
+      indicacion: 'En plancha con los brazos rectos, junta y separa los omóplatos.',
+      ritmo: 'Pausa 1 s en cada punto',
+      dosis: '2 × 10', dibujo: 'flexEscap', anclaNota: 'Sin ancla: en el suelo',
+      claves: [
+        ['Inicio', 'Plancha alta, manos bajo los hombros.'],
+        ['Juntar', 'Sin doblar los codos, junta los omóplatos.'],
+        ['Empujar', 'Empuja el suelo hasta separarlos al máximo.'],
+        ['Pausa', '1 s en cada punto.']
+      ],
+      agarre: {
+        titulo: 'MONTAJE', dibujo: 'bienMalFlexEscap',
+        puntos: [
+          ['Manos', 'Plancha alta, manos bajo los hombros.'],
+          ['Cuerpo', 'Recto de la cabeza a los talones.'],
+          ['Mirada', 'Al suelo, un poco por delante.']
+        ]
+      },
+      errores: [
+        ['Doblar los codos', 'Solo se mueven los omóplatos: si no, es una flexión corta.'],
+        ['Hundir la cadera', 'Abdomen y glúteos apretados.'],
+        ['Recorrido corto', 'Máximo en los dos sentidos.'],
+        ['Ir rápido', 'Lento y con pausa.']
+      ],
+      info: [
+        ['Para qué sirve', 'Activa el serrato para empujar con el hombro estable.'],
+        ['Nota', 'Calentamiento: sin fatiga.']
+      ],
+      temporizador: { series: 2, reps: 10, descanso: 30, preparacion: 5 }
+    },
+    {
+      nombre: 'Dislocaciones con banda',
+      indicacion: 'Arco completo con los brazos rectos: delante, arriba y detrás de la cadera.',
+      ritmo: '2 s ida · 2 s vuelta',
+      dosis: '2 × 10', dibujo: 'dislocaciones', anclaNota: 'Sin ancla: la banda va en tus manos',
+      claves: [
+        ['Inicio', 'Banda delante de los muslos, agarre muy ancho y brazos rectos.'],
+        ['Brazos', 'Codos estirados todo el recorrido.'],
+        ['Ida', 'Sube por delante y sigue hasta detrás de la cadera.'],
+        ['Vuelta', 'Por el mismo arco: 1 repetición.']
+      ],
+      agarre: {
+        dibujo: 'agarreDislocaciones',
+        puntos: [
+          ['Banda', 'La más liviana que tengas.'],
+          ['Dónde', 'Por la parte recta, con las manos muy separadas.'],
+          ['Dificultad', 'Más separadas = más fácil.']
+        ]
+      },
+      errores: [
+        ['Doblar los codos', 'Brazos rectos en una V ancha; si no pasan, separa más las manos.'],
+        ['Sacar las costillas', 'Abdomen firme arriba.'],
+        ['Ir con rebote', 'Lento y continuo.'],
+        ['Forzar el paso', 'Separa más las manos.']
+      ],
+      info: [
+        ['Para qué sirve', 'Abre el pecho y los hombros antes de un día con mucho volumen.'],
+        ['Cómo progresar', 'Acerca un poco las manos cada semana si sale suave.']
+      ],
+      temporizador: { series: 2, reps: 10, descanso: 30, preparacion: 5 }
     }
   ],
   // VIERNES · Pecho (fuerza) · calentamiento
@@ -592,6 +693,242 @@ const BLOQUES = {
             ['Cómo progresar', 'Cuando pases de 60 s, prueba el agarre ancho.']
           ],
           temporizador: { series: 2, opciones: [30, 45, 60], descanso: 60, preparacion: 5 }
+        }
+      ]
+    }
+  ],
+  // DOMINGO · Pecho con foco en volumen
+  'Pecho · Volumen': [
+    { titulo: 'Calentamiento', ejercicios: CALENTAMIENTOS['Pecho · Volumen'] },
+    {
+      titulo: 'Principal · Volumen', nota: 'Descanso 60 s',
+      ejercicios: [
+        {
+          nombre: 'Flexiones clásicas',
+          indicacion: 'Cuerpo como una tabla: baja en 2 s hasta casi tocar el suelo y sube en 1.',
+          ritmo: '2 s abajo · 1 s arriba',
+          dosis: '4 × 15–20', dibujo: 'flexClasica', anclaNota: 'Sin ancla: en el suelo',
+          claves: [
+            ['Arriba', 'Brazos estirados, manos un poco más abiertas que los hombros.'],
+            ['Bajar', 'En 2 s, pecho casi al suelo, codos a unos 45°.'],
+            ['Subir', 'En 1 s soltando el aire.'],
+            ['Parar', '2 repeticiones antes de que se rompa la técnica.']
+          ],
+          agarre: {
+            titulo: 'MONTAJE', dibujo: 'bienMalFlexiones',
+            puntos: [
+              ['Manos', 'Un poco más abiertas que los hombros.'],
+              ['Cuerpo', 'Pies juntos, abdomen y glúteos apretados.'],
+              ['Cuello', 'Alineado con la espalda.']
+            ]
+          },
+          errores: [
+            ['Cadera hundida', 'Cuerpo recto de la cabeza a los talones: si cae por la fatiga, la serie terminó.'],
+            ['Codos en cruz', 'A 45°, no a 90°.'],
+            ['Medias repeticiones', 'Con el cansancio se acortan: vigílalo.'],
+            ['Descansar arriba', 'Ritmo constante dentro de la serie.']
+          ],
+          info: [
+            ['Para qué sirve', 'Mucho volumen para el pecho con una técnica que ya dominas.'],
+            ['Cómo progresar', 'Cuando salgan 4 × 20, añade una pausa de 1 s abajo.']
+          ],
+          temporizador: { series: 4, reps: '15–20', descanso: 60, descansos: [45, 60, 90], preparacion: 5 }
+        },
+        {
+          nombre: 'Flexiones pies elevados',
+          indicacion: 'Pies en una silla firme y manos en el suelo: baja hasta que la cara casi toque el suelo.',
+          ritmo: '2 s abajo · 1 s arriba',
+          dosis: '3 × 12–15', dibujo: 'piesElevados', anclaNota: 'Sin ancla: suelo y silla',
+          claves: [
+            ['Arriba', 'Cuerpo inclinado hacia abajo, recto de los pies a la cabeza.'],
+            ['Bajar', 'En 2 s, con los codos a 45°.'],
+            ['Subir', 'En 1 s, sin doblar la cadera.'],
+            ['Parar', 'Si la cadera cae, termina la serie.']
+          ],
+          agarre: {
+            titulo: 'MONTAJE', dibujo: 'bienMalPiesElevados',
+            puntos: [
+              ['Silla', 'Firme y contra la pared para que no se deslice.'],
+              ['Pies', 'Apoya los empeines en la silla y las manos en el suelo.'],
+              ['Manos', 'Algo más abiertas que los hombros.']
+            ]
+          },
+          errores: [
+            ['Cadera hundida', 'Cuerpo en línea de los pies a la cabeza: si no, la lumbar sufre.'],
+            ['Silla que se mueve', 'Apóyala siempre contra la pared.'],
+            ['Cabeza adelantada', 'Baja el pecho, no la cara.'],
+            ['Codos en cruz', 'A 45° del cuerpo.']
+          ],
+          info: [
+            ['Qué trabaja', 'Parte alta del pecho y hombros, con más carga que la flexión normal.'],
+            ['Cómo progresar', 'Una silla más alta o una pausa abajo.']
+          ],
+          temporizador: { series: 3, reps: '12–15', descanso: 60, descansos: [45, 60, 90], preparacion: 5 }
+        },
+        {
+          nombre: 'Flexiones abiertas',
+          indicacion: 'Manos a 1,5 veces el ancho de los hombros: el pecho baja entre las manos.',
+          ritmo: '2 s abajo · 1 s arriba',
+          dosis: '3 × 12–15', dibujo: 'flexAbiertas', anclaNota: 'Sin ancla: en el suelo',
+          claves: [
+            ['Arriba', 'Manos a una vez y media el ancho de los hombros.'],
+            ['Bajar', 'Los dos codos a la vez, pecho entre las manos en 2 s.'],
+            ['Subir', 'En 1 s soltando el aire.'],
+            ['Codos', 'Alineados sobre las muñecas.']
+          ],
+          agarre: {
+            titulo: 'MONTAJE', dibujo: 'bienMalAbiertas',
+            puntos: [
+              ['Manos', 'A una vez y media el ancho de los hombros.'],
+              ['Dedos', 'Girados un poco hacia fuera.'],
+              ['Cuerpo', 'Recto y apretado.']
+            ]
+          },
+          errores: [
+            ['Cadera alta', 'Cuerpo recto también con las manos abiertas: si no, se pierde el pecho.'],
+            ['Manos demasiado abiertas', 'Si duele el hombro, ciérralas un poco.'],
+            ['Recorrido corto', 'Pecho cerca del suelo.'],
+            ['Rebote abajo', 'Controla el cambio de dirección.']
+          ],
+          info: [
+            ['Qué trabaja', 'Más pectoral y menos tríceps que la flexión normal.'],
+            ['Cómo progresar', 'Añade 1 s de pausa abajo cuando salgan 3 × 15.']
+          ],
+          temporizador: { series: 3, reps: '12–15', descanso: 60, descansos: [45, 60, 90], preparacion: 5 }
+        }
+      ]
+    },
+    {
+      titulo: 'Accesorios', nota: 'Descanso 45 s',
+      ejercicios: [
+        {
+          nombre: 'Press de pecho a una mano',
+          indicacion: 'De espaldas a la pared: empuja al frente a ritmo continuo, series largas.',
+          ritmo: 'Continuo',
+          dosis: '3 × 15–20 c/brazo', dibujo: 'pressPecho', ancla: 'media',
+          claves: [
+            ['Inicio', 'De espaldas al ancla media, mano en el pecho.'],
+            ['Empujar', 'Al frente y vuelve a ritmo continuo, sin girar el tronco.'],
+            ['Codo', 'A 45° del cuerpo en cada vuelta.'],
+            ['Cambio', 'Termina y cambia de brazo, sin descanso: eso es 1 serie.']
+          ],
+          agarre: {
+            titulo: 'MONTAJE', dibujo: 'bienMalPressPecho',
+            puntos: [
+              ['Banda', 'Algo más suave que el viernes: hoy son más repeticiones.'],
+              ['Pies', 'De espaldas al ancla media, pie contrario adelantado.'],
+              ['Tensión', 'Avanza hasta tener tensión con la mano en el pecho.']
+            ]
+          },
+          errores: [
+            ['Arquear la espalda', 'Tronco firme, también cuando llega la fatiga.'],
+            ['Girar el tronco', 'Empuja solo el brazo.'],
+            ['Acortar al final', 'Recorrido completo hasta la última repetición.'],
+            ['Dejarse llevar', 'Controla la vuelta.']
+          ],
+          info: [
+            ['Qué trabaja', 'Pectoral medio con series largas: resistencia muscular.'],
+            ['Cómo progresar', 'Cuando salgan 3 × 20, da un paso más lejos.']
+          ],
+          temporizador: { series: 3, reps: '15–20', lado: 'por brazo', descanso: 45, descansos: [30, 45, 60], preparacion: 5 }
+        },
+        {
+          nombre: 'Apertura de abajo arriba',
+          indicacion: 'De espaldas al ancla baja: sube el brazo en arco hasta delante de la cara.',
+          ritmo: 'Pausa 1 s arriba · 2 s bajar',
+          dosis: '3 × 15 c/brazo', dibujo: 'aperturaArriba', ancla: 'baja',
+          claves: [
+            ['Inicio', 'Brazo abajo y hacia fuera, codo algo flexionado, otra mano en la cadera.'],
+            ['Subir', 'En arco hasta delante de la cara.'],
+            ['Pausa', 'Aprieta 1 s arriba y baja en 2 s.'],
+            ['Cambio', 'Termina y cambia de brazo, sin descanso: eso es 1 serie.']
+          ],
+          agarre: {
+            titulo: 'MONTAJE', dibujo: 'bienMalAperturaArriba',
+            puntos: [
+              ['Ancla', 'Engancha la banda al ancla baja.'],
+              ['Posición', 'De espaldas a la pared, un paso adelante.'],
+              ['Brazo', 'Abajo y hacia fuera, codo ligeramente flexionado.']
+            ]
+          },
+          errores: [
+            ['Codo muy doblado', 'Hombro bajo y codo fijo: si se dobla, se convierte en un press.'],
+            ['Subir de más', 'Hasta la altura de la cara, no por encima de la cabeza.'],
+            ['Girar el tronco', 'El pecho mira al frente.'],
+            ['Banda dura', 'Series largas: banda liviana o media.']
+          ],
+          info: [
+            ['Qué trabaja', 'Parte alta del pecho, con un ángulo que no dan las flexiones.'],
+            ['Cómo progresar', 'Da un paso más adelante o alarga la pausa arriba.']
+          ],
+          temporizador: { series: 3, reps: 15, lado: 'por brazo', descanso: 45, descansos: [30, 45, 60], preparacion: 5 }
+        },
+        {
+          nombre: 'Cruce a una mano',
+          indicacion: 'De espaldas al ancla alta: baja el brazo en arco hasta la cadera contraria.',
+          ritmo: 'Pausa 1 s abajo · 2 s volver',
+          dosis: '3 × 15–20 c/brazo', dibujo: 'cruce', ancla: 'alta',
+          claves: [
+            ['Inicio', 'Brazo abierto a la altura del hombro, mano libre en la cadera.'],
+            ['Codo', 'Ligeramente flexionado y fijo.'],
+            ['Bajar', 'En arco hasta la cadera contraria; aprieta 1 s.'],
+            ['Volver', 'En 2 s. Termina y cambia de brazo: eso es 1 serie.']
+          ],
+          agarre: {
+            titulo: 'MONTAJE', dibujo: 'bienMalCruce',
+            puntos: [
+              ['Ancla', 'Engancha la banda al ancla alta.'],
+              ['Posición', 'De espaldas, un paso adelante e inclínate un poco.'],
+              ['Mano libre', 'En la cadera.']
+            ]
+          },
+          errores: [
+            ['Encoger el hombro', 'Hombro bajo y codo fijo, sin doblarlo.'],
+            ['Girar el tronco', 'Solo se mueve el brazo.'],
+            ['Subir de golpe', 'Controla la vuelta.'],
+            ['Sin pausa', 'La pausa abajo es clave.']
+          ],
+          info: [
+            ['Qué trabaja', 'Parte baja del pectoral.'],
+            ['Cómo progresar', 'Aléjate un paso más cuando salgan 3 × 20.']
+          ],
+          temporizador: { series: 3, reps: '15–20', lado: 'por brazo', descanso: 45, descansos: [30, 45, 60], preparacion: 5 }
+        }
+      ]
+    },
+    {
+      titulo: 'Final', nota: 'Descanso 60 s',
+      ejercicios: [
+        {
+          nombre: 'Flexiones por tiempo',
+          indicacion: 'Todas las flexiones limpias que puedas hasta la alarma.',
+          ritmo: 'Rápido pero controlado',
+          dosis: '2 × 40 s', dibujo: 'flexTiempo', anclaNota: 'Sin ancla: en el suelo',
+          claves: [
+            ['Preparación', 'Ponte en posición en los 5 s de preparación.'],
+            ['Durante', 'Flexiones completas a ritmo constante.'],
+            ['Si se rompe', 'Descansa arriba y sigue.'],
+            ['Apunta', 'El número de cada serie.']
+          ],
+          agarre: {
+            titulo: 'MONTAJE', dibujo: 'bienMalFlexiones',
+            puntos: [
+              ['Tiempo', 'Elige 30, 40 o 45 s en el temporizador.'],
+              ['Posición', 'Colócate arriba durante la preparación.'],
+              ['Apuntar', 'Ten a mano algo para apuntar tus repeticiones.']
+            ]
+          },
+          errores: [
+            ['Cadera hundida', 'Aunque haya prisa, el cuerpo sigue recto: si no, esas no cuentan.'],
+            ['Medias repeticiones', 'Solo cuentan las completas.'],
+            ['Aguantar el aire', 'Respira en cada repetición.'],
+            ['Rebotar abajo', 'Ritmo rápido, pero controlado.']
+          ],
+          info: [
+            ['Para qué sirve', 'Remata el pecho con volumen y te da un número para medir tu progreso.'],
+            ['Cómo progresar', 'Supera tu número de la semana anterior.']
+          ],
+          temporizador: { series: 2, opciones: [30, 40, 45], porDefecto: 40, descanso: 60, preparacion: 5 }
         }
       ]
     }
@@ -1460,5 +1797,55 @@ const DIBUJOS = {
   bienMalPullover: `
 <svg viewBox="0 0 280 140" fill="none" role="img" aria-label="Bien: brazo recto que baja en arco hasta el muslo. Mal: codo doblado: se convierte en un remo">
 <text x="70" y="14" text-anchor="middle" fill="#7FB2E5" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✓ BRAZO RECTO</text><text x="210" y="14" text-anchor="middle" fill="#F2913D" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✕ CODO DOBLADO</text><line x1="140" y1="10" x2="140" y2="132" stroke="#2E3238" stroke-width="2"/><line x1="12" y1="126" x2="128" y2="126" stroke="#4A5059" stroke-width="2"/><line x1="152" y1="126" x2="268" y2="126" stroke="#4A5059" stroke-width="2"/><line x1="12" y1="24" x2="12" y2="126" stroke="#4A5059" stroke-width="2"/><line x1="152" y1="24" x2="152" y2="126" stroke="#4A5059" stroke-width="2"/><path d="M30 40 A60 60 0 0 0 76 94" stroke="#7FB2E5" stroke-width="1.5" stroke-dasharray="3 4"/><g stroke="#F4F1EA" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><line x1="80" y1="40" x2="88" y2="92"/><polyline points="88,92 78,110 72,124"/><polyline points="88,92 96,110 102,124"/><line x1="80" y1="46" x2="76" y2="94"/></g><polygon points="72,28 62,34 72,38" fill="#F4F1EA"/><circle cx="77" cy="28" r="8" fill="#F4F1EA"/><g stroke="#F4F1EA" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><line x1="220" y1="40" x2="228" y2="92"/><polyline points="228,92 218,110 212,124"/><polyline points="228,92 236,110 242,124"/><polyline points="220,46 202,62 216,82"/></g><polygon points="212,28 202,34 212,38" fill="#F4F1EA"/><circle cx="217" cy="28" r="8" fill="#F4F1EA"/>
+</svg>`,
+  flexClasica: `
+<svg viewBox="0 200 240 220" fill="none" role="img" aria-label="Flexión de perfil: desde brazos estirados y cuerpo recto como una tabla, baja en 2 segundos hasta que el pecho casi toca el suelo con los codos hacia atrás, y sube en 1 segundo">
+<line x1="10" y1="404" x2="230" y2="404" stroke="#4A5059" stroke-width="2"/>
+<g stroke="#F4F1EA" stroke-linecap="round" stroke-linejoin="round">
+<polyline points="80,330 215,396" stroke-width="13"><animate attributeName="points" values="80,330 215,396;86,380 215,396;86,380 215,396;80,330 215,396;80,330 215,396" keyTimes="0;0.556;0.639;0.917;1" dur="3.6s" repeatCount="indefinite"/></polyline>
+<polyline points="80,402 80,366 80,330" stroke-width="11"><animate attributeName="points" values="80,402 80,366 80,330;80,402 108,380 86,380;80,402 108,380 86,380;80,402 80,366 80,330;80,402 80,366 80,330" keyTimes="0;0.556;0.639;0.917;1" dur="3.6s" repeatCount="indefinite"/></polyline>
+</g>
+<g><animateTransform attributeName="transform" type="translate" values="0 0;5 48;5 48;0 0;0 0" keyTimes="0;0.556;0.639;0.917;1" dur="3.6s" repeatCount="indefinite"/>
+<polygon points="44,318 35,324 44,328" fill="#F4F1EA"/><circle cx="60" cy="318" r="19" fill="#F4F1EA"/></g>
+<text x="120" y="244" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">cuerpo recto como una tabla</text>
+<text x="120" y="260" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">2 s abajo · 1 s arriba</text>
+<text x="120" y="222" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Mono, Consolas, monospace" font-size="11">DE PERFIL</text>
+</svg>`,
+  flexTiempo: `
+<svg viewBox="0 200 240 220" fill="none" role="img" aria-label="Flexión de perfil: desde brazos estirados y cuerpo recto como una tabla, repeticiones seguidas a ritmo constante hasta que el pecho casi toca el suelo con los codos hacia atrás, y sube en 1 segundo">
+<line x1="10" y1="404" x2="230" y2="404" stroke="#4A5059" stroke-width="2"/>
+<g stroke="#F4F1EA" stroke-linecap="round" stroke-linejoin="round">
+<polyline points="80,330 215,396" stroke-width="13"><animate attributeName="points" values="80,330 215,396;86,380 215,396;86,380 215,396;80,330 215,396;80,330 215,396" keyTimes="0;0.45;0.5;0.95;1" dur="2.2s" repeatCount="indefinite"/></polyline>
+<polyline points="80,402 80,366 80,330" stroke-width="11"><animate attributeName="points" values="80,402 80,366 80,330;80,402 108,380 86,380;80,402 108,380 86,380;80,402 80,366 80,330;80,402 80,366 80,330" keyTimes="0;0.45;0.5;0.95;1" dur="2.2s" repeatCount="indefinite"/></polyline>
+</g>
+<g><animateTransform attributeName="transform" type="translate" values="0 0;5 48;5 48;0 0;0 0" keyTimes="0;0.45;0.5;0.95;1" dur="2.2s" repeatCount="indefinite"/>
+<polygon points="44,318 35,324 44,328" fill="#F4F1EA"/><circle cx="60" cy="318" r="19" fill="#F4F1EA"/></g>
+<text x="120" y="244" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">ritmo constante hasta la alarma</text>
+<text x="120" y="260" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">todas las limpias que puedas</text>
+<text x="120" y="222" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Mono, Consolas, monospace" font-size="11">DE PERFIL</text>
+</svg>`,
+  piesElevados: `
+<svg viewBox="0 200 240 220" fill="none" role="img" aria-label="Flexión con los pies en una silla, de perfil: el cuerpo queda inclinado hacia abajo; bajas en 2 segundos hasta que la cara casi toca el suelo y subes en 1">
+<line x1="10" y1="404" x2="230" y2="404" stroke="#4A5059" stroke-width="2"/><g stroke="#9EA3AA" stroke-width="5" stroke-linecap="round"><line x1="186" y1="354" x2="232" y2="354"/><line x1="190" y1="354" x2="190" y2="404"/><line x1="228" y1="354" x2="228" y2="404"/><line x1="228" y1="354" x2="228" y2="300"/></g><polyline points="80,330 210,346" stroke="#F4F1EA" stroke-width="13" stroke-linecap="round" stroke-linejoin="round" fill="none"><animate attributeName="points" values="80,330 210,346;86,382 210,346;86,382 210,346;80,330 210,346;80,330 210,346" keyTimes="0;0.556;0.639;0.917;1" dur="3.6s" repeatCount="indefinite"/></polyline><polyline points="80,402 80,366 80,330" stroke="#F4F1EA" stroke-width="11" stroke-linecap="round" stroke-linejoin="round" fill="none"><animate attributeName="points" values="80,402 80,366 80,330;80,402 106,384 86,382;80,402 106,384 86,382;80,402 80,366 80,330;80,402 80,366 80,330" keyTimes="0;0.556;0.639;0.917;1" dur="3.6s" repeatCount="indefinite"/></polyline><g><polygon points="44,318 34,324 44,328" fill="#F4F1EA"/><circle cx="60" cy="318" r="19" fill="#F4F1EA"/><animateTransform attributeName="transform" type="translate" values="0 0;6 50;6 50;0 0;0 0" keyTimes="0;0.556;0.639;0.917;1" dur="3.6s" repeatCount="indefinite"/></g><text x="196" y="286" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="11">pies en la silla</text><text x="120" y="222" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Mono, Consolas, monospace" font-size="11">DE PERFIL</text><text x="120" y="244" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">cuerpo recto, sin doblar la cadera</text><text x="120" y="260" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">2 s abajo · 1 s arriba</text>
+</svg>`,
+  bienMalPiesElevados: `
+<svg viewBox="0 0 280 140" fill="none" role="img" aria-label="Bien: cuerpo en línea recta de los pies a la cabeza. Mal: cadera hundida: la lumbar sufre">
+<text x="70" y="14" text-anchor="middle" fill="#7FB2E5" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✓ EN LÍNEA</text><text x="210" y="14" text-anchor="middle" fill="#F2913D" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✕ CADERA HUNDIDA</text><line x1="140" y1="10" x2="140" y2="132" stroke="#2E3238" stroke-width="2"/><line x1="14" y1="122" x2="126" y2="122" stroke="#4A5059" stroke-width="2"/><line x1="154" y1="122" x2="266" y2="122" stroke="#4A5059" stroke-width="2"/><g stroke="#9EA3AA" stroke-width="3"><line x1="100" y1="96" x2="126" y2="96"/><line x1="104" y1="96" x2="104" y2="122"/><line x1="122" y1="96" x2="122" y2="122"/><line x1="240" y1="96" x2="266" y2="96"/><line x1="244" y1="96" x2="244" y2="122"/><line x1="262" y1="96" x2="262" y2="122"/></g><g stroke="#F4F1EA" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><line x1="30" y1="120" x2="30" y2="86"/><line x1="30" y1="86" x2="114" y2="92"/><line x1="170" y1="120" x2="170" y2="86"/><polyline points="170,86 206,108 254,92"/></g><polygon points="17,78 7,84 17,88" fill="#F4F1EA"/><circle cx="22" cy="78" r="8" fill="#F4F1EA"/><polygon points="157,78 147,84 157,88" fill="#F4F1EA"/><circle cx="162" cy="78" r="8" fill="#F4F1EA"/>
+</svg>`,
+  flexAbiertas: `
+<svg viewBox="0 200 240 220" fill="none" role="img" aria-label="Flexión abierta de frente: manos a una vez y media el ancho de los hombros; los dos codos se doblan a la vez y el pecho baja entre las manos en 2 segundos, y subes en 1">
+<line x1="10" y1="404" x2="230" y2="404" stroke="#4A5059" stroke-width="2"/><polyline points="38,402 67,368 96,334" stroke="#F4F1EA" stroke-width="11" stroke-linecap="round" stroke-linejoin="round" fill="none"><animate attributeName="points" values="38,402 67,368 96,334;38,402 40,368 96,380;38,402 40,368 96,380;38,402 67,368 96,334;38,402 67,368 96,334" keyTimes="0;0.556;0.639;0.917;1" dur="3.6s" repeatCount="indefinite"/></polyline><polyline points="144,334 173,368 202,402" stroke="#F4F1EA" stroke-width="11" stroke-linecap="round" stroke-linejoin="round" fill="none"><animate attributeName="points" values="144,334 173,368 202,402;144,380 200,368 202,402;144,380 200,368 202,402;144,334 173,368 202,402;144,334 173,368 202,402" keyTimes="0;0.556;0.639;0.917;1" dur="3.6s" repeatCount="indefinite"/></polyline><polyline points="96,334 144,334" stroke="#F4F1EA" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" fill="none"><animate attributeName="points" values="96,334 144,334;96,380 144,380;96,380 144,380;96,334 144,334;96,334 144,334" keyTimes="0;0.556;0.639;0.917;1" dur="3.6s" repeatCount="indefinite"/></polyline><g><circle cx="120" cy="316" r="17" fill="#F4F1EA"/><circle cx="113.9" cy="314.3" r="2.04" fill="#16181B"/><circle cx="126.1" cy="314.3" r="2.04" fill="#16181B"/><animateTransform attributeName="transform" type="translate" values="0 0;0 46;0 46;0 0;0 0" keyTimes="0;0.556;0.639;0.917;1" dur="3.6s" repeatCount="indefinite"/></g><text x="120" y="286" text-anchor="middle" fill="#F2913D" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="11">bajan los dos brazos</text><text x="120" y="222" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Mono, Consolas, monospace" font-size="11">DE FRENTE</text><text x="120" y="244" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">manos a 1,5 veces el ancho</text><text x="120" y="260" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">de los hombros</text>
+</svg>`,
+  bienMalAbiertas: `
+<svg viewBox="0 0 280 140" fill="none" role="img" aria-label="Bien: cuerpo recto también con las manos abiertas. Mal: cadera muy alta: se pierde el trabajo del pecho">
+<text x="70" y="14" text-anchor="middle" fill="#7FB2E5" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✓ CUERPO RECTO</text><text x="210" y="14" text-anchor="middle" fill="#F2913D" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✕ CADERA ALTA</text><line x1="140" y1="10" x2="140" y2="132" stroke="#2E3238" stroke-width="2"/><line x1="20" y1="120" x2="120" y2="120" stroke="#4A5059" stroke-width="2"/><line x1="160" y1="120" x2="260" y2="120" stroke="#4A5059" stroke-width="2"/><g stroke="#F4F1EA" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><line x1="40" y1="118" x2="40" y2="88"/><line x1="40" y1="88" x2="116" y2="116"/><line x1="180" y1="118" x2="180" y2="88"/><polyline points="180,88 218,64 256,116"/></g><polygon points="27,80 17,86 27,90" fill="#F4F1EA"/><circle cx="32" cy="80" r="8" fill="#F4F1EA"/><polygon points="167,80 157,86 167,90" fill="#F4F1EA"/><circle cx="172" cy="80" r="8" fill="#F4F1EA"/>
+</svg>`,
+  aperturaArriba: `
+<svg viewBox="0 0 240 420" fill="none" role="img" aria-label="Apertura de abajo arriba de frente: de espaldas al ancla baja, el brazo abajo y hacia fuera sube en arco hasta delante de la cara con el codo algo flexionado, pausa 1 segundo y baja en 2; la otra mano en la cadera">
+<line x1="10" y1="412" x2="230" y2="412" stroke="#4A5059" stroke-width="2"/><text x="176" y="368" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="11">ancla baja detrás</text><circle cx="224" cy="380" r="5" fill="#9EA3AA"/><line x1="224" y1="380" x2="206" y2="284" stroke="#F2913D" stroke-width="3" stroke-linecap="round"><animate attributeName="x2" values="206;214;142;142;214;206" keyTimes="0;0.125;0.25;0.5;0.75;1" dur="4s" repeatCount="indefinite"/><animate attributeName="y2" values="284;196;98;98;196;284" keyTimes="0;0.125;0.25;0.5;0.75;1" dur="4s" repeatCount="indefinite"/></line><g stroke="#F4F1EA" stroke-linecap="round" stroke-linejoin="round"><line x1="120" y1="118" x2="120" y2="250" stroke-width="13"/><line x1="94" y1="130" x2="146" y2="130" stroke-width="13"/><line x1="102" y1="250" x2="138" y2="250" stroke-width="13"/><polyline points="104,250 98,330 92,404" stroke-width="13"/><polyline points="136,250 144,330 150,404" stroke-width="13"/><polyline points="96,130 76,186 100,232" stroke-width="12"/><polyline points="146,132 178,210 206,284" stroke="#F4F1EA" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" fill="none"><animate attributeName="points" values="146,132 178,210 206,284;146,132 186,170 214,196;146,132 170,128 142,98;146,132 170,128 142,98;146,132 186,170 214,196;146,132 178,210 206,284" keyTimes="0;0.125;0.25;0.5;0.75;1" dur="4s" repeatCount="indefinite"/></polyline></g><circle cx="120" cy="92" r="22" fill="#F4F1EA"/><circle cx="112.1" cy="89.8" r="2.64" fill="#16181B"/><circle cx="127.9" cy="89.8" r="2.64" fill="#16181B"/><text x="120" y="40" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Mono, Consolas, monospace" font-size="11">DE FRENTE</text><text x="50" y="300" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">sube en arco</text><text x="50" y="316" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">hasta la cara</text><text x="50" y="332" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">pausa 1 s</text>
+</svg>`,
+  bienMalAperturaArriba: `
+<svg viewBox="0 0 280 140" fill="none" role="img" aria-label="Bien: hombro bajo y codo fijo, la mano dibuja un arco. Mal: hombro encogido y codo muy doblado: se convierte en un press">
+<text x="70" y="14" text-anchor="middle" fill="#7FB2E5" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✓ HOMBRO BAJO</text><text x="210" y="14" text-anchor="middle" fill="#F2913D" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✕ CODO DOBLADO</text><line x1="140" y1="10" x2="140" y2="132" stroke="#2E3238" stroke-width="2"/><g stroke="#F4F1EA" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><line x1="70" y1="46" x2="70" y2="96"/><line x1="56" y1="52" x2="84" y2="52"/><polyline points="84,52 98,50 82,34"/><polyline points="62,96 60,126"/><polyline points="78,96 80,126"/><line x1="210" y1="46" x2="210" y2="96"/><line x1="196" y1="54" x2="226" y2="44"/><polyline points="226,44 236,62 222,34"/><polyline points="202,96 200,126"/><polyline points="218,96 220,126"/></g><path d="M102 104 Q112 70 88 36" stroke="#7FB2E5" stroke-width="1.5" stroke-dasharray="3 4"/><circle cx="70" cy="34" r="9" fill="#F4F1EA"/><circle cx="66.8" cy="33.1" r="1.08" fill="#16181B"/><circle cx="73.2" cy="33.1" r="1.08" fill="#16181B"/><circle cx="210" cy="34" r="9" fill="#F4F1EA"/><circle cx="206.8" cy="33.1" r="1.08" fill="#16181B"/><circle cx="213.2" cy="33.1" r="1.08" fill="#16181B"/>
 </svg>`
 };

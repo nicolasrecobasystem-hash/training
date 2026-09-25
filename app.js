@@ -552,7 +552,7 @@
   function reiniciar() {
     parar();
     var c = cfg();
-    if (c && c.opciones && c.opciones.indexOf(st.dur) < 0) st.dur = c.opciones[0];
+    if (c && c.opciones && c.opciones.indexOf(st.dur) < 0) st.dur = c.porDefecto || c.opciones[0];
     if (c && c.descansos && c.descansos.indexOf(st.desc) < 0) st.desc = c.descansos.indexOf(c.descanso) >= 0 ? c.descanso : c.descansos[0];
     st.fase = 'espera'; st.corriendo = false; st.pausado = false; st.serie = 1; st.quedan = st.dur; st.total = st.dur;
   }
