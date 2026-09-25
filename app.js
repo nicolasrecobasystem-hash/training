@@ -239,6 +239,7 @@
     document.getElementById('rep-tit').textContent = rep.etiqueta;
     document.getElementById('rep-mini').textContent = rep.mini ? '▢' : '–';
     avisarMando();
+    if (st.pantalla === 'calent' && st.modoPintado === 'aprender' && document.querySelector('.apr-mus')) pintarTemporizador();
     // En modo Entrenar, la franja de abajo muestra la canción que suena
     var em = document.querySelector('.ent-mus');
     if (em && rep.actual) { var cn = cancionPorItem(rep.actual); em.setAttribute('data-acc', 'rep-otra'); em.querySelector('b').textContent = cn ? cn.nombre : (esArchivo(rep.actual) ? nombreArchivo(rep.actual) : 'YouTube'); }
@@ -693,6 +694,14 @@
     var b = bloques()[st.bloque + 1]; return b ? b.titulo : '';
   }
   function textoAncla(ex) { return !ex ? '' : ex.ancla && ANCLAS[ex.ancla] ? ANCLAS[ex.ancla] : (ex.anclaNota || 'Sin ancla'); }
+  // Intensidad del ejercicio (1 baja · 2 media · 3 alta): decide qué música suena. Se cambia tocando la píldora.
+  function intensidadEj(ex) { return ex ? intensidadDeClave(claveDe(DIAS[st.sel]) + '|' + ex.nombre) : 0; }
+  function cicloIntensidad() {
+    var ex = ejActual(); if (!ex) return;
+    var n = intensidadEj(ex) % 3 + 1;
+    ejIntensidad[claveDe(DIAS[st.sel]) + '|' + ex.nombre] = n; guardarTodo(); pintar();
+  }
+  function puntosInt(n) { return '<i class="' + (n >= 1 ? 'on' : '') + '"></i><i class="' + (n >= 2 ? 'on' : '') + '"></i><i class="' + (n >= 3 ? 'on' : '') + '"></i>'; }
   function terminarDia() {
     var kf = claveFecha(new Date()), gf = claveDe(DIAS[st.sel]), rf = registroDe(kf) || { grupo: gf, hechos: [] };
     rf.grupo = gf; rf.total = totalDe(gf); rf.terminado = true; historial[kf] = rf; guardarHistorial();
@@ -747,7 +756,7 @@
         '<div class="ent-der"><div class="ent-fase mono t-fase" id="e-fase"></div><div class="ent-tiempo" id="e-tiempo"></div>' +
         '<div class="ent-nom">' + esc(ex ? ex.nombre : '') + '</div><div class="ent-sub" id="e-sub"></div>' +
         '<div class="ent-puntos" id="e-puntos"></div><div class="ent-barra"><i id="e-barra"></i></div>' +
-        (ex && ex.ritmo ? '<div class="ent-ritmo">Ritmo · ' + esc(ex.ritmo) + '</div>' : '') + '</div></div>' +
+        '<div class="ent-ritmo"><span class="ent-int">Intensidad ' + INTENSIDADES[intensidadEj(ex)].toLowerCase() + ' <b>' + puntosInt(intensidadEj(ex)) + '</b></span>' + (ex && ex.ritmo ? ' · Ritmo · ' + esc(ex.ritmo) : '') + '</div></div></div>' +
         '<div class="ent-pie">' +
         '<div class="ent-caja">Siguiente <b>' + esc(nombreSiguiente() || '—') + '</b></div>' +
         '<div class="ent-caja">Ancla <b>' + esc(textoAncla(ex)) + '</b></div>' +
@@ -791,7 +800,9 @@
           return '<button type="button" class="apr-cancion' + (rep.visible && rep.actual === cn.item ? ' on' : '') + '" data-acc="tocar-cancion" data-id="' + esc(cn.id) + '">▶ ' + esc(cn.nombre) + '</button>'; }).join('') + '</div>'
           : '<div class="vacio">No hay canciones para este mood y esta intensidad.</div>') + '</div>';
     }
-    var chips = ex ? '<span class="c">' + esc(ex.dosis || '') + '</span>' + (c ? '<span>descanso ' + descansoActual() + ' s</span>' : '') +
+    var ni = intensidadEj(ex);
+    var chips = ex ? '<span class="c">' + esc(ex.dosis || '') + '</span>' +
+      '<button type="button" class="chip-int n' + ni + '" data-acc="int-ciclo" title="Intensidad del ejercicio (decide la música). Toca para cambiarla">Intensidad ' + INTENSIDADES[ni].toLowerCase() + ' <b>' + puntosInt(ni) + '</b></button>' + (c ? '<span>descanso ' + descansoActual() + ' s</span>' : '') +
       '<span>' + esc(textoAncla(ex)) + '</span>' + (ex.ritmo ? '<span>' + esc(ex.ritmo) + '</span>' : '') : '';
     return '<div class="pantalla calent apr">' + htmlCabecera(d, false) +
       '<div class="menu-ej" style="grid-template-columns:repeat(' + nMenu + ',minmax(0,1fr))">' + menu + '</div>' +
@@ -1141,6 +1152,14 @@
     if (st.fase === 'hecho') tiempo = '✓';
     return tiempo;
   }
+  // Música integrada en la barra de abajo del modo Aprender (sin reproductor flotante)
+  function htmlMusInline() {
+    var cn = rep.visible && rep.actual ? ((cancionPorItem(rep.actual) || {}).nombre || (esArchivo(rep.actual) ? nombreArchivo(rep.actual) : 'YouTube')) : '';
+    var pausada = rep.visible && musicaPausada();
+    return '<div class="apr-mus"><button type="button" class="apr-mus-n" data-acc="' + (rep.visible ? 'rep-otra' : 'musica') + '" title="Cambiar de canción">' +
+      '<span class="nota">♪</span><span class="t"><b>' + esc(cn || 'Poner música') + '</b><small>' + (cn ? (pausada ? 'en pausa · ' : '') + 'toca para cambiar' : 'suena al pulsar Iniciar') + '</small></span></button>' +
+      (rep.visible ? '<button type="button" class="apr-mus-b" data-acc="pausa-musica" aria-label="Pausar o seguir la música">' + (pausada ? '▶' : '⏸') + '</button>' : '') + '</div>';
+  }
   function pintarTemporizador() {
     if (st.pantalla !== 'calent') return;
     if (st.modoPintado !== modoCal()) { pintar(); return; }   // cambia de Aprender a Entrenar (o al revés)
@@ -1171,7 +1190,7 @@
           : '<div class="t-dur"><span>DURACIÓN</span>' + c.opciones.map(function (s) {
               return '<button type="button" class="pastilla' + (s === st.dur ? ' on' : '') + '" data-acc="dur" data-s="' + s + '" aria-pressed="' + (s === st.dur) + '">' + s + ' s</button>'; }).join('') + '</div>';
         zona.innerHTML = '<div class="apr-temp"><div class="apr-temp-izq"><div class="t-fase mono">LISTO · ' + c.series + (c.series === 1 ? ' SERIE' : ' SERIES') + (c.lado ? ' ' + esc(String(c.lado).toUpperCase()) : '') + '</div>' +
-          htmlFases(c) + '</div>' + pastillas + '<button type="button" class="btn-iniciar" data-acc="principal">' + etiquetaPrincipal(c) + '</button></div>';
+          htmlFases(c) + '</div>' + pastillas + htmlMusInline() + '<button type="button" class="btn-iniciar" data-acc="principal">' + etiquetaPrincipal(c) + '</button></div>';
       }
     }
     avisarMando();
@@ -1182,6 +1201,7 @@
     vista.innerHTML = st.pantalla === 'semana' ? htmlSemana() + (st.pidiendoMood ? htmlMood() : '') + (st.completado ? htmlCompletado() : '') : (st.pantalla === 'config' ? htmlConfig() + (st.subida ? htmlSubida() : '') : st.pantalla === 'calendario' ? htmlCalendario() : htmlCalentamiento());
     if (st.pidiendoMood) { var f = vista.querySelector('.mood.ultimo') || vista.querySelector('.mood'); if (f) f.focus(); }
     app.classList.toggle('ent-activo', st.pantalla === 'calent' && st.modoPintado === 'entrenar');
+    app.classList.toggle('cal-activo', st.pantalla === 'calent');
     if (st.pantalla === 'calent') pintarTemporizador();
     if (st.pantalla === 'config') { actualizarEstadoCfg(); pintarNube(); }
     avisarMando();
@@ -1228,6 +1248,8 @@
     else if (acc === 'info') { st.verInfo = !st.verInfo; pintar(); }
     else if (acc === 'bloque') { irABloque(+b.getAttribute('data-i')); }
     else if (acc === 'terminar') { terminarDia(); }
+    else if (acc === 'int-ciclo') { cicloIntensidad(); }
+    else if (acc === 'pausa-musica') { pausarMusica(); setTimeout(function () { if (st.modoPintado === 'aprender') pintarTemporizador(); }, 350); }
     else if (acc === 'tab') { st.tab = b.getAttribute('data-t'); pintar(); }
     else if (acc === 'elegir-mood') { st.eligiendoMood = true; pintar(); }
     else if (acc === 'cerrar-elegir-mood') { if (b === ev.target || b.tagName === 'BUTTON') { st.eligiendoMood = false; pintar(); } }
@@ -1434,7 +1456,7 @@
       moods: moods.map(function (m) { return { n: m, c: biblioteca.filter(function (x) { return x.moods.indexOf(m) >= 0; }).length }; }),
       ultimoMood: ultimoMood,
       bloque: { titulo: b ? b.titulo : '', i: st.bloque, n: bs.length }, hueco: st.hueco, nHuecos: l.length,
-      ej: ex ? { nombre: ex.nombre, dosis: ex.dosis || '', dibujo: ex.dibujo || '', indicacion: ex.indicacion || '', ritmo: ex.ritmo || '', hecho: estaHecho(ex, g), ancla: textoAncla(ex) } : null,
+      ej: ex ? { nombre: ex.nombre, dosis: ex.dosis || '', dibujo: ex.dibujo || '', indicacion: ex.indicacion || '', ritmo: ex.ritmo || '', hecho: estaHecho(ex, g), ancla: textoAncla(ex), intensidad: intensidadEj(ex) } : null,
       modo: st.pantalla === 'calent' ? modoCal() : '', color: colorModo(), bloqueTit: b ? b.titulo : '',
       siguiente: sig, ultimo: st.pantalla === 'calent' && !sig,
       temp: c ? { fase: st.fase, quedan: st.fase === 'espera' ? st.dur : st.quedan, total: st.total, serie: st.serie, series: c.series, reps: c.reps || 0,
@@ -1496,6 +1518,7 @@
       case 'cancion': if (enCalent) arrancarMusica(true); else if (rep.visible) reproducir(rep.lista, rep.etiqueta); break;
       case 'pausa-musica': pausarMusica(); break;
       case 'terminar': if (enCalent) terminarDia(); break;
+      case 'int-ciclo': if (enCalent) cicloIntensidad(); break;
       case 'mood-cambiar': cambiarMood(typeof o.i === 'number' ? o.i : -1); break;
       case 'semana': reiniciar(); cerrarRep(); st.pantalla = 'semana'; st.pidiendoMood = false; pintar(); break;
     }
@@ -1504,8 +1527,8 @@
   // El navegador solo deja sonar música y pitidos si has tocado esta pantalla alguna vez:
   // con el primer toque se "desbloquea" el sonido para que luego el mando pueda ponerlo.
   document.addEventListener('pointerdown', function () { activarAudio(); }, { once: true });
-  audioEl.addEventListener('play', function () { avisarMando(); });
-  audioEl.addEventListener('pause', function () { avisarMando(); });
+  audioEl.addEventListener('play', function () { avisarMando(); if (st.pantalla === 'calent' && st.modoPintado === 'aprender') pintarTemporizador(); });
+  audioEl.addEventListener('pause', function () { avisarMando(); if (st.pantalla === 'calent' && st.modoPintado === 'aprender') pintarTemporizador(); });
 
   // ---------- luces Govee: cambian de color con la fase del temporizador ----------
   // La clave de Govee vive en Supabase (función "govee"); aquí solo se guarda qué luces usar.

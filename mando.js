@@ -126,7 +126,8 @@
     $('.m-ante').textContent = (e.bloque.titulo + ' · ' + (e.hueco + 1) + ' de ' + e.nHuecos).toUpperCase();
     $('.m-nombre').textContent = ex ? ex.nombre : '[Por definir]';
     if (!ent) {
-      $('.m-chips').innerHTML = ex ? '<span class="c">' + esc(ex.dosis) + '</span>' + (t ? '<span>desc. ' + t.descanso + ' s</span>' : '') + (ex.ancla ? '<span>' + esc(ex.ancla) + '</span>' : '') + (ex.hecho ? '<span class="ok">✓ hecho</span>' : '') : '';
+      var INT = ['', 'baja', 'media', 'alta'];
+      $('.m-chips').innerHTML = ex ? '<span class="c">' + esc(ex.dosis) + '</span>' + (ex.intensidad ? '<button type="button" class="m-int n' + ex.intensidad + '" data-a="int-ciclo">Int. ' + INT[ex.intensidad] + ' ' + '●●●'.slice(0, ex.intensidad) + '○○○'.slice(0, 3 - ex.intensidad) + '</button>' : '') + (t ? '<span>desc. ' + t.descanso + ' s</span>' : '') + (ex.ancla ? '<span>' + esc(ex.ancla) + '</span>' : '') + (ex.hecho ? '<span class="ok">✓ hecho</span>' : '') : '';
       var clave = ex ? ex.nombre + '|' + ex.dibujo : '';
       if (clave !== dibujoActual) {
         dibujoActual = clave;
@@ -144,7 +145,7 @@
       $('.m-tiempo').innerHTML = txt;
       var hechas = t.fase === 'hecho' ? t.series : (t.fase === 'descanso' ? t.serie : t.serie - 1);
       $('.m-puntos').innerHTML = Array.apply(null, Array(t.series)).map(function (_, i) { return '<i class="' + (i < hechas ? 'on' : '') + '"></i>'; }).join('');
-      $('.m-serie').textContent = ('Serie ' + Math.min(t.serie, t.series) + ' / ' + t.series + (t.lado ? ' · ' + t.lado : '')).toUpperCase();
+      $('.m-serie').textContent = ('Serie ' + Math.min(t.serie, t.series) + ' / ' + t.series + (t.lado ? ' · ' + t.lado : '') + (ex && ex.intensidad ? ' · int. ' + ['', 'baja', 'media', 'alta'][ex.intensidad] : '')).toUpperCase();
     }
     var pri = $('.m-pri');
     pri.textContent = t ? t.etiqueta : 'Sin temporizador'; pri.disabled = !t;

@@ -438,3 +438,22 @@ button.ent-caja{cursor:pointer}
 .apr-montaje{grid-template-columns:260px 1fr}
 .apr-mpuntos{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-content:start}
 .apr-mpuntos .apr-paso{font-size:14.5px;padding:10px 14px}
+
+/* Intensidad del ejercicio (baja · media · alta) */
+.chip-int{border:1px solid var(--linea2);border-radius:999px;padding:3px 12px;font-family:var(--mono);font-size:12px;background:transparent;color:var(--suave);cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.chip-int b,.ent-int b{display:inline-flex;gap:3px}.chip-int i,.ent-int i{width:8px;height:8px;border-radius:50%;border:1.5px solid currentColor;display:inline-block}
+.chip-int i.on,.ent-int i.on{background:currentColor}
+.chip-int.n1{border-color:var(--azul);color:var(--azul)}.chip-int.n2{border-color:var(--amarillo);color:var(--amarillo)}.chip-int.n3{border-color:var(--acento);color:var(--acento)}
+.ent-int{display:inline-flex;align-items:center;gap:8px}.ent-int i{width:10px;height:10px}
+
+/* Música dentro de la barra de abajo: en la pantalla del ejercicio no hay reproductor flotante */
+#app.cal-activo #reproductor.audio{display:none}
+#app.cal-activo #reproductor:not(.audio){left:64px;right:auto;bottom:112px}
+.apr-mus{flex:1 1 0;min-width:0;display:flex;align-items:center;gap:6px;height:56px;background:var(--fondo);border:1px solid var(--linea2);border-radius:12px;padding:0 6px 0 4px}
+.apr-mus-n{flex:1;min-width:0;height:100%;display:flex;align-items:center;gap:10px;background:none;border:0;color:var(--texto);text-align:left;cursor:pointer;padding:0 8px}
+.apr-mus-n .nota{font-size:24px;color:var(--acento)}
+.apr-mus-n .t{min-width:0;display:flex;flex-direction:column}
+.apr-mus-n b{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.apr-mus-n small{font-family:var(--mono);font-size:10px;letter-spacing:.06em;color:var(--tenue);white-space:nowrap}
+.apr-mus-b{flex:none;width:42px;height:42px;border-radius:10px;border:1px solid var(--linea2);background:transparent;color:var(--texto);font-size:16px;cursor:pointer}
+.apr-temp{gap:16px}.apr-temp-izq{width:200px}.btn-iniciar{min-width:190px;margin-left:0}
