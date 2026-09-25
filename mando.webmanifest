@@ -1,0 +1,18 @@
+{
+  "name": "Mando · Mi semana",
+  "short_name": "Mando",
+  "description": "Controla la pantalla grande desde el móvil o la tableta.",
+  "lang": "es",
+  "id": "./mando.html",
+  "start_url": "./mando.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#16181B",
+  "theme_color": "#16181B",
+  "icons": [
+    { "src": "iconos/mando-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "iconos/mando-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "iconos/mando-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

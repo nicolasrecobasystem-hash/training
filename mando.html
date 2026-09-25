@@ -5,6 +5,10 @@
 <meta http-equiv="Cache-Control" content="no-cache">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Mando">
+<link rel="manifest" href="mando.webmanifest">
+<link rel="apple-touch-icon" href="iconos/mando-180.png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#16181B">
 <title>Mando · Mi semana</title>
@@ -18,5 +22,9 @@
 <script src="datos.js?v=20260924r"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="mando.js?v=20260924r"></script>
+<script>
+// App instalable (iPhone, iPad, Android): guarda una copia para abrirla sin conexión
+if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(function () {});
+</script>
 </body>
 </html>

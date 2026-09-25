@@ -1,0 +1,17 @@
+{
+  "name": "Mi semana de entrenamiento",
+  "short_name": "Mi semana",
+  "description": "Tu rutina de la semana con bandas, barra y pared.",
+  "lang": "es",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#16181B",
+  "theme_color": "#16181B",
+  "icons": [
+    { "src": "iconos/icono-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "iconos/icono-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "iconos/icono-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

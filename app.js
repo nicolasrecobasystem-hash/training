@@ -472,7 +472,11 @@
 
   // ---------- escalado 16:9 ----------
   function escalar() {
-    var s = Math.min(window.innerWidth / 1280, window.innerHeight / 720);
+    // Área útil: la ventana menos las zonas seguras del iPhone (notch y barra de inicio)
+    var esc = document.getElementById('escenario'), cs = esc ? getComputedStyle(esc) : null;
+    var w = esc ? esc.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight) : window.innerWidth;
+    var h = esc ? esc.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom) : window.innerHeight;
+    var s = Math.min(w / 1280, h / 720);
     app.style.transform = 'scale(' + s + ')';
   }
   window.addEventListener('resize', escalar);

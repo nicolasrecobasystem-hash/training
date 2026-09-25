@@ -346,3 +346,11 @@ button:disabled{cursor:not-allowed}
 .luz-brillo input{flex:1;accent-color:var(--acento)}
 .luces-nota{font-size:12px;color:var(--tenue);line-height:1.45;margin:0}
 .luces-msg{min-height:1.2em}
+
+/* iPhone / iPad como app instalada: respetar notch y barra de inicio */
+#escenario{padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);box-sizing:border-box}
+/* En un móvil en vertical la pantalla de 16:9 queda pequeña: aviso para girarlo */
+@media (orientation:portrait) and (max-width:700px){
+  body::after{content:"↻  Gira el iPhone para verlo en grande";position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%);
+    background:#1F2227;border:1px solid #F2913D;color:#F4F1EA;font:600 15px "IBM Plex Sans",Helvetica,sans-serif;padding:10px 16px;border-radius:12px;white-space:nowrap;z-index:50;pointer-events:none}
+}
