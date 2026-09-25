@@ -38,6 +38,11 @@ const INFO_GRUPO = {
     duracion: '~50 min',
     material: 'Suelo, silla, bandas y anclas media, alta y baja',
     enfoque: 'Volumen de pecho: muchas repeticiones limpias'
+  },
+  'Bíceps': {
+    duracion: '~50 min',
+    material: 'Bandas, barra, banda de ayuda y anclas baja y alta',
+    enfoque: 'Bíceps y antebrazo'
   }
 };
 
@@ -354,6 +359,101 @@ const CALENTAMIENTOS = {
         ['Cómo progresar', 'Acerca un poco las manos cada semana si sale suave.']
       ],
       temporizador: { series: 2, reps: 10, descanso: 30, preparacion: 5 }
+    }
+  ],
+  // LUNES · Bíceps · calentamiento
+  'Bíceps': [
+    {
+      nombre: 'Colgarte de la barra',
+      indicacion: 'Mangos paralelos y brazos estirados: deja caer el peso, cuerpo quieto.',
+      dosis: '2 × 20 s', dibujo: 'colgado', ancla: 'barra',
+      claves: [
+        ['Subir', 'Apoya el peso poco a poco desde la silla.'],
+        ['Brazos', 'Estirados, pies al aire.'],
+        ['Cuerpo', 'Recto y quieto, piernas juntas. Relaja los hombros.'],
+        ['Bajar', 'Apoyando los pies en la silla.']
+      ],
+      agarre: {
+        dibujo: 'agarreNeutro',
+        puntos: [
+          ['Silla', 'Firme, debajo de la barra.'],
+          ['Mangos', 'Paralelos, palmas enfrentadas.'],
+          ['Manos secas', 'Sécatelas antes de colgarte.']
+        ]
+      },
+      errores: [
+        ['Balancearse', 'Cuerpo vertical y quieto: si oscilas, apoya un pie y vuelve a empezar.'],
+        ['Doblar los codos', 'Brazos estirados.'],
+        ['Soltarse de golpe', 'Baja por la silla.'],
+        ['Aguantar con dolor', 'Un pinchazo en el hombro: para.']
+      ],
+      info: [
+        ['Para qué sirve', 'Descomprime y prepara hombros, codos y agarre.'],
+        ['Nota', 'Es calentamiento: sin llegar al límite.']
+      ],
+      temporizador: { series: 2, opciones: [20, 25], descanso: 30, preparacion: 5 }
+    },
+    {
+      nombre: 'Pull-aparts con banda',
+      indicacion: 'Brazos al frente a la altura del pecho; abre hasta que la banda toque el pecho.',
+      ritmo: '1 s abrir · 2 s volver',
+      dosis: '2 × 15', dibujo: 'pullApart', anclaNota: 'Sin ancla: la banda va en tus manos',
+      claves: [
+        ['Inicio', 'Brazos al frente, codos casi rectos.'],
+        ['Abrir', 'Hasta tocar el pecho.'],
+        ['Pausa', 'Aguanta 1 s juntando los omóplatos.'],
+        ['Volver', 'Controlando la banda.']
+      ],
+      agarre: {
+        titulo: 'MONTAJE', dibujo: 'agarreBanda',
+        puntos: [
+          ['Banda', 'Liviana.'],
+          ['Manos', 'Al ancho de los hombros.'],
+          ['Si no llega', 'Si no llega al pecho, separa más las manos.']
+        ]
+      },
+      errores: [
+        ['Hombros a las orejas', 'Brazos rectos en cruz y hombros bajos, codos sin doblar.'],
+        ['Arquear la espalda', 'El tronco no se mueve.'],
+        ['Soltar de golpe', 'Controla la vuelta.'],
+        ['Bajar los brazos', 'Siempre a la altura del pecho.']
+      ],
+      info: [
+        ['Para qué sirve', 'Activa la espalda alta y pone los hombros en su sitio antes de los curls.'],
+        ['Nota', 'Calentamiento: sin fatiga.']
+      ],
+      temporizador: { series: 2, reps: 15, descanso: 30, preparacion: 5 }
+    },
+    {
+      nombre: 'Curl ligero a una mano',
+      indicacion: 'Pisa una banda liviana y sube suave hasta el hombro sin mover el codo.',
+      ritmo: 'Suave y continuo',
+      dosis: '1 × 15 c/brazo', dibujo: 'curlLigero', anclaNota: 'Sin ancla: pisas la banda',
+      claves: [
+        ['Inicio', 'Brazo estirado y codo pegado; la otra mano en la cadera.'],
+        ['Subir', 'Suave hasta el hombro, sin mover el codo.'],
+        ['Bajar', 'Sin soltar la tensión.'],
+        ['Cambio', 'Termina y cambia de brazo, sin descanso: eso es 1 serie.']
+      ],
+      agarre: {
+        titulo: 'MONTAJE', dibujo: 'bienMalCurl',
+        puntos: [
+          ['Banda', 'La más liviana.'],
+          ['Pie', 'Písala con el pie del mismo lado.'],
+          ['Mano libre', 'En la cadera.']
+        ]
+      },
+      errores: [
+        ['Codo adelantado', 'Codo pegado al costado: solo se mueve el antebrazo.'],
+        ['Banda dura', 'Es calentamiento: liviana.'],
+        ['Ir rápido', 'Suave y continuo.'],
+        ['Muñeca doblada', 'Muñeca recta, alineada con el antebrazo.']
+      ],
+      info: [
+        ['Para qué sirve', 'Calienta el codo y el bíceps antes de las series pesadas.'],
+        ['Nota', 'Deberías acabar sin sensación de cansancio.']
+      ],
+      temporizador: { series: 1, reps: 15, lado: 'por brazo', descanso: 30, preparacion: 5 }
     }
   ],
   // VIERNES · Pecho (fuerza) · calentamiento
@@ -929,6 +1029,211 @@ const BLOQUES = {
             ['Cómo progresar', 'Supera tu número de la semana anterior.']
           ],
           temporizador: { series: 2, opciones: [30, 40, 45], porDefecto: 40, descanso: 60, preparacion: 5 }
+        }
+      ]
+    }
+  ],
+  // LUNES · Bíceps
+  'Bíceps': [
+    { titulo: 'Calentamiento', ejercicios: CALENTAMIENTOS['Bíceps'] },
+    {
+      titulo: 'Principal', nota: 'Descanso 60 s–2 min',
+      ejercicios: [
+        {
+          nombre: 'Curl a una mano',
+          indicacion: 'Pisa la banda y sube la mano hasta el hombro con el codo pegado al costado.',
+          ritmo: '1 s arriba · 3 s abajo',
+          dosis: '4 × 10–12 c/brazo', dibujo: 'curl', anclaNota: 'Sin ancla: pisas la banda',
+          claves: [
+            ['Inicio', 'Brazo estirado, palma hacia delante, codo pegado.'],
+            ['Subir', 'En 1 s soltando el aire; pausa arriba.'],
+            ['Bajar', 'En 3 s hasta estirar del todo.'],
+            ['Cambio', 'Termina y cambia de brazo, sin descanso: eso es 1 serie.']
+          ],
+          agarre: {
+            titulo: 'MONTAJE', dibujo: 'bienMalCurl',
+            puntos: [
+              ['Pie', 'Pisa la banda con el pie del lado que trabaja.'],
+              ['Banda', 'Una con la que llegues justo a 10–12.'],
+              ['Postura', 'Mano libre en la cadera, rodillas algo flexionadas.']
+            ]
+          },
+          errores: [
+            ['Codo adelantado', 'El codo se queda pegado: si se adelanta, el cuerpo se echa atrás a ayudar.'],
+            ['Media bajada', 'Estira el brazo del todo abajo.'],
+            ['Balancear', 'Si necesitas impulso, banda más suave.'],
+            ['Muñeca doblada', 'Muñeca recta.']
+          ],
+          info: [
+            ['Qué trabaja', 'Bíceps braquial, sobre todo la cabeza larga.'],
+            ['Cómo progresar', 'Separa más el pie o usa una banda más dura cuando salgan 4 × 12.']
+          ],
+          temporizador: { series: 4, reps: '10–12', lado: 'por brazo', descanso: 75, descansos: [60, 75, 90], preparacion: 5 }
+        },
+        {
+          nombre: 'Curl martillo a una mano',
+          indicacion: 'Como el curl, con la palma hacia el cuerpo: sube con el pulgar arriba.',
+          ritmo: '3 s abajo',
+          dosis: '3 × 10–12 c/brazo', dibujo: 'curlMartillo', anclaNota: 'Sin ancla: pisas la banda',
+          claves: [
+            ['Inicio', 'Palma mirando al cuerpo, como si sujetaras un martillo.'],
+            ['Subir', 'Con el pulgar arriba hasta el hombro.'],
+            ['Bajar', 'En 3 s.'],
+            ['Cambio', 'Termina y cambia de brazo, sin descanso: eso es 1 serie.']
+          ],
+          agarre: {
+            titulo: 'MONTAJE', dibujo: 'bienMalCurl',
+            puntos: [
+              ['Pie', 'Pisa la banda con el pie del lado que trabaja.'],
+              ['Agarre', 'Con la palma hacia dentro.'],
+              ['Mano libre', 'En la cadera.']
+            ]
+          },
+          errores: [
+            ['Codo adelantado', 'Codo pegado: si se adelanta, el hombro hace el trabajo.'],
+            ['Girar la muñeca', 'La palma se queda hacia dentro todo el recorrido.'],
+            ['Ir rápido', '3 segundos de bajada.'],
+            ['Encoger el hombro', 'Hombro bajo.']
+          ],
+          info: [
+            ['Qué trabaja', 'Braquial y antebrazo: dan grosor al brazo.'],
+            ['Cómo progresar', 'Banda más dura cuando salgan 3 × 12.']
+          ],
+          temporizador: { series: 3, reps: '10–12', lado: 'por brazo', descanso: 60, descansos: [45, 60, 75], preparacion: 5 }
+        },
+        {
+          nombre: 'Dominadas supinas asistidas',
+          indicacion: 'Barra central con las palmas hacia ti y la banda de ayuda bajo un pie.',
+          ritmo: 'Bajar en 2–3 s',
+          dosis: '3 × 5–8', dibujo: 'dominadaSupina', ancla: 'barra',
+          claves: [
+            ['Abajo', 'Brazos estirados y hombros bajos.'],
+            ['Subir', 'Hasta pasar la barbilla: el bíceps trabaja mucho más.'],
+            ['Bajar', 'En 2–3 s.'],
+            ['Salir', 'A la silla y saca el pie con cuidado.']
+          ],
+          agarre: {
+            titulo: 'MONTAJE', dibujo: 'bienMalAsistida',
+            puntos: [
+              ['Banda', 'Ahorcada en la barra, no en el mosquetón.'],
+              ['Agarre', 'Barra central, palmas hacia ti, al ancho de los hombros.'],
+              ['Pie o rodilla', 'Pie en la banda para más ayuda, rodilla para menos.']
+            ]
+          },
+          errores: [
+            ['Balancearse', 'Subida vertical: si la banda te lanza, baja más despacio.'],
+            ['Media repetición', 'Barbilla arriba y brazos estirados abajo.'],
+            ['Soltar la banda', 'Nunca con la banda estirada.'],
+            ['Agarre muy estrecho', 'Al ancho de los hombros.']
+          ],
+          info: [
+            ['Qué trabaja', 'Bíceps y dorsal a la vez. También suma para tus dominadas.'],
+            ['Cómo progresar', 'Banda más fina cuando salgan 3 × 8.']
+          ],
+          temporizador: { series: 3, reps: '5–8', descanso: 120, descansos: [90, 120, 150], preparacion: 5 }
+        }
+      ]
+    },
+    {
+      titulo: 'Accesorios', nota: 'Descanso 60 s',
+      ejercicios: [
+        {
+          nombre: 'Curl detrás del cuerpo',
+          indicacion: 'De espaldas al ancla baja: dobla el codo hasta el hombro con el codo por detrás.',
+          ritmo: 'Pausa 1 s arriba · 3 s abajo',
+          dosis: '3 × 12–15 c/brazo', dibujo: 'curlDetras', ancla: 'baja',
+          claves: [
+            ['Inicio', 'Brazo estirado por detrás del cuerpo.'],
+            ['Subir', 'La mano hacia el hombro sin adelantar el codo.'],
+            ['Pausa', 'Aprieta 1 s arriba y baja en 3 s.'],
+            ['Cambio', 'Termina y cambia de brazo, sin descanso: eso es 1 serie.']
+          ],
+          agarre: {
+            titulo: 'MONTAJE', dibujo: 'bienMalCurlDetras',
+            puntos: [
+              ['Ancla', 'Engancha la banda al ancla baja.'],
+              ['Posición', 'De espaldas a la pared, da un paso adelante.'],
+              ['Brazo', 'Queda estirado por detrás del cuerpo.']
+            ]
+          },
+          errores: [
+            ['Codo hacia delante', 'El codo se queda detrás: si se adelanta, pierde el efecto.'],
+            ['Inclinarse', 'Tronco recto, pecho fuera.'],
+            ['Banda dura', 'Mejor media y con buen recorrido.'],
+            ['Bajar de golpe', 'Controla la bajada.']
+          ],
+          info: [
+            ['Qué trabaja', 'Bíceps en estiramiento: un estímulo que no da el curl normal.'],
+            ['Cómo progresar', 'Otro paso adelante o banda más dura.']
+          ],
+          temporizador: { series: 3, reps: '12–15', lado: 'por brazo', descanso: 60, descansos: [45, 60, 75], preparacion: 5 }
+        },
+        {
+          nombre: 'Curl alto a una mano',
+          indicacion: 'De costado al ancla alta: dobla el codo hacia la cabeza, como enseñando el bíceps.',
+          ritmo: 'Pausa 1 s arriba · 2 s volver',
+          dosis: '3 × 12–15 c/brazo', dibujo: 'curlAlto', ancla: 'alta',
+          claves: [
+            ['Inicio', 'Brazo estirado hacia el ancla, a la altura del hombro.'],
+            ['Doblar', 'Lleva la mano hacia la cabeza; el codo no se mueve.'],
+            ['Pausa', 'Aprieta 1 s y vuelve en 2 s.'],
+            ['Cambio', 'Termina y cambia de brazo, sin descanso: eso es 1 serie.']
+          ],
+          agarre: {
+            titulo: 'MONTAJE', dibujo: 'bienMalCurlAlto',
+            puntos: [
+              ['Ancla', 'Engancha la banda al ancla alta.'],
+              ['Posición', 'De costado, aléjate hasta tener tensión.'],
+              ['Brazo', 'A la altura del hombro, mano libre en la cadera.']
+            ]
+          },
+          errores: [
+            ['Codo que cae', 'El codo se queda alto y quieto: si cae, es un curl normal.'],
+            ['Girar el tronco', 'De costado todo el rato.'],
+            ['Hombro a la oreja', 'Hombro bajo.'],
+            ['Estirar a medias', 'Brazo recto al volver.']
+          ],
+          info: [
+            ['Qué trabaja', 'Bíceps en su posición más contraída, sobre todo la cabeza corta.'],
+            ['Cómo progresar', 'Aléjate de la pared o alarga la pausa.']
+          ],
+          temporizador: { series: 3, reps: '12–15', lado: 'por brazo', descanso: 60, descansos: [45, 60, 75], preparacion: 5 }
+        }
+      ]
+    },
+    {
+      titulo: 'Final', nota: 'Descanso 30 s',
+      ejercicios: [
+        {
+          nombre: 'Isométrico de curl a 90°',
+          indicacion: 'Sube hasta que el antebrazo quede horizontal y aguanta quieto.',
+          ritmo: 'Quieto · respira normal',
+          dosis: '2 × 30 s c/brazo', dibujo: 'isoCurl', anclaNota: 'Sin ancla: pisas la banda',
+          claves: [
+            ['Inicio', 'Pisa la banda con el brazo estirado, como en el curl.'],
+            ['Subir', 'Hasta 90°: antebrazo horizontal.'],
+            ['Aguantar', 'Quieto, sin moverte.'],
+            ['Cambio', 'Al sonar la alarma, cambia de brazo: los dos son 1 serie.']
+          ],
+          agarre: {
+            titulo: 'MONTAJE', dibujo: 'bienMalIsoCurl',
+            puntos: [
+              ['Banda', 'Media o dura.'],
+              ['Tiempo', 'Temporizador listo: elige 20, 30 o 40 s.'],
+              ['Mano libre', 'En la cadera.']
+            ]
+          },
+          errores: [
+            ['Echarse atrás', 'Codo pegado y antebrazo horizontal, sin inclinarte para aguantar.'],
+            ['Bajar poco a poco', 'La altura no cambia.'],
+            ['Aguantar el aire', 'Respira normal.'],
+            ['Codo adelantado', 'Pegado al costado.']
+          ],
+          info: [
+            ['Para qué sirve', 'Remata el bíceps con tensión constante.'],
+            ['Cómo progresar', 'Banda más dura o 40 s.']
+          ],
+          temporizador: { series: 2, opciones: [20, 30, 40], porDefecto: 30, lado: 'por brazo', descanso: 30, preparacion: 5 }
         }
       ]
     }
@@ -1847,5 +2152,49 @@ const DIBUJOS = {
   bienMalAperturaArriba: `
 <svg viewBox="0 0 280 140" fill="none" role="img" aria-label="Bien: hombro bajo y codo fijo, la mano dibuja un arco. Mal: hombro encogido y codo muy doblado: se convierte en un press">
 <text x="70" y="14" text-anchor="middle" fill="#7FB2E5" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✓ HOMBRO BAJO</text><text x="210" y="14" text-anchor="middle" fill="#F2913D" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✕ CODO DOBLADO</text><line x1="140" y1="10" x2="140" y2="132" stroke="#2E3238" stroke-width="2"/><g stroke="#F4F1EA" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><line x1="70" y1="46" x2="70" y2="96"/><line x1="56" y1="52" x2="84" y2="52"/><polyline points="84,52 98,50 82,34"/><polyline points="62,96 60,126"/><polyline points="78,96 80,126"/><line x1="210" y1="46" x2="210" y2="96"/><line x1="196" y1="54" x2="226" y2="44"/><polyline points="226,44 236,62 222,34"/><polyline points="202,96 200,126"/><polyline points="218,96 220,126"/></g><path d="M102 104 Q112 70 88 36" stroke="#7FB2E5" stroke-width="1.5" stroke-dasharray="3 4"/><circle cx="70" cy="34" r="9" fill="#F4F1EA"/><circle cx="66.8" cy="33.1" r="1.08" fill="#16181B"/><circle cx="73.2" cy="33.1" r="1.08" fill="#16181B"/><circle cx="210" cy="34" r="9" fill="#F4F1EA"/><circle cx="206.8" cy="33.1" r="1.08" fill="#16181B"/><circle cx="213.2" cy="33.1" r="1.08" fill="#16181B"/>
+</svg>`,
+  curl: `
+<svg viewBox="0 0 240 420" fill="none" role="img" aria-label="Curl a una mano de frente: pisas la banda, brazo estirado y codo pegado al costado; subes la mano hasta el hombro sin mover el codo en 1 segundo y bajas en 3">
+<line x1="10" y1="412" x2="230" y2="412" stroke="#4A5059" stroke-width="2"/><line x1="126" y1="408" x2="158" y2="408" stroke="#F2913D" stroke-width="5" stroke-linecap="round"/><line x1="142" y1="406" x2="152" y2="252" stroke="#F2913D" stroke-width="3" stroke-linecap="round"><animate attributeName="x2" values="152;160;160;152" keyTimes="0;0.222;0.333;1" dur="4.5s" repeatCount="indefinite"/><animate attributeName="y2" values="252;146;146;252" keyTimes="0;0.222;0.333;1" dur="4.5s" repeatCount="indefinite"/></line><g stroke="#F4F1EA" stroke-linecap="round" stroke-linejoin="round" transform="translate(0,0)"><line x1="120" y1="118" x2="120" y2="250" stroke-width="13"/><line x1="94" y1="130" x2="146" y2="130" stroke-width="13"/><line x1="102" y1="250" x2="138" y2="250" stroke-width="13"/><polyline points="104,250 100,330 98,402" stroke-width="13"/><polyline points="136,250 140,330 142,402" stroke-width="13"/><polyline points="96,130 76,186 104,238" stroke-width="12"/><polyline points="146,132 150,192 152,252" stroke="#F4F1EA" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" fill="none"><animate attributeName="points" values="146,132 150,192 152,252;146,132 150,192 160,146;146,132 150,192 160,146;146,132 150,192 152,252" keyTimes="0;0.222;0.333;1" dur="4.5s" repeatCount="indefinite"/></polyline></g><g transform="translate(0,0)"><circle cx="120" cy="92" r="22" fill="#F4F1EA"/><circle cx="112.1" cy="89.8" r="2.64" fill="#16181B"/><circle cx="127.9" cy="89.8" r="2.64" fill="#16181B"/></g><text x="200" y="190" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">codo</text><text x="200" y="206" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">pegado</text><text x="190" y="400" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">pisa la banda</text><text x="46" y="250" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">1 s arriba</text><text x="46" y="265" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">3 s abajo</text><text x="120" y="40" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Mono, Consolas, monospace" font-size="11">DE FRENTE</text>
+</svg>`,
+  curlLigero: `
+<svg viewBox="0 0 240 420" fill="none" role="img" aria-label="Curl ligero a una mano de frente: pisas una banda liviana y subes suave hasta el hombro sin mover el codo, bajando sin soltar la tensión">
+<line x1="10" y1="412" x2="230" y2="412" stroke="#4A5059" stroke-width="2"/><line x1="126" y1="408" x2="158" y2="408" stroke="#F2913D" stroke-width="5" stroke-linecap="round"/><line x1="142" y1="406" x2="152" y2="252" stroke="#F2913D" stroke-width="3" stroke-linecap="round"><animate attributeName="x2" values="152;160;160;152" keyTimes="0;0.4;0.5;1" dur="3s" repeatCount="indefinite"/><animate attributeName="y2" values="252;146;146;252" keyTimes="0;0.4;0.5;1" dur="3s" repeatCount="indefinite"/></line><g stroke="#F4F1EA" stroke-linecap="round" stroke-linejoin="round" transform="translate(0,0)"><line x1="120" y1="118" x2="120" y2="250" stroke-width="13"/><line x1="94" y1="130" x2="146" y2="130" stroke-width="13"/><line x1="102" y1="250" x2="138" y2="250" stroke-width="13"/><polyline points="104,250 100,330 98,402" stroke-width="13"/><polyline points="136,250 140,330 142,402" stroke-width="13"/><polyline points="96,130 76,186 104,238" stroke-width="12"/><polyline points="146,132 150,192 152,252" stroke="#F4F1EA" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" fill="none"><animate attributeName="points" values="146,132 150,192 152,252;146,132 150,192 160,146;146,132 150,192 160,146;146,132 150,192 152,252" keyTimes="0;0.4;0.5;1" dur="3s" repeatCount="indefinite"/></polyline></g><g transform="translate(0,0)"><circle cx="120" cy="92" r="22" fill="#F4F1EA"/><circle cx="112.1" cy="89.8" r="2.64" fill="#16181B"/><circle cx="127.9" cy="89.8" r="2.64" fill="#16181B"/></g><text x="200" y="190" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">codo</text><text x="200" y="206" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">pegado</text><text x="190" y="400" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">pisa la banda</text><text x="46" y="250" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">suave y</text><text x="46" y="265" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">continuo</text><text x="120" y="40" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Mono, Consolas, monospace" font-size="11">DE FRENTE</text>
+</svg>`,
+  curlMartillo: `
+<svg viewBox="0 0 240 420" fill="none" role="img" aria-label="Curl martillo a una mano de frente: igual que el curl pero con la palma mirando hacia el cuerpo; subes con el pulgar arriba hasta el hombro y bajas en 3 segundos">
+<line x1="10" y1="412" x2="230" y2="412" stroke="#4A5059" stroke-width="2"/><line x1="126" y1="408" x2="158" y2="408" stroke="#F2913D" stroke-width="5" stroke-linecap="round"/><line x1="142" y1="406" x2="152" y2="252" stroke="#F2913D" stroke-width="3" stroke-linecap="round"><animate attributeName="x2" values="152;160;160;152" keyTimes="0;0.222;0.333;1" dur="4.5s" repeatCount="indefinite"/><animate attributeName="y2" values="252;146;146;252" keyTimes="0;0.222;0.333;1" dur="4.5s" repeatCount="indefinite"/></line><g stroke="#F4F1EA" stroke-linecap="round" stroke-linejoin="round" transform="translate(0,0)"><line x1="120" y1="118" x2="120" y2="250" stroke-width="13"/><line x1="94" y1="130" x2="146" y2="130" stroke-width="13"/><line x1="102" y1="250" x2="138" y2="250" stroke-width="13"/><polyline points="104,250 100,330 98,402" stroke-width="13"/><polyline points="136,250 140,330 142,402" stroke-width="13"/><polyline points="96,130 76,186 104,238" stroke-width="12"/><polyline points="146,132 150,192 152,252" stroke="#F4F1EA" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" fill="none"><animate attributeName="points" values="146,132 150,192 152,252;146,132 150,192 160,146;146,132 150,192 160,146;146,132 150,192 152,252" keyTimes="0;0.222;0.333;1" dur="4.5s" repeatCount="indefinite"/></polyline></g><g transform="translate(0,0)"><circle cx="120" cy="92" r="22" fill="#F4F1EA"/><circle cx="112.1" cy="89.8" r="2.64" fill="#16181B"/><circle cx="127.9" cy="89.8" r="2.64" fill="#16181B"/></g><text x="200" y="190" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">codo</text><text x="200" y="206" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">pegado</text><text x="190" y="400" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">pisa la banda</text><text x="46" y="250" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">palma hacia</text><text x="46" y="265" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">dentro</text><text x="120" y="40" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Mono, Consolas, monospace" font-size="11">DE FRENTE</text>
+</svg>`,
+  bienMalCurl: `
+<svg viewBox="0 0 280 140" fill="none" role="img" aria-label="Bien: el codo se queda pegado, trabaja solo el bíceps. Mal: el codo se adelanta y el cuerpo se echa atrás">
+<text x="70" y="14" text-anchor="middle" fill="#7FB2E5" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✓ CODO PEGADO</text><text x="210" y="14" text-anchor="middle" fill="#F2913D" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✕ CODO ADELANTE</text><line x1="140" y1="10" x2="140" y2="132" stroke="#2E3238" stroke-width="2"/><line x1="20" y1="126" x2="120" y2="126" stroke="#4A5059" stroke-width="2"/><line x1="160" y1="126" x2="260" y2="126" stroke="#4A5059" stroke-width="2"/><g transform="rotate(0 70 92)"><g stroke="#F4F1EA" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><line x1="70" y1="40" x2="72" y2="92"/><line x1="70" y1="46" x2="72" y2="74"/><line x1="72" y1="74" x2="88" y2="60"/></g><polygon points="76,24 86,30 76,35" fill="#F4F1EA"/><circle cx="71" cy="28" r="8" fill="#F4F1EA"/></g><g stroke="#F4F1EA" stroke-width="5" stroke-linecap="round"><polyline points="72,92 62,110 56,124"/><polyline points="72,92 82,110 88,124"/></g><g transform="rotate(-12 210 92)"><g stroke="#F4F1EA" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><line x1="210" y1="40" x2="212" y2="92"/><line x1="210" y1="46" x2="226" y2="68"/><line x1="226" y1="68" x2="228" y2="44"/></g><polygon points="216,24 226,30 216,35" fill="#F4F1EA"/><circle cx="211" cy="28" r="8" fill="#F4F1EA"/></g><g stroke="#F4F1EA" stroke-width="5" stroke-linecap="round"><polyline points="212,92 202,110 196,124"/><polyline points="212,92 222,110 228,124"/></g>
+</svg>`,
+  dominadaSupina: `
+<svg viewBox="0 -30 240 450" fill="none" role="img" aria-label="Dominada supina asistida de frente, con las palmas hacia ti en la barra central: la banda de ayuda cuelga de la barra y pasa bajo un pie; subes hasta pasar la barbilla y bajas en 2 segundos">
+<line x1="10" y1="412" x2="230" y2="412" stroke="#4A5059" stroke-width="2"/><line x1="20" y1="30" x2="220" y2="30" stroke="#9EA3AA" stroke-width="8" stroke-linecap="round"/><line x1="84" y1="30" x2="84" y2="14" stroke="#9EA3AA" stroke-width="7" stroke-linecap="round"/><line x1="156" y1="30" x2="156" y2="14" stroke="#9EA3AA" stroke-width="7" stroke-linecap="round"/><polyline points="86,30 88,78 90,126" stroke="#F4F1EA" stroke-width="13" stroke-linecap="round" stroke-linejoin="round" fill="none"><animate attributeName="points" values="86,30 88,78 90,126;86,30 56,52 90,30;86,30 56,52 90,30;86,30 88,78 90,126;86,30 88,78 90,126" keyTimes="0;0.25;0.35;0.85;1" dur="4s" repeatCount="indefinite"/></polyline><polyline points="154,30 152,78 150,126" stroke="#F4F1EA" stroke-width="13" stroke-linecap="round" stroke-linejoin="round" fill="none"><animate attributeName="points" values="154,30 152,78 150,126;154,30 184,52 150,30;154,30 184,52 150,30;154,30 152,78 150,126;154,30 152,78 150,126" keyTimes="0;0.25;0.35;0.85;1" dur="4s" repeatCount="indefinite"/></polyline><g><g stroke="#F4F1EA" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"><line x1="90" y1="126" x2="150" y2="126"/><line x1="120" y1="120" x2="120" y2="248"/><line x1="100" y1="248" x2="140" y2="248"/><polyline points="102,248 100,322 98,378"/><polyline points="138,248 140,322 142,378"/></g><circle cx="120" cy="104" r="22" fill="#F4F1EA"/><circle cx="112.1" cy="101.8" r="2.64" fill="#16181B"/><circle cx="127.9" cy="101.8" r="2.64" fill="#16181B"/><animateTransform attributeName="transform" type="translate" values="0 0;0 -96;0 -96;0 0;0 0" keyTimes="0;0.25;0.35;0.85;1" dur="4s" repeatCount="indefinite"/></g><polyline points="106,30 94,300 94,390 110,390 112,30" stroke="#F2913D" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"><animate attributeName="points" values="106,30 94,300 94,390 110,390 112,30;106,30 94,210 94,294 110,294 112,30;106,30 94,210 94,294 110,294 112,30;106,30 94,300 94,390 110,390 112,30;106,30 94,300 94,390 110,390 112,30" keyTimes="0;0.25;0.35;0.85;1" dur="4s" repeatCount="indefinite"/></polyline><text x="196" y="-8" text-anchor="middle" fill="#F2913D" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">la banda</text><text x="196" y="8" text-anchor="middle" fill="#F2913D" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">empuja abajo</text><text x="196" y="330" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">pie en</text><text x="196" y="346" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">la banda</text><text x="120" y="436" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Mono, Consolas, monospace" font-size="11">palmas hacia ti</text>
+</svg>`,
+  curlDetras: `
+<svg viewBox="0 0 240 420" fill="none" role="img" aria-label="Curl detrás del cuerpo de perfil: de espaldas al ancla baja, el brazo estirado por detrás del cuerpo; doblas el codo hasta llevar la mano al hombro con el codo fijo detrás, pausa 1 segundo y bajas en 3">
+<line x1="18" y1="20" x2="18" y2="404" stroke="#4A5059" stroke-width="3"/><line x1="18" y1="404" x2="232" y2="404" stroke="#4A5059" stroke-width="2"/><circle cx="18" cy="368" r="6" fill="#9EA3AA"/><text x="28" y="356" text-anchor="start" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="11">ancla baja</text><line x1="18" y1="368" x2="90" y2="254" stroke="#F2913D" stroke-width="3" stroke-linecap="round"><animate attributeName="x2" values="90;126;126;90" keyTimes="0;0.222;0.444;1" dur="5s" repeatCount="indefinite"/><animate attributeName="y2" values="254;150;150;254" keyTimes="0;0.222;0.444;1" dur="5s" repeatCount="indefinite"/></line><g stroke="#F4F1EA" stroke-linecap="round" stroke-linejoin="round"><line x1="116" y1="118" x2="112" y2="250" stroke-width="13"/><polyline points="112,250 94,328 82,402" stroke-width="13"/><polyline points="112,250 138,324 150,402" stroke-width="13"/><polyline points="116,136 124,190 110,232" stroke-width="12"/><polyline points="116,136 100,196 90,254" stroke="#F4F1EA" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" fill="none"><animate attributeName="points" values="116,136 100,196 90,254;116,136 100,196 126,150;116,136 100,196 126,150;116,136 100,196 90,254" keyTimes="0;0.222;0.444;1" dur="5s" repeatCount="indefinite"/></polyline></g><polygon points="137,88 147,94 137,99" fill="#F4F1EA"/><circle cx="118" cy="92" r="22" fill="#F4F1EA"/><text x="60" y="160" text-anchor="middle" fill="#F2913D" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">codo atrás,</text><text x="60" y="176" text-anchor="middle" fill="#F2913D" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">fijo</text><text x="120" y="40" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Mono, Consolas, monospace" font-size="11">DE PERFIL</text>
+</svg>`,
+  bienMalCurlDetras: `
+<svg viewBox="0 0 280 140" fill="none" role="img" aria-label="Bien: el codo se queda por detrás del cuerpo. Mal: el codo se va hacia delante y pierde el efecto">
+<text x="70" y="14" text-anchor="middle" fill="#7FB2E5" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✓ CODO DETRÁS</text><text x="210" y="14" text-anchor="middle" fill="#F2913D" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✕ CODO ADELANTE</text><line x1="140" y1="10" x2="140" y2="132" stroke="#2E3238" stroke-width="2"/><line x1="12" y1="126" x2="128" y2="126" stroke="#4A5059" stroke-width="2"/><line x1="152" y1="126" x2="268" y2="126" stroke="#4A5059" stroke-width="2"/><line x1="12" y1="24" x2="12" y2="126" stroke="#4A5059" stroke-width="2"/><line x1="152" y1="24" x2="152" y2="126" stroke="#4A5059" stroke-width="2"/><line x1="12" y1="112" x2="74" y2="50" stroke="#F2913D" stroke-width="2"/><line x1="152" y1="112" x2="232" y2="44" stroke="#F2913D" stroke-width="2"/><g stroke="#F4F1EA" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><line x1="70" y1="40" x2="72" y2="92"/><polyline points="72,92 62,110 56,124"/><polyline points="72,92 82,110 88,124"/><line x1="70" y1="46" x2="62" y2="74"/><line x1="62" y1="74" x2="74" y2="50"/></g><polygon points="76,24 86,30 76,35" fill="#F4F1EA"/><circle cx="71" cy="28" r="8" fill="#F4F1EA"/><g stroke="#F4F1EA" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><line x1="210" y1="40" x2="212" y2="92"/><polyline points="212,92 202,110 196,124"/><polyline points="212,92 222,110 228,124"/><line x1="210" y1="46" x2="224" y2="70"/><line x1="224" y1="70" x2="222" y2="44"/></g><polygon points="216,24 226,30 216,35" fill="#F4F1EA"/><circle cx="211" cy="28" r="8" fill="#F4F1EA"/>
+</svg>`,
+  curlAlto: `
+<svg viewBox="0 0 240 420" fill="none" role="img" aria-label="Curl alto a una mano de frente: de costado al ancla alta, el brazo estirado hacia ella a la altura del hombro; doblas el codo llevando la mano hacia la cabeza sin mover el codo, pausa 1 segundo y vuelves en 2">
+<line x1="14" y1="20" x2="14" y2="412" stroke="#4A5059" stroke-width="3"/><line x1="14" y1="412" x2="232" y2="412" stroke="#4A5059" stroke-width="2"/><circle cx="14" cy="128" r="6" fill="#9EA3AA"/><text x="22" y="116" text-anchor="start" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="11">ancla alta</text><line x1="14" y1="128" x2="48" y2="132" stroke="#F2913D" stroke-width="3" stroke-linecap="round"><animate attributeName="x2" values="48;104;104;48" keyTimes="0;0.2;0.422;1" dur="4.5s" repeatCount="indefinite"/><animate attributeName="y2" values="132;94;94;132" keyTimes="0;0.2;0.422;1" dur="4.5s" repeatCount="indefinite"/></line><g stroke="#F4F1EA" stroke-linecap="round" stroke-linejoin="round"><line x1="150" y1="118" x2="150" y2="250" stroke-width="13"/><line x1="124" y1="130" x2="176" y2="130" stroke-width="13"/><line x1="132" y1="250" x2="168" y2="250" stroke-width="13"/><polyline points="134,250 128,330 122,404" stroke-width="13"/><polyline points="166,250 172,330 178,404" stroke-width="13"/><polyline points="176,130 196,186 172,232" stroke-width="12"/><polyline points="128,130 88,130 48,132" stroke="#F4F1EA" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" fill="none"><animate attributeName="points" values="128,130 88,130 48,132;128,130 88,130 104,94;128,130 88,130 104,94;128,130 88,130 48,132" keyTimes="0;0.2;0.422;1" dur="4.5s" repeatCount="indefinite"/></polyline></g><circle cx="150" cy="92" r="22" fill="#F4F1EA"/><circle cx="142.1" cy="89.8" r="2.64" fill="#16181B"/><circle cx="157.9" cy="89.8" r="2.64" fill="#16181B"/><text x="88" y="176" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">el codo</text><text x="88" y="192" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">no se mueve</text><text x="120" y="40" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Mono, Consolas, monospace" font-size="11">DE FRENTE</text>
+</svg>`,
+  bienMalCurlAlto: `
+<svg viewBox="0 0 280 140" fill="none" role="img" aria-label="Bien: el codo se queda alto y quieto. Mal: el codo cae y se convierte en un curl normal">
+<text x="70" y="14" text-anchor="middle" fill="#7FB2E5" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✓ CODO ALTO</text><text x="210" y="14" text-anchor="middle" fill="#F2913D" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✕ CODO CAE</text><line x1="140" y1="10" x2="140" y2="132" stroke="#2E3238" stroke-width="2"/><line x1="12" y1="126" x2="128" y2="126" stroke="#4A5059" stroke-width="2"/><line x1="152" y1="126" x2="268" y2="126" stroke="#4A5059" stroke-width="2"/><line x1="12" y1="24" x2="12" y2="126" stroke="#4A5059" stroke-width="2"/><line x1="152" y1="24" x2="152" y2="126" stroke="#4A5059" stroke-width="2"/><line x1="12" y1="52" x2="56" y2="34" stroke="#F2913D" stroke-width="2"/><line x1="152" y1="52" x2="206" y2="46" stroke="#F2913D" stroke-width="2"/><g stroke="#F4F1EA" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><line x1="90" y1="44" x2="90" y2="94"/><line x1="78" y1="52" x2="102" y2="52"/><polyline points="83,94 81,124"/><polyline points="97,94 99,124"/><line x1="78" y1="52" x2="56" y2="52"/><line x1="56" y1="52" x2="66" y2="34"/></g><circle cx="90" cy="32" r="9" fill="#F4F1EA"/><circle cx="86.8" cy="31.1" r="1.08" fill="#16181B"/><circle cx="93.2" cy="31.1" r="1.08" fill="#16181B"/><g stroke="#F4F1EA" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><line x1="230" y1="44" x2="230" y2="94"/><line x1="218" y1="52" x2="242" y2="52"/><polyline points="223,94 221,124"/><polyline points="237,94 239,124"/><line x1="218" y1="52" x2="200" y2="72"/><line x1="200" y1="72" x2="206" y2="46"/></g><circle cx="230" cy="32" r="9" fill="#F4F1EA"/><circle cx="226.8" cy="31.1" r="1.08" fill="#16181B"/><circle cx="233.2" cy="31.1" r="1.08" fill="#16181B"/>
+</svg>`,
+  isoCurl: `
+<svg viewBox="0 0 240 420" fill="none" role="img" aria-label="Isométrico de curl a 90 grados de perfil: pisas la banda, subes hasta que el antebrazo queda horizontal con el codo pegado al costado y aguantas quieto el tiempo marcado">
+<line x1="10" y1="404" x2="230" y2="404" stroke="#4A5059" stroke-width="2"/><line x1="120" y1="400" x2="152" y2="400" stroke="#F2913D" stroke-width="5" stroke-linecap="round"/><line x1="140" y1="398" x2="120" y2="254" stroke="#F2913D" stroke-width="3" stroke-linecap="round"><animate attributeName="x2" values="120;176;176;120" keyTimes="0;0.15;0.9;1" dur="7s" repeatCount="indefinite"/><animate attributeName="y2" values="254;196;196;254" keyTimes="0;0.15;0.9;1" dur="7s" repeatCount="indefinite"/></line><g stroke="#F4F1EA" stroke-linecap="round" stroke-linejoin="round"><line x1="116" y1="118" x2="112" y2="250" stroke-width="13"/><polyline points="112,250 94,328 82,402" stroke-width="13"/><polyline points="112,250 138,324 150,402" stroke-width="13"/><polyline points="116,136 124,190 110,232" stroke-width="12"/><polyline points="116,136 118,196 120,254" stroke="#F4F1EA" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" fill="none"><animate attributeName="points" values="116,136 118,196 120,254;116,136 118,196 176,196;116,136 118,196 176,196;116,136 118,196 120,254" keyTimes="0;0.15;0.9;1" dur="7s" repeatCount="indefinite"/></polyline></g><polygon points="137,88 147,94 137,99" fill="#F4F1EA"/><circle cx="118" cy="92" r="22" fill="#F4F1EA"/><path d="M140 196 A22 22 0 0 0 118 174" stroke="#F2913D" stroke-width="2"/><text x="150" y="172" text-anchor="middle" fill="#F2913D" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="13">90°</text><text x="196" y="240" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">aguanta</text><text x="196" y="256" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">quieto</text><text x="120" y="40" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Mono, Consolas, monospace" font-size="11">DE PERFIL</text>
+</svg>`,
+  bienMalIsoCurl: `
+<svg viewBox="0 0 280 140" fill="none" role="img" aria-label="Bien: codo pegado y antebrazo horizontal. Mal: echarse atrás para aguantar">
+<text x="70" y="14" text-anchor="middle" fill="#7FB2E5" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✓ CODO PEGADO</text><text x="210" y="14" text-anchor="middle" fill="#F2913D" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✕ ECHARSE ATRÁS</text><line x1="140" y1="10" x2="140" y2="132" stroke="#2E3238" stroke-width="2"/><line x1="20" y1="126" x2="120" y2="126" stroke="#4A5059" stroke-width="2"/><line x1="160" y1="126" x2="260" y2="126" stroke="#4A5059" stroke-width="2"/><g stroke="#F4F1EA" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><line x1="70" y1="40" x2="72" y2="92"/><line x1="70" y1="46" x2="72" y2="72"/><line x1="72" y1="72" x2="98" y2="72"/></g><polygon points="76,24 86,30 76,35" fill="#F4F1EA"/><circle cx="71" cy="28" r="8" fill="#F4F1EA"/><g stroke="#F4F1EA" stroke-width="5" stroke-linecap="round"><polyline points="72,92 62,110 56,124"/><polyline points="72,92 82,110 88,124"/></g><g transform="rotate(-16 212 92)"><g stroke="#F4F1EA" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><line x1="210" y1="40" x2="212" y2="92"/><line x1="210" y1="46" x2="212" y2="72"/><line x1="212" y1="72" x2="238" y2="72"/></g><polygon points="216,24 226,30 216,35" fill="#F4F1EA"/><circle cx="211" cy="28" r="8" fill="#F4F1EA"/></g><g stroke="#F4F1EA" stroke-width="5" stroke-linecap="round"><polyline points="212,92 202,110 196,124"/><polyline points="212,92 222,110 228,124"/></g>
 </svg>`
 };
