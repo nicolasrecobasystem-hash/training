@@ -48,6 +48,11 @@ const INFO_GRUPO = {
     duracion: '~55 min',
     material: 'Barra, bandas, banda de ayuda y anclas media y alta',
     enfoque: 'Espalda con muchas repeticiones'
+  },
+  'Tríceps': {
+    duracion: '~45 min',
+    material: 'Suelo, silla, bandas y anclas alta y media',
+    enfoque: 'Tríceps: sus tres cabezas'
   }
 };
 
@@ -554,6 +559,102 @@ const CALENTAMIENTOS = {
         ['Nota', 'Calentamiento: sin fatiga.']
       ],
       temporizador: { series: 2, reps: 15, descanso: 30, preparacion: 5 }
+    }
+  ],
+  // MIÉRCOLES · Tríceps · calentamiento
+  'Tríceps': [
+    {
+      nombre: 'Pull-aparts con banda',
+      indicacion: 'Brazos al frente a la altura del pecho; abre hasta que la banda toque el pecho.',
+      ritmo: '1 s abrir · 2 s volver',
+      dosis: '2 × 15', dibujo: 'pullApart', anclaNota: 'Sin ancla: la banda va en tus manos',
+      claves: [
+        ['Inicio', 'Brazos al frente, codos casi rectos.'],
+        ['Abrir', 'Hasta tocar el pecho.'],
+        ['Pausa', 'Aguanta 1 s juntando los omóplatos.'],
+        ['Volver', 'Controlando la banda.']
+      ],
+      agarre: {
+        titulo: 'MONTAJE', dibujo: 'agarreBanda',
+        puntos: [
+          ['Banda', 'Liviana.'],
+          ['Manos', 'Al ancho de los hombros.'],
+          ['Si no llega', 'Si no llega al pecho, separa más las manos.']
+        ]
+      },
+      errores: [
+        ['Hombros a las orejas', 'Brazos rectos en cruz y hombros bajos, codos sin doblar.'],
+        ['Arquear la espalda', 'El tronco no se mueve.'],
+        ['Soltar de golpe', 'Controla la vuelta.'],
+        ['Bajar los brazos', 'Siempre a la altura del pecho.']
+      ],
+      info: [
+        ['Para qué sirve', 'Equilibra los hombros antes de un día de empuje.'],
+        ['Nota', 'Calentamiento: sin fatiga.']
+      ],
+      temporizador: { series: 2, reps: 15, descanso: 30, preparacion: 5 }
+    },
+    {
+      nombre: 'Dislocaciones con banda',
+      indicacion: 'Arco completo con los brazos rectos: delante, arriba y detrás.',
+      ritmo: '2 s ida · 2 s vuelta',
+      dosis: '2 × 10', dibujo: 'dislocaciones', anclaNota: 'Sin ancla: la banda va en tus manos',
+      claves: [
+        ['Inicio', 'Agarre muy ancho, brazos rectos delante de los muslos.'],
+        ['Brazos', 'Codos estirados.'],
+        ['Ida', 'Sube y sigue hasta detrás de la cadera.'],
+        ['Vuelta', 'Por el mismo arco.']
+      ],
+      agarre: {
+        dibujo: 'agarreDislocaciones',
+        puntos: [
+          ['Banda', 'La más liviana.'],
+          ['Dónde', 'Por la parte recta, con las manos muy separadas.'],
+          ['Dificultad', 'Más separadas = más fácil.']
+        ]
+      },
+      errores: [
+        ['Doblar los codos', 'Brazos rectos en V ancha: si no pasan, separa las manos.'],
+        ['Sacar las costillas', 'Abdomen firme.'],
+        ['Ir con rebote', 'Lento.'],
+        ['Forzar el paso', 'Separa las manos.']
+      ],
+      info: [
+        ['Para qué sirve', 'Movilidad de hombro para las extensiones por encima de la cabeza.'],
+        ['Cómo progresar', 'Acerca las manos poco a poco.']
+      ],
+      temporizador: { series: 2, reps: 10, descanso: 30, preparacion: 5 }
+    },
+    {
+      nombre: 'Flexiones escapulares',
+      indicacion: 'En plancha con los brazos rectos, junta y separa los omóplatos.',
+      ritmo: 'Pausa 1 s en cada punto',
+      dosis: '2 × 10', dibujo: 'flexEscap', anclaNota: 'Sin ancla: en el suelo',
+      claves: [
+        ['Inicio', 'Plancha alta, manos bajo los hombros, cuerpo recto.'],
+        ['Juntar', 'Junta los omóplatos con los brazos rectos.'],
+        ['Empujar', 'Empuja el suelo hasta separarlos.'],
+        ['Pausa', '1 s en cada punto.']
+      ],
+      agarre: {
+        titulo: 'MONTAJE', dibujo: 'bienMalFlexEscap',
+        puntos: [
+          ['Posición', 'Plancha alta.'],
+          ['Manos', 'Bajo los hombros.'],
+          ['Cuerpo', 'Recto.']
+        ]
+      },
+      errores: [
+        ['Doblar los codos', 'Solo se mueven los omóplatos.'],
+        ['Hundir la cadera', 'Abdomen apretado.'],
+        ['Recorrido corto', 'Máximo en los dos sentidos.'],
+        ['Ir rápido', 'Con pausa.']
+      ],
+      info: [
+        ['Para qué sirve', 'Hombro estable para las flexiones diamante.'],
+        ['Nota', 'Sin fatiga.']
+      ],
+      temporizador: { series: 2, reps: 10, descanso: 30, preparacion: 5 }
     }
   ],
   // VIERNES · Pecho (fuerza) · calentamiento
@@ -1574,6 +1675,211 @@ const BLOQUES = {
       ]
     }
   ],
+  // MIÉRCOLES · Tríceps
+  'Tríceps': [
+    { titulo: 'Calentamiento', ejercicios: CALENTAMIENTOS['Tríceps'] },
+    {
+      titulo: 'Principal', nota: 'Descanso 60–90 s',
+      ejercicios: [
+        {
+          nombre: 'Flexiones diamante',
+          indicacion: 'Manos juntas bajo el pecho formando un rombo; baja con los codos pegados.',
+          ritmo: '2 s abajo · 1 s arriba',
+          dosis: '4 × 8–15', dibujo: 'diamante', anclaNota: 'Sin ancla: en el suelo',
+          claves: [
+            ['Arriba', 'Pulgares e índices forman un rombo bajo el pecho.'],
+            ['Bajar', 'En 2 s, llevando los codos hacia atrás.'],
+            ['Subir', 'En 1 s hasta estirar los brazos.'],
+            ['Si falla', 'Termina la serie con las rodillas apoyadas.']
+          ],
+          agarre: {
+            titulo: 'MONTAJE', dibujo: 'bienMalDiamante',
+            puntos: [
+              ['Manos', 'Juntas bajo el pecho, formando un rombo.'],
+              ['Pies', 'Algo separados para más estabilidad.'],
+              ['Cuerpo', 'Recto y apretado.']
+            ]
+          },
+          errores: [
+            ['Codos hacia los lados', 'Codos cerca del cuerpo y hacia atrás: abiertos cargan muñeca y hombro.'],
+            ['Cadera hundida', 'Cuerpo recto.'],
+            ['Recorrido corto', 'Pecho cerca de las manos.'],
+            ['Dolor de muñeca', 'Separa un poco las manos.']
+          ],
+          info: [
+            ['Qué trabaja', 'Tríceps como músculo principal, con ayuda del pecho.'],
+            ['Cómo progresar', 'Cuando salgan 4 × 15, pies en la silla.']
+          ],
+          temporizador: { series: 4, reps: '8–15', descanso: 90, descansos: [60, 90, 120], preparacion: 5 }
+        },
+        {
+          nombre: 'Fondos en silla',
+          indicacion: 'Manos en el borde de la silla por detrás: baja hasta 90° con los codos hacia atrás.',
+          ritmo: '2 s abajo · 1 s arriba',
+          dosis: '3 × 10–15', dibujo: 'fondos', anclaNota: 'Sin ancla: con una silla',
+          claves: [
+            ['Arriba', 'Manos en el borde, brazos estirados.'],
+            ['Bajar', 'En 2 s llevando los codos hacia atrás.'],
+            ['Parar', 'En 90°: no más abajo.'],
+            ['Subir', 'En 1 s hasta estirar los brazos.']
+          ],
+          agarre: {
+            titulo: 'MONTAJE', dibujo: 'bienMalFondos',
+            puntos: [
+              ['Silla', 'Firme y contra la pared.'],
+              ['Manos', 'En el borde, dedos hacia delante.'],
+              ['Piernas', 'Dobladas: más fácil. Estiradas: más difícil.']
+            ]
+          },
+          errores: [
+            ['Codos abiertos', 'Codos a 90° y hacia atrás, hombros bajos: si no, castiga el hombro.'],
+            ['Bajar demasiado', 'Más de 90° carga el hombro.'],
+            ['Alejarse de la silla', 'La espalda roza el borde.'],
+            ['Silla suelta', 'Siempre contra la pared.']
+          ],
+          info: [
+            ['Qué trabaja', 'Tríceps con el propio peso del cuerpo.'],
+            ['Cómo progresar', 'Estira las piernas o pon los pies en otra silla.']
+          ],
+          temporizador: { series: 3, reps: '10–15', descanso: 90, descansos: [60, 90, 120], preparacion: 5 }
+        },
+        {
+          nombre: 'Extensión sobre la cabeza',
+          indicacion: 'Pisa la banda, codo al techo: estira el antebrazo hasta el brazo recto.',
+          ritmo: '1 s estirar · 2 s volver',
+          dosis: '3 × 12 c/brazo', dibujo: 'extCabeza', anclaNota: 'Sin ancla: pisas la banda',
+          claves: [
+            ['Inicio', 'Codo apuntando al techo, mano detrás de la cabeza.'],
+            ['Codo', 'Apunta al techo y no se mueve.'],
+            ['Estirar', 'Hasta el brazo recto; vuelve en 2 s.'],
+            ['Cambio', 'Termina y cambia de brazo, sin descanso: eso es 1 serie.']
+          ],
+          agarre: {
+            titulo: 'MONTAJE', dibujo: 'bienMalExtCabeza',
+            puntos: [
+              ['Pie', 'Pisa la banda con el pie del lado que trabaja.'],
+              ['Banda', 'Pásala por detrás y sube la mano detrás de la cabeza.'],
+              ['Mano libre', 'Sujetando el codo si hace falta.']
+            ]
+          },
+          errores: [
+            ['Codo abierto', 'Codo fijo arriba: si se abre, baja hacia delante.'],
+            ['Arquear la espalda', 'Costillas abajo.'],
+            ['Rango corto', 'Mano bien detrás de la cabeza.'],
+            ['Banda dura', 'Mejor media y con recorrido.']
+          ],
+          info: [
+            ['Qué trabaja', 'Cabeza larga del tríceps, la más grande.'],
+            ['Cómo progresar', 'Banda más dura cuando los 3 × 12 sean fáciles.']
+          ],
+          temporizador: { series: 3, reps: 12, lado: 'por brazo', descanso: 60, descansos: [45, 60, 75], preparacion: 5 }
+        }
+      ]
+    },
+    {
+      titulo: 'Accesorios', nota: 'Descanso 45 s',
+      ejercicios: [
+        {
+          nombre: 'Extensión hacia abajo',
+          indicacion: 'Mirando al ancla alta, codo pegado: empuja hacia abajo hasta estirar el brazo.',
+          ritmo: 'Pausa 1 s abajo · 2 s volver',
+          dosis: '3 × 15 c/brazo', dibujo: 'extAbajo', ancla: 'alta',
+          claves: [
+            ['Inicio', 'Codo pegado al costado, antebrazo horizontal.'],
+            ['Empujar', 'Hacia abajo hasta estirar junto al muslo.'],
+            ['Pausa', 'Aprieta 1 s y vuelve en 2 s, solo hasta la horizontal.'],
+            ['Cambio', 'Termina y cambia de brazo, sin descanso: eso es 1 serie.']
+          ],
+          agarre: {
+            titulo: 'MONTAJE', dibujo: 'bienMalExtAbajo',
+            puntos: [
+              ['Ancla', 'Banda en el ancla alta.'],
+              ['Posición', 'Mirando a la pared, a un paso.'],
+              ['Codo', 'Pegado al costado.']
+            ]
+          },
+          errores: [
+            ['Codo adelantado', 'Codo quieto junto al cuerpo: no se despega.'],
+            ['Inclinarse encima', 'Tronco recto.'],
+            ['Subir de más', 'Vuelve solo hasta la horizontal.'],
+            ['Hombro a la oreja', 'Hombro bajo.']
+          ],
+          info: [
+            ['Qué trabaja', 'Cabeza lateral del tríceps.'],
+            ['Cómo progresar', 'Paso atrás o banda más dura.']
+          ],
+          temporizador: { series: 3, reps: 15, lado: 'por brazo', descanso: 45, descansos: [30, 45, 60], preparacion: 5 }
+        },
+        {
+          nombre: 'Patada de tríceps',
+          indicacion: 'Inclinado hacia el ancla media: estira el antebrazo atrás hasta el brazo recto.',
+          ritmo: 'Pausa 1 s estirado',
+          dosis: '3 × 15 c/brazo', dibujo: 'patada', ancla: 'media',
+          claves: [
+            ['Inicio', 'Codo a la altura de la cadera, antebrazo colgando.'],
+            ['Codo', 'Pegado a la cadera y fijo.'],
+            ['Estirar', 'Atrás hasta el brazo recto; aguanta 1 s.'],
+            ['Cambio', 'Termina y cambia de brazo, sin descanso: eso es 1 serie.']
+          ],
+          agarre: {
+            titulo: 'MONTAJE', dibujo: 'bienMalPatada',
+            puntos: [
+              ['Ancla', 'Banda en el ancla media.'],
+              ['Postura', 'Inclínate hacia delante con la espalda recta.'],
+              ['Mano libre', 'Apoyada en la rodilla.']
+            ]
+          },
+          errores: [
+            ['Codo que baja', 'Solo se mueve el antebrazo: si el codo baja, el brazo se balancea.'],
+            ['Espalda redonda', 'Recta desde la cadera.'],
+            ['Ir rápido', 'Pausa estirado.'],
+            ['Codo bajo', 'A la altura de la cadera.']
+          ],
+          info: [
+            ['Qué trabaja', 'Tríceps en su posición más contraída.'],
+            ['Cómo progresar', 'Aléjate de la pared o alarga la pausa.']
+          ],
+          temporizador: { series: 3, reps: 15, lado: 'por brazo', descanso: 45, descansos: [30, 45, 60], preparacion: 5 }
+        }
+      ]
+    },
+    {
+      titulo: 'Final', nota: 'Descanso 45 s',
+      ejercicios: [
+        {
+          nombre: 'Fondos isométricos',
+          indicacion: 'En la silla, baja hasta 90° con los codos hacia atrás y quédate quieto.',
+          ritmo: 'Quieto · respira normal',
+          dosis: '2 × 20–30 s', dibujo: 'fondosIso', anclaNota: 'Sin ancla: con una silla',
+          claves: [
+            ['Arriba', 'Empieza con los brazos estirados.'],
+            ['Bajar', 'Hasta 90°, con los codos hacia atrás.'],
+            ['Aguantar', 'Quieto, respirando normal.'],
+            ['Al terminar', 'Sube y siéntate.']
+          ],
+          agarre: {
+            titulo: 'MONTAJE', dibujo: 'bienMalFondos',
+            puntos: [
+              ['Silla', 'Contra la pared.'],
+              ['Tiempo', 'Temporizador listo.'],
+              ['Piernas', 'Dobladas.']
+            ]
+          },
+          errores: [
+            ['Codos abiertos', 'Codos atrás y hombros bajos, no hacia delante.'],
+            ['Hundirse', 'La altura no cambia.'],
+            ['Aguantar el aire', 'Respira.'],
+            ['Hombros arriba', 'Bajos y atrás.']
+          ],
+          info: [
+            ['Para qué sirve', 'Remata el tríceps con tensión constante.'],
+            ['Cómo progresar', 'Llega a 40 s o estira las piernas.']
+          ],
+          temporizador: { series: 2, opciones: [20, 25, 30], descanso: 45, preparacion: 5 }
+        }
+      ]
+    }
+  ],
   // VIERNES · Pecho con foco en fuerza
   'Pecho · Fuerza': [
     { titulo: 'Calentamiento', ejercicios: CALENTAMIENTOS['Pecho · Fuerza'] },
@@ -2532,5 +2838,49 @@ const DIBUJOS = {
   bienMalIsoCurl: `
 <svg viewBox="0 0 280 140" fill="none" role="img" aria-label="Bien: codo pegado y antebrazo horizontal. Mal: echarse atrás para aguantar">
 <text x="70" y="14" text-anchor="middle" fill="#7FB2E5" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✓ CODO PEGADO</text><text x="210" y="14" text-anchor="middle" fill="#F2913D" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✕ ECHARSE ATRÁS</text><line x1="140" y1="10" x2="140" y2="132" stroke="#2E3238" stroke-width="2"/><line x1="20" y1="126" x2="120" y2="126" stroke="#4A5059" stroke-width="2"/><line x1="160" y1="126" x2="260" y2="126" stroke="#4A5059" stroke-width="2"/><g stroke="#F4F1EA" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><line x1="70" y1="40" x2="72" y2="92"/><line x1="70" y1="46" x2="72" y2="72"/><line x1="72" y1="72" x2="98" y2="72"/></g><polygon points="76,24 86,30 76,35" fill="#F4F1EA"/><circle cx="71" cy="28" r="8" fill="#F4F1EA"/><g stroke="#F4F1EA" stroke-width="5" stroke-linecap="round"><polyline points="72,92 62,110 56,124"/><polyline points="72,92 82,110 88,124"/></g><g transform="rotate(-16 212 92)"><g stroke="#F4F1EA" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><line x1="210" y1="40" x2="212" y2="92"/><line x1="210" y1="46" x2="212" y2="72"/><line x1="212" y1="72" x2="238" y2="72"/></g><polygon points="216,24 226,30 216,35" fill="#F4F1EA"/><circle cx="211" cy="28" r="8" fill="#F4F1EA"/></g><g stroke="#F4F1EA" stroke-width="5" stroke-linecap="round"><polyline points="212,92 202,110 196,124"/><polyline points="212,92 222,110 228,124"/></g>
+</svg>`,
+  diamante: `
+<svg viewBox="0 200 240 220" fill="none" role="img" aria-label="Flexión diamante de frente: manos juntas bajo el pecho formando un rombo; bajas en 2 segundos con los codos pegados al cuerpo hacia atrás y subes en 1">
+<line x1="10" y1="404" x2="230" y2="404" stroke="#4A5059" stroke-width="2"/><polyline points="112,402 104,368 96,334" stroke="#F4F1EA" stroke-width="11" stroke-linecap="round" stroke-linejoin="round" fill="none"><animate attributeName="points" values="112,402 104,368 96,334;112,402 86,394 96,380;112,402 86,394 96,380;112,402 104,368 96,334;112,402 104,368 96,334" keyTimes="0;0.556;0.639;0.917;1" dur="3.6s" repeatCount="indefinite"/></polyline><polyline points="128,402 136,368 144,334" stroke="#F4F1EA" stroke-width="11" stroke-linecap="round" stroke-linejoin="round" fill="none"><animate attributeName="points" values="128,402 136,368 144,334;128,402 154,394 144,380;128,402 154,394 144,380;128,402 136,368 144,334;128,402 136,368 144,334" keyTimes="0;0.556;0.639;0.917;1" dur="3.6s" repeatCount="indefinite"/></polyline><polyline points="96,334 144,334" stroke="#F4F1EA" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" fill="none"><animate attributeName="points" values="96,334 144,334;96,380 144,380;96,380 144,380;96,334 144,334;96,334 144,334" keyTimes="0;0.556;0.639;0.917;1" dur="3.6s" repeatCount="indefinite"/></polyline><g><circle cx="120" cy="316" r="17" fill="#F4F1EA"/><circle cx="113.9" cy="314.3" r="2.04" fill="#16181B"/><circle cx="126.1" cy="314.3" r="2.04" fill="#16181B"/><animateTransform attributeName="transform" type="translate" values="0 0;0 46;0 46;0 0;0 0" keyTimes="0;0.556;0.639;0.917;1" dur="3.6s" repeatCount="indefinite"/></g><polygon points="120,396 128,402 120,408 112,402" stroke="#F2913D" stroke-width="2"/><text x="190" y="330" text-anchor="middle" fill="#F2913D" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="11">manos juntas</text><text x="46" y="330" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="11">codos pegados</text><text x="120" y="222" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Mono, Consolas, monospace" font-size="11">DE FRENTE</text><text x="120" y="244" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">2 s abajo · 1 s arriba</text><text x="120" y="260" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">codos hacia atrás</text>
+</svg>`,
+  bienMalDiamante: `
+<svg viewBox="0 0 280 140" fill="none" role="img" aria-label="Bien: codos cerca del cuerpo, hacia atrás. Mal: codos hacia los lados: carga la muñeca y el hombro">
+<text x="70" y="14" text-anchor="middle" fill="#7FB2E5" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✓ CODOS PEGADOS</text><text x="210" y="14" text-anchor="middle" fill="#F2913D" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✕ CODOS FUERA</text><line x1="140" y1="10" x2="140" y2="132" stroke="#2E3238" stroke-width="2"/><g stroke="#F4F1EA" stroke-linecap="round" stroke-linejoin="round"><line x1="70" y1="50" x2="70" y2="124" stroke-width="7"/><line x1="54" y1="54" x2="86" y2="54" stroke-width="7"/><line x1="54" y1="54" x2="58" y2="84" stroke-width="5"/><line x1="86" y1="54" x2="82" y2="84" stroke-width="5"/></g><polygon points="65,36 70,26 75,36" fill="#F4F1EA"/><circle cx="70" cy="42" r="9" fill="#F4F1EA"/><text x="70" y="136" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Mono, Consolas, monospace" font-size="9">desde arriba</text><g stroke="#F4F1EA" stroke-linecap="round" stroke-linejoin="round"><line x1="210" y1="50" x2="210" y2="124" stroke-width="7"/><line x1="194" y1="54" x2="226" y2="54" stroke-width="7"/><line x1="194" y1="54" x2="164" y2="62" stroke-width="5"/><line x1="226" y1="54" x2="256" y2="62" stroke-width="5"/></g><polygon points="205,36 210,26 215,36" fill="#F4F1EA"/><circle cx="210" cy="42" r="9" fill="#F4F1EA"/><text x="210" y="136" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Mono, Consolas, monospace" font-size="9">desde arriba</text>
+</svg>`,
+  fondos: `
+<svg viewBox="0 150 240 270" fill="none" role="img" aria-label="Fondos en silla de perfil: manos en el borde de la silla por detrás con los brazos estirados; bajas en 2 segundos hasta que los codos forman 90 grados apuntando hacia atrás y subes en 1">
+<line x1="10" y1="404" x2="230" y2="404" stroke="#4A5059" stroke-width="2"/><g stroke="#9EA3AA" stroke-width="5" stroke-linecap="round"><line x1="24" y1="334" x2="80" y2="334"/><line x1="28" y1="334" x2="28" y2="404"/><line x1="76" y1="334" x2="76" y2="404"/><line x1="24" y1="334" x2="24" y2="264"/></g><polyline points="96,254 100,330" stroke="#F4F1EA" stroke-width="13" stroke-linecap="round" stroke-linejoin="round" fill="none"><animate attributeName="points" values="96,254 100,330;98,300 102,376;98,300 102,376;96,254 100,330;96,254 100,330" keyTimes="0;0.556;0.639;0.917;1" dur="3.6s" repeatCount="indefinite"/></polyline><polyline points="100,330 160,330 166,402" stroke="#F4F1EA" stroke-width="13" stroke-linecap="round" stroke-linejoin="round" fill="none"><animate attributeName="points" values="100,330 160,330 166,402;102,376 160,352 166,402;102,376 160,352 166,402;100,330 160,330 166,402;100,330 160,330 166,402" keyTimes="0;0.556;0.639;0.917;1" dur="3.6s" repeatCount="indefinite"/></polyline><polyline points="80,332 88,293 96,254" stroke="#F4F1EA" stroke-width="11" stroke-linecap="round" stroke-linejoin="round" fill="none"><animate attributeName="points" values="80,332 88,293 96,254;80,332 60,298 98,300;80,332 60,298 98,300;80,332 88,293 96,254;80,332 88,293 96,254" keyTimes="0;0.556;0.639;0.917;1" dur="3.6s" repeatCount="indefinite"/></polyline><g><polygon points="117,222 127,228 117,233" fill="#F4F1EA"/><circle cx="100" cy="226" r="20" fill="#F4F1EA"/><animateTransform attributeName="transform" type="translate" values="0 0;4 46;4 46;0 0;0 0" keyTimes="0;0.556;0.639;0.917;1" dur="3.6s" repeatCount="indefinite"/></g><text x="170" y="200" text-anchor="middle" fill="#F2913D" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">codos a 90°,</text><text x="170" y="216" text-anchor="middle" fill="#F2913D" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">hacia atrás</text><text x="170" y="238" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="11">2 s abajo · 1 s arriba</text><text x="120" y="166" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Mono, Consolas, monospace" font-size="11">DE PERFIL</text>
+</svg>`,
+  fondosIso: `
+<svg viewBox="0 150 240 270" fill="none" role="img" aria-label="Fondos isométricos de perfil: desde arriba con los brazos estirados bajas hasta 90 grados con los codos hacia atrás y te quedas quieto el tiempo marcado">
+<line x1="10" y1="404" x2="230" y2="404" stroke="#4A5059" stroke-width="2"/><g stroke="#9EA3AA" stroke-width="5" stroke-linecap="round"><line x1="24" y1="334" x2="80" y2="334"/><line x1="28" y1="334" x2="28" y2="404"/><line x1="76" y1="334" x2="76" y2="404"/><line x1="24" y1="334" x2="24" y2="264"/></g><polyline points="96,254 100,330" stroke="#F4F1EA" stroke-width="13" stroke-linecap="round" stroke-linejoin="round" fill="none"><animate attributeName="points" values="96,254 100,330;98,300 102,376;98,300 102,376;96,254 100,330" keyTimes="0;0.15;0.88;1" dur="7s" repeatCount="indefinite"/></polyline><polyline points="100,330 160,330 166,402" stroke="#F4F1EA" stroke-width="13" stroke-linecap="round" stroke-linejoin="round" fill="none"><animate attributeName="points" values="100,330 160,330 166,402;102,376 160,352 166,402;102,376 160,352 166,402;100,330 160,330 166,402" keyTimes="0;0.15;0.88;1" dur="7s" repeatCount="indefinite"/></polyline><polyline points="80,332 88,293 96,254" stroke="#F4F1EA" stroke-width="11" stroke-linecap="round" stroke-linejoin="round" fill="none"><animate attributeName="points" values="80,332 88,293 96,254;80,332 60,298 98,300;80,332 60,298 98,300;80,332 88,293 96,254" keyTimes="0;0.15;0.88;1" dur="7s" repeatCount="indefinite"/></polyline><g><polygon points="117,222 127,228 117,233" fill="#F4F1EA"/><circle cx="100" cy="226" r="20" fill="#F4F1EA"/><animateTransform attributeName="transform" type="translate" values="0 0;4 46;4 46;0 0" keyTimes="0;0.15;0.88;1" dur="7s" repeatCount="indefinite"/></g><text x="170" y="200" text-anchor="middle" fill="#F2913D" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">baja a 90°</text><text x="170" y="216" text-anchor="middle" fill="#F2913D" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">y aguanta</text><text x="170" y="238" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="11">respira normal</text><text x="120" y="166" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Mono, Consolas, monospace" font-size="11">DE PERFIL</text>
+</svg>`,
+  bienMalFondos: `
+<svg viewBox="0 0 280 140" fill="none" role="img" aria-label="Bien: codos a 90° y hacia atrás, hombros bajos. Mal: codos abiertos y hombros hacia delante: castiga el hombro">
+<text x="70" y="14" text-anchor="middle" fill="#7FB2E5" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✓ CODOS ATRÁS</text><text x="210" y="14" text-anchor="middle" fill="#F2913D" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✕ HOMBROS DELANTE</text><line x1="140" y1="10" x2="140" y2="132" stroke="#2E3238" stroke-width="2"/><line x1="20" y1="126" x2="130" y2="126" stroke="#4A5059" stroke-width="2"/><line x1="160" y1="126" x2="270" y2="126" stroke="#4A5059" stroke-width="2"/><g stroke="#9EA3AA" stroke-width="3"><line x1="30" y1="84" x2="56" y2="84"/><line x1="34" y1="84" x2="34" y2="126"/><line x1="52" y1="84" x2="52" y2="126"/></g><g stroke="#F4F1EA" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><polyline points="54,84 40,64 64,62"/><line x1="64" y1="62" x2="64" y2="104"/><polyline points="64,104 100,100 104,126"/></g><polygon points="71,42 81,48 71,53" fill="#F4F1EA"/><circle cx="66" cy="46" r="8" fill="#F4F1EA"/><g stroke="#9EA3AA" stroke-width="3"><line x1="170" y1="84" x2="196" y2="84"/><line x1="174" y1="84" x2="174" y2="126"/><line x1="192" y1="84" x2="192" y2="126"/></g><g stroke="#F4F1EA" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><polyline points="194,84 196,58 214,66"/><line x1="214" y1="66" x2="204" y2="104"/><polyline points="204,104 240,100 244,126"/></g><polygon points="227,46 237,52 227,57" fill="#F4F1EA"/><circle cx="222" cy="50" r="8" fill="#F4F1EA"/>
+</svg>`,
+  extCabeza: `
+<svg viewBox="0 0 240 420" fill="none" role="img" aria-label="Extensión sobre la cabeza de perfil: pisas la banda, que pasa por detrás del cuerpo; el codo apunta al techo y la mano está detrás de la cabeza; estiras el antebrazo hasta que el brazo queda recto sobre la cabeza y vuelves en 2 segundos">
+<line x1="10" y1="404" x2="230" y2="404" stroke="#4A5059" stroke-width="2"/><line x1="86" y1="400" x2="112" y2="400" stroke="#F2913D" stroke-width="5" stroke-linecap="round"/><line x1="88" y1="398" x2="92" y2="94" stroke="#F2913D" stroke-width="3" stroke-linecap="round"><animate attributeName="x2" values="92;126;126;92;92" keyTimes="0;0.25;0.35;0.9;1" dur="4s" repeatCount="indefinite"/><animate attributeName="y2" values="94;14;14;94;94" keyTimes="0;0.25;0.35;0.9;1" dur="4s" repeatCount="indefinite"/></line><g stroke="#F4F1EA" stroke-linecap="round" stroke-linejoin="round"><line x1="116" y1="118" x2="114" y2="250" stroke-width="13"/><polyline points="114,250 104,328 98,402" stroke-width="13"/><polyline points="114,250 128,328 136,402" stroke-width="13"/><polyline points="116,136 124,190 110,232" stroke-width="12"/><polyline points="116,134 120,70 92,94" stroke="#F4F1EA" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" fill="none"><animate attributeName="points" values="116,134 120,70 92,94;116,134 120,70 126,14;116,134 120,70 126,14;116,134 120,70 92,94;116,134 120,70 92,94" keyTimes="0;0.25;0.35;0.9;1" dur="4s" repeatCount="indefinite"/></polyline></g><polygon points="137,88 147,94 137,99" fill="#F4F1EA"/><circle cx="118" cy="92" r="22" fill="#F4F1EA"/><text x="186" y="80" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">codo arriba,</text><text x="186" y="96" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">no se mueve</text><text x="186" y="40" text-anchor="middle" fill="#F2913D" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">estira</text><text x="46" y="392" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="11">pisa la banda</text>
+</svg>`,
+  bienMalExtCabeza: `
+<svg viewBox="0 0 280 140" fill="none" role="img" aria-label="Bien: codo fijo arriba, solo se mueve el antebrazo. Mal: el codo se abre y baja hacia delante">
+<text x="70" y="14" text-anchor="middle" fill="#7FB2E5" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✓ CODO AL TECHO</text><text x="210" y="14" text-anchor="middle" fill="#F2913D" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✕ CODO ABIERTO</text><line x1="140" y1="10" x2="140" y2="132" stroke="#2E3238" stroke-width="2"/><line x1="20" y1="126" x2="120" y2="126" stroke="#4A5059" stroke-width="2"/><line x1="160" y1="126" x2="260" y2="126" stroke="#4A5059" stroke-width="2"/><g stroke="#F4F1EA" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><line x1="70" y1="44" x2="72" y2="94"/><polyline points="72,94 64,110 60,124"/><polyline points="72,94 80,110 84,124"/><line x1="70" y1="46" x2="72" y2="18"/><line x1="72" y1="18" x2="60" y2="30"/></g><polygon points="76,30 86,36 76,41" fill="#F4F1EA"/><circle cx="71" cy="34" r="8" fill="#F4F1EA"/><g stroke="#F4F1EA" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><line x1="210" y1="44" x2="212" y2="94"/><polyline points="212,94 204,110 200,124"/><polyline points="212,94 220,110 224,124"/><line x1="210" y1="46" x2="226" y2="28"/><line x1="226" y1="28" x2="216" y2="16"/></g><polygon points="216,30 226,36 216,41" fill="#F4F1EA"/><circle cx="211" cy="34" r="8" fill="#F4F1EA"/>
+</svg>`,
+  extAbajo: `
+<svg viewBox="0 0 240 420" fill="none" role="img" aria-label="Extensión hacia abajo de perfil: mirando al ancla alta, con el codo pegado al costado y el antebrazo horizontal, empujas hacia abajo hasta estirar el brazo junto al muslo, pausa 1 segundo y vuelves en 2">
+<line x1="18" y1="20" x2="18" y2="404" stroke="#4A5059" stroke-width="3"/><line x1="18" y1="404" x2="232" y2="404" stroke="#4A5059" stroke-width="2"/><circle cx="18" cy="120" r="6" fill="#9EA3AA"/><text x="28" y="108" text-anchor="start" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="11">ancla alta</text><line x1="18" y1="120" x2="84" y2="190" stroke="#F2913D" stroke-width="3" stroke-linecap="round"><animate attributeName="x2" values="84;118;118;84;84" keyTimes="0;0.222;0.444;0.889;1" dur="4.5s" repeatCount="indefinite"/><animate attributeName="y2" values="190;252;252;190;190" keyTimes="0;0.222;0.444;0.889;1" dur="4.5s" repeatCount="indefinite"/></line><g stroke="#F4F1EA" stroke-linecap="round" stroke-linejoin="round"><line x1="124" y1="118" x2="128" y2="250" stroke-width="13"/><polyline points="128,250 106,326 96,402" stroke-width="13"/><polyline points="128,250 146,328 158,402" stroke-width="13"/><polyline points="124,136 140,190 128,232" stroke-width="12"/><polyline points="124,136 126,194 84,190" stroke="#F4F1EA" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" fill="none"><animate attributeName="points" values="124,136 126,194 84,190;124,136 126,194 118,252;124,136 126,194 118,252;124,136 126,194 84,190;124,136 126,194 84,190" keyTimes="0;0.222;0.444;0.889;1" dur="4.5s" repeatCount="indefinite"/></polyline></g><polygon points="103,92 93,98 103,102" fill="#F4F1EA"/><circle cx="122" cy="92" r="22" fill="#F4F1EA"/><text x="190" y="196" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">codo</text><text x="190" y="212" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">pegado</text><text x="120" y="40" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Mono, Consolas, monospace" font-size="11">DE PERFIL</text>
+</svg>`,
+  bienMalExtAbajo: `
+<svg viewBox="0 0 280 140" fill="none" role="img" aria-label="Bien: codo quieto junto al cuerpo. Mal: el codo se despega y se adelanta">
+<text x="70" y="14" text-anchor="middle" fill="#7FB2E5" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✓ CODO PEGADO</text><text x="210" y="14" text-anchor="middle" fill="#F2913D" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✕ CODO ADELANTE</text><line x1="140" y1="10" x2="140" y2="132" stroke="#2E3238" stroke-width="2"/><line x1="12" y1="126" x2="128" y2="126" stroke="#4A5059" stroke-width="2"/><line x1="152" y1="126" x2="268" y2="126" stroke="#4A5059" stroke-width="2"/><line x1="12" y1="24" x2="12" y2="126" stroke="#4A5059" stroke-width="2"/><line x1="152" y1="24" x2="152" y2="126" stroke="#4A5059" stroke-width="2"/><g stroke="#F4F1EA" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><line x1="80" y1="40" x2="82" y2="92"/><polyline points="82,92 72,110 66,124"/><polyline points="82,92 92,110 98,124"/><line x1="80" y1="46" x2="82" y2="72"/><line x1="82" y1="72" x2="76" y2="94"/></g><polygon points="74,28 64,34 74,38" fill="#F4F1EA"/><circle cx="79" cy="28" r="8" fill="#F4F1EA"/><line x1="12" y1="40" x2="76" y2="94" stroke="#F2913D" stroke-width="2"/><g stroke="#F4F1EA" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><line x1="220" y1="40" x2="222" y2="92"/><polyline points="222,92 212,110 206,124"/><polyline points="222,92 232,110 238,124"/><line x1="220" y1="46" x2="206" y2="68"/><line x1="206" y1="68" x2="208" y2="92"/></g><polygon points="214,28 204,34 214,38" fill="#F4F1EA"/><circle cx="219" cy="28" r="8" fill="#F4F1EA"/><line x1="152" y1="40" x2="208" y2="92" stroke="#F2913D" stroke-width="2"/>
+</svg>`,
+  patada: `
+<svg viewBox="0 0 240 420" fill="none" role="img" aria-label="Patada de tríceps de perfil: inclinado hacia el ancla media con la espalda recta, el codo a la altura de la cadera y el antebrazo colgando; estiras el antebrazo hacia atrás hasta dejar el brazo recto, pausa 1 segundo y vuelves">
+<line x1="18" y1="20" x2="18" y2="404" stroke="#4A5059" stroke-width="3"/><line x1="18" y1="404" x2="232" y2="404" stroke="#4A5059" stroke-width="2"/><circle cx="18" cy="250" r="6" fill="#9EA3AA"/><text x="28" y="238" text-anchor="start" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="11">ancla media</text><line x1="18" y1="250" x2="128" y2="256" stroke="#F2913D" stroke-width="3" stroke-linecap="round"><animate attributeName="x2" values="128;166;166;128;128" keyTimes="0;0.222;0.444;0.889;1" dur="4.5s" repeatCount="indefinite"/><animate attributeName="y2" values="256;246;246;256;256" keyTimes="0;0.222;0.444;0.889;1" dur="4.5s" repeatCount="indefinite"/></line><g stroke="#F4F1EA" stroke-linecap="round" stroke-linejoin="round"><line x1="96" y1="166" x2="150" y2="244" stroke-width="13"/><polyline points="150,244 128,322 118,402" stroke-width="13"/><polyline points="150,244 172,322 180,402" stroke-width="13"/><polyline points="98,172 104,240 126,318" stroke-width="12"/><polyline points="98,170 132,208 128,256" stroke="#F4F1EA" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" fill="none"><animate attributeName="points" values="98,170 132,208 128,256;98,170 132,208 166,246;98,170 132,208 166,246;98,170 132,208 128,256;98,170 132,208 128,256" keyTimes="0;0.222;0.444;0.889;1" dur="4.5s" repeatCount="indefinite"/></polyline></g><polygon points="58,146 48,152 58,156" fill="#F4F1EA"/><circle cx="76" cy="146" r="21" fill="#F4F1EA"/><text x="184" y="182" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">codo en</text><text x="184" y="198" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">la cadera</text><text x="120" y="40" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Mono, Consolas, monospace" font-size="11">DE PERFIL</text><text x="184" y="290" text-anchor="middle" fill="#F2913D" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">estira atrás</text>
+</svg>`,
+  bienMalPatada: `
+<svg viewBox="0 0 280 140" fill="none" role="img" aria-label="Bien: solo se mueve el antebrazo, el codo fijo. Mal: el codo baja y el brazo se balancea">
+<text x="70" y="14" text-anchor="middle" fill="#7FB2E5" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✓ CODO FIJO</text><text x="210" y="14" text-anchor="middle" fill="#F2913D" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✕ CODO BAJA</text><line x1="140" y1="10" x2="140" y2="132" stroke="#2E3238" stroke-width="2"/><line x1="12" y1="126" x2="128" y2="126" stroke="#4A5059" stroke-width="2"/><line x1="152" y1="126" x2="268" y2="126" stroke="#4A5059" stroke-width="2"/><g stroke="#F4F1EA" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><line x1="58" y1="58" x2="88" y2="94"/><polyline points="88,94 78,110 74,124"/><polyline points="88,94 100,110 104,124"/><line x1="60" y1="60" x2="78" y2="74"/><line x1="78" y1="74" x2="100" y2="84"/></g><polygon points="45,48 35,54 45,58" fill="#F4F1EA"/><circle cx="50" cy="48" r="8" fill="#F4F1EA"/><g stroke="#F4F1EA" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><line x1="198" y1="58" x2="228" y2="94"/><polyline points="228,94 218,110 214,124"/><polyline points="228,94 240,110 244,124"/><line x1="200" y1="60" x2="208" y2="86"/><line x1="208" y1="86" x2="230" y2="100"/></g><polygon points="185,48 175,54 185,58" fill="#F4F1EA"/><circle cx="190" cy="48" r="8" fill="#F4F1EA"/>
 </svg>`
 };
