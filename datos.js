@@ -2390,7 +2390,31 @@ const FRASES_SERIE = [
   'El héroe eres tú.',
   'No dejes que el dolor de un pasado imperfecto frene la gloria de tu futuro.',
   'El nivel mundial empieza donde termina tu zona de confort.',
-  'Donde vive tu mayor incomodidad, vive también tu mayor oportunidad.'
+  'Donde vive tu mayor incomodidad, vive también tu mayor oportunidad.',
+  'Tus excusas son las mentiras que tu miedo te cuenta para mantenerte en tu zona de confort.',
+  'El cambio es duro al principio, desordenado a la mitad y precioso al final.',
+  'La mente es como un músculo. Úsala o piérdela.',
+  'El éxito no es hacer cosas extraordinarias, sino hacer cosas ordinarias de forma extraordinaria.',
+  'Los líderes no siguen a la multitud: lideran desde adelante.',
+  'El mejor momento para plantar un árbol fue hace veinte años. El segundo mejor es ahora.',
+  'Todo lo que quieres está al otro lado del miedo.',
+  'El fracaso no es el final: es la oportunidad de empezar de nuevo, más inteligente.',
+  'El tiempo vale más que el dinero: el tiempo perdido no vuelve.',
+  'Que el miedo a lo que podría pasar no te impida hacer lo que debes hacer.',
+  'El éxito es un estado mental.',
+  'La disciplina diaria es la clave del éxito.',
+  'Cada maestro fue una vez un estudiante.',
+  'No importa lo lento que vayas, mientras no te detengas.',
+  'Las excusas son los clavos con los que se construye la casa del fracaso.',
+  'No importa cuánto tienes, sino cómo usas lo que tienes.',
+  'La excelencia no es un evento, es un hábito.',
+  'El éxito no es ganar, es dar lo mejor de ti.',
+  'El único límite es el que te pones a ti mismo.',
+  'El éxito es un viaje, no una meta.',
+  'No cambiarás tu vida hasta que cambies algo que haces todos los días.',
+  'El conocimiento no es poder. El conocimiento aplicado es poder.',
+  'La felicidad no es un destino, es una elección.',
+  'El éxito sin felicidad es el peor tipo de fracaso.'
 ];
 
 // Dibujos (SVG). Se pueden añadir más con otro nombre.
