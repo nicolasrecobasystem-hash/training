@@ -2437,7 +2437,20 @@ const FRASES_SERIE = [
   'Cuanta más preparación, más probable es el éxito.',
   'No podría haber hecho más: fue lo mejor que pude, con defectos y todo.',
   'No te enfoques en el resultado, sino en lo que tienes que hacer ahora.',
-  'Es de sabios enfrentar tus miedos.'
+  'Es de sabios enfrentar tus miedos.',
+  'Si no encuentras un juego con las probabilidades a tu favor, crea uno.',
+  'Cuando no puedes ganar por ser mejor, gana por ser diferente.',
+  'Crea un juego que favorezca tus fortalezas y evite tus debilidades.',
+  'El cerebro ama los retos, pero solo en su zona óptima de dificultad.',
+  'Ni demasiado difícil, ni demasiado fácil: justo en el límite de tus habilidades.',
+  'Estar en la zona es estar completamente inmerso en lo que haces.',
+  'La mayor amenaza del éxito no es el fracaso, sino el aburrimiento.',
+  'Enamórate del aburrimiento y sigue con tu hábito.',
+  'Los profesionales actúan aunque las circunstancias estén en contra y el humor no acompañe.',
+  'Para ser excelente, fascínate con repetir la misma acción una y otra vez.',
+  'Revisa lo que haces y corrige el rumbo cuando haga falta.',
+  'Cuanto más te aferras a una identidad, más difícil es crecer más allá de ella.',
+  'Si la forma en que te defines desaparece, ¿quién eres en ese momento?'
 ];
 
 // Dibujos (SVG). Se pueden añadir más con otro nombre.
