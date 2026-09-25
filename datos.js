@@ -2414,7 +2414,30 @@ const FRASES_SERIE = [
   'No cambiarás tu vida hasta que cambies algo que haces todos los días.',
   'El conocimiento no es poder. El conocimiento aplicado es poder.',
   'La felicidad no es un destino, es una elección.',
-  'El éxito sin felicidad es el peor tipo de fracaso.'
+  'El éxito sin felicidad es el peor tipo de fracaso.',
+  'No eres responsable de la naturaleza de tu chimpancé, pero sí de gestionarlo.',
+  'Aprende a vivir con tu chimpancé sin dejar que te muerda.',
+  'No luches contra tu chimpancé con fuerza de voluntad: gestiónalo.',
+  'Siempre eres responsable de tu chimpancé.',
+  'Si quieres que las cosas cambien, tienes que verlas de otra manera.',
+  'La persona que quieres ser es la persona que realmente eres.',
+  'No puedes evitar que tu chimpancé reaccione, pero sí que actúe.',
+  'Puedes ser una víctima o seguir adelante con una sonrisa. Tú eliges.',
+  'Tienes una opción: reaccionar al estrés o gestionarlo.',
+  'Para frenar a tu chimpancé, piensa más despacio. Funciona siempre.',
+  'Reírte de ti mismo es una de las armas más poderosas contra el estrés.',
+  'La vida es injusta, habrá estrés y las cosas saldrán mal. Sigue.',
+  'Asume la responsabilidad: mírate a ti mismo, no culpes a los demás.',
+  'Las personas exitosas tienen un plan. Y si falla, traen otro enseguida.',
+  'Tu mente y tu cuerpo necesitan descanso para recuperarse.',
+  'Mientras lo sigas intentando, no puedes dejar de tener éxito.',
+  'Los exitosos asumen toda la responsabilidad y buscan mejorar la próxima vez.',
+  'No puedes hacerlo mejor que tu mejor esfuerzo.',
+  'Si tienes ocho horas para talar un árbol, pasa seis afilando el hacha.',
+  'Cuanta más preparación, más probable es el éxito.',
+  'No podría haber hecho más: fue lo mejor que pude, con defectos y todo.',
+  'No te enfoques en el resultado, sino en lo que tienes que hacer ahora.',
+  'Es de sabios enfrentar tus miedos.'
 ];
 
 // Dibujos (SVG). Se pueden añadir más con otro nombre.
