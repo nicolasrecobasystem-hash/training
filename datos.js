@@ -9,11 +9,11 @@
 const DIAS = [
   { letra: 'D', nombre: 'Domingo',   grupo: 'Pecho', rutina: 'Pecho · Volumen' },
   { letra: 'L', nombre: 'Lunes',     grupo: 'Bíceps' },
-  { letra: 'M', nombre: 'Martes',    grupo: 'Espalda' },
+  { letra: 'M', nombre: 'Martes',    grupo: 'Espalda', rutina: 'Espalda · Volumen' },
   { letra: 'M', nombre: 'Miércoles', grupo: 'Tríceps' },
   { letra: 'J', nombre: 'Jueves',    grupo: 'Hombro' },
   { letra: 'V', nombre: 'Viernes',   grupo: 'Pecho', rutina: 'Pecho · Fuerza' },
-  { letra: 'S', nombre: 'Sábado',    grupo: 'Espalda' }
+  { letra: 'S', nombre: 'Sábado',    grupo: 'Espalda', rutina: 'Espalda · Dominadas' }
 ];
 
 // Información general de cada grupo (lo que se ve al pulsar un día).
@@ -28,6 +28,11 @@ const INFO_GRUPO = {
     duracion: '~55 min',
     material: 'Bandas, anclas media, alta y baja, y suelo',
     enfoque: 'Fuerza de pecho y tríceps'
+  },
+  'Espalda · Dominadas': {
+    duracion: '~55 min',
+    material: 'Barra, bandas, banda de ayuda y anclas media y alta',
+    enfoque: 'Dominadas: sumar repeticiones completas'
   }
 };
 
@@ -155,6 +160,101 @@ const CALENTAMIENTOS = {
       temporizador: { series: 2, reps: 10, descanso: 30, preparacion: 5 }
     }
   ],
+  // SÁBADO · Espalda con foco en dominadas · calentamiento
+  'Espalda · Dominadas': [
+    {
+      nombre: 'Colgarte de la barra',
+      indicacion: 'Mangos paralelos y brazos estirados: deja caer el peso, cuerpo quieto.',
+      dosis: '2 × 20 s', dibujo: 'colgado', ancla: 'barra',
+      claves: [
+        ['Subir', 'Apoya el peso poco a poco desde la silla, sin dejarte caer.'],
+        ['Brazos', 'Totalmente estirados, pies al aire.'],
+        ['Cuerpo', 'Recto y quieto, piernas juntas. Relaja hombros y espalda.'],
+        ['Bajar', 'Apoyando los pies en la silla.']
+      ],
+      agarre: {
+        dibujo: 'agarreNeutro',
+        puntos: [
+          ['Silla', 'Firme, debajo de la barra, para subir y bajar.'],
+          ['Mangos', 'Paralelos, palmas enfrentadas.'],
+          ['Manos secas', 'Sécatelas: hoy el agarre trabaja mucho.']
+        ]
+      },
+      errores: [
+        ['Balancearse', 'Cuerpo vertical y quieto. Si oscilas, pie en la silla y vuelve a empezar.'],
+        ['Doblar los codos', 'Aquí no se tira. Brazos estirados.'],
+        ['Soltarse de golpe', 'Baja siempre por la silla.'],
+        ['Aguantar con dolor', 'Estirar se nota; un pinchazo no.']
+      ],
+      info: [
+        ['Para qué sirve', 'Prepara hombros, dorsales y agarre para las dominadas.'],
+        ['Nota', 'Es calentamiento: no llegues al límite del agarre.']
+      ],
+      temporizador: { series: 2, opciones: [20, 25], descanso: 30, preparacion: 5 }
+    },
+    {
+      nombre: 'Dominadas escapulares',
+      indicacion: 'Colgado con los codos rectos: baja los hombros y el cuerpo sube unos centímetros.',
+      ritmo: 'Pausa 1 s arriba',
+      dosis: '2 × 6', dibujo: 'dominadasEsc', ancla: 'barra',
+      claves: [
+        ['Pasivo', 'Hombros hacia las orejas y cabeza hundida entre los brazos.'],
+        ['Activo', 'Baja los hombros y junta los omóplatos, sin doblar los codos.'],
+        ['Pausa', '1 s arriba, con los codos rectos.'],
+        ['Volver', 'Despacio al pasivo. Eso es 1 repetición.']
+      ],
+      agarre: {
+        titulo: 'MONTAJE', dibujo: 'bienMalDominadas',
+        puntos: [
+          ['Subir', 'Con la silla, y agarra los mangos paralelos.'],
+          ['Brazos', 'Cuélgate con los brazos totalmente estirados.'],
+          ['Cuerpo', 'Piernas juntas y abdomen firme.']
+        ]
+      },
+      errores: [
+        ['Doblar los codos', 'Solo se mueven hombros y omóplatos: si no, es media dominada.'],
+        ['Balancearse', 'Si oscilas, para y vuelve a empezar.'],
+        ['Movimiento corto', 'Recorrido completo arriba y abajo.'],
+        ['Ir rápido', 'Pausa real de 1 s arriba.']
+      ],
+      info: [
+        ['Para qué sirve', 'Enseña a arrancar la dominada con la espalda: es el primer tramo de cada repetición.'],
+        ['Nota', 'Pocas y limpias: guarda fuerzas para el bloque principal.']
+      ],
+      temporizador: { series: 2, reps: 6, descanso: 30, preparacion: 5 }
+    },
+    {
+      nombre: 'Jalón ligero a una mano',
+      indicacion: 'De rodillas bajo la barra: lleva el codo a las costillas con una banda liviana.',
+      ritmo: '2 s volver',
+      dosis: '1 × 15 c/brazo', dibujo: 'jalon', ancla: 'mosqueton',
+      claves: [
+        ['Inicio', 'De rodillas, brazo estirado hacia arriba con algo de tensión.'],
+        ['Hombro', 'Bájalo antes de doblar el codo.'],
+        ['Tirar', 'Codo a las costillas, como en una dominada; vuelve en 2 s.'],
+        ['Cambio', 'Termina las 15 y cambia de brazo: eso es 1 serie.']
+      ],
+      agarre: {
+        titulo: 'MONTAJE', dibujo: 'bienMalJalon',
+        puntos: [
+          ['Banda', 'Una liviana, enganchada al mosquetón central de la barra.'],
+          ['Posición', 'Arrodíllate debajo, con la mano libre en la cadera.'],
+          ['Brazo', 'Agarra la banda con el brazo estirado y algo de tensión.']
+        ]
+      },
+      errores: [
+        ['Echarse atrás', 'Tronco recto: el codo baja hasta las costillas, no tires con el cuerpo.'],
+        ['Banda dura', 'Es activación: con banda liviana basta.'],
+        ['Tirar con la mano', 'Piensa en el codo, no en la mano.'],
+        ['Hombro a la oreja', 'Baja el hombro primero.']
+      ],
+      info: [
+        ['Para qué sirve', 'Activa el dorsal con el mismo gesto de la dominada.'],
+        ['Nota', 'Sin fatiga: al terminar deberías sentirte más fuerte, no cansado.']
+      ],
+      temporizador: { series: 1, reps: 15, lado: 'por brazo', descanso: 30, preparacion: 5 }
+    }
+  ],
   // VIERNES · Pecho (fuerza) · calentamiento
   'Pecho · Fuerza': [
     {
@@ -262,6 +362,240 @@ const CALENTAMIENTOS = {
 //  (el de "descanso" sale marcado por defecto).
 // ==========================================================
 const BLOQUES = {
+  // SÁBADO · Espalda con foco en dominadas
+  'Espalda · Dominadas': [
+    { titulo: 'Calentamiento', ejercicios: CALENTAMIENTOS['Espalda · Dominadas'] },
+    {
+      titulo: 'Principal · Dominadas', nota: 'Descanso 2 min',
+      ejercicios: [
+        {
+          nombre: 'Dominadas sueltas',
+          indicacion: 'Una dominada completa por serie: barbilla sobre la barra y abajo con los brazos estirados.',
+          dosis: '4 × 1', dibujo: 'dominada', ancla: 'barra',
+          claves: [
+            ['Abajo', 'Brazos totalmente estirados: cada repetición empieza aquí.'],
+            ['Arranque', 'Cuélgate y baja los hombros.'],
+            ['Subir', 'Codos hacia las costillas hasta pasar la barbilla.'],
+            ['Bajar', 'Controlando, hasta estirar los brazos del todo.']
+          ],
+          agarre: {
+            titulo: 'MONTAJE', dibujo: 'bienMalBarbilla',
+            puntos: [
+              ['Silla', 'Debajo de la barra, y las manos secas.'],
+              ['Mangos', 'Paralelos: es el agarre más fácil y cómodo.'],
+              ['Descanso', '2 minutos completos entre series.']
+            ]
+          },
+          errores: [
+            ['Barbilla que no llega', 'No cuenta. Mejor 1 completa que 3 a medias.'],
+            ['Patada o impulso', 'Sube sin balanceo: el impulso no construye fuerza.'],
+            ['Media bajada', 'Abajo, brazos totalmente estirados.'],
+            ['Descansar poco', 'Con 2 min recuperas y la siguiente sale limpia.']
+          ],
+          info: [
+            ['Por qué sueltas', 'Practicar la repetición completa sin fatiga es lo que más rápido sube el número.'],
+            ['Cómo progresar', 'Cada 2 semanas prueba cuántas seguidas sacas. Con 3, pasa a series de 2.']
+          ],
+          temporizador: { series: 4, reps: 1, descanso: 120, descansos: [90, 120, 150], preparacion: 5 }
+        },
+        {
+          nombre: 'Dominadas asistidas',
+          indicacion: 'Con la banda de ayuda bajo un pie: sube hasta pasar la barbilla y baja en 2 s.',
+          ritmo: '1 s subir · 2 s bajar',
+          dosis: '3 × 5–8', dibujo: 'dominadaAsistida', ancla: 'barra',
+          claves: [
+            ['Abajo', 'Brazos estirados y hombros bajos. Aquí la banda empuja más.'],
+            ['Subir', 'Hasta pasar la barbilla; la banda ayuda en el tramo difícil.'],
+            ['Bajar', 'En 2 s, con una pausa breve abajo.'],
+            ['Salir', 'Vuelve a la silla y saca el pie con cuidado.']
+          ],
+          agarre: {
+            titulo: 'MONTAJE', dibujo: 'bienMalAsistida',
+            puntos: [
+              ['Banda', 'Pásala por la barra y por dentro de sí misma: queda ahorcada y fija.'],
+              ['Pie o rodilla', 'Desde la silla mete el pie (más ayuda) o la rodilla (menos).'],
+              ['Mangos', 'Agarra los paralelos antes de soltar la silla.']
+            ]
+          },
+          errores: [
+            ['Balancearse', 'Subida vertical y controlada: si la banda te lanza, baja más despacio.'],
+            ['Rebotar abajo', 'La banda devuelve fuerza: pausa breve abajo.'],
+            ['Soltar la banda', 'Nunca saques el pie con la banda estirada: pega fuerte.'],
+            ['Media repetición', 'Barbilla sobre la barra y brazos estirados abajo.']
+          ],
+          info: [
+            ['Para qué sirve', 'Te deja hacer más repeticiones completas de las que harías solo.'],
+            ['Cómo progresar', 'Con 3 × 8, pasa a una banda más fina o a la rodilla.']
+          ],
+          temporizador: { series: 3, reps: '5–8', descanso: 120, descansos: [90, 120, 150], preparacion: 5 }
+        },
+        {
+          nombre: 'Dominadas negativas',
+          indicacion: 'Empieza arriba desde la silla y baja en 5 s frenando todo el recorrido.',
+          ritmo: 'Bajada en 5 s',
+          dosis: '3 × 3', dibujo: 'negativa', ancla: 'barra',
+          claves: [
+            ['Arriba', 'Desde la silla, colócate con la barbilla sobre la barra.'],
+            ['Bajar', 'Levanta los pies y baja en 5 s, cuéntalos en voz alta.'],
+            ['Abajo', 'Brazos estirados; apoya los pies en la silla.'],
+            ['Repetir', 'Vuelve arriba con la silla y repite.']
+          ],
+          agarre: {
+            titulo: 'MONTAJE', dibujo: 'bienMalNegativa',
+            puntos: [
+              ['Silla', 'Debajo de la barra, a una altura que te deje llegar arriba.'],
+              ['Mangos', 'Agarra los mangos paralelos.'],
+              ['Contar', 'Cuenta los 5 segundos en voz alta.']
+            ]
+          },
+          errores: [
+            ['Caer de golpe', 'Bajada constante, sin tramos rápidos: caer castiga codos y hombros.'],
+            ['Caer al final', 'El último tramo también se controla.'],
+            ['Hacer muchas', 'Pocas y de calidad: son muy exigentes.'],
+            ['Sin silla', 'Siempre silla para subir y para bajar.']
+          ],
+          info: [
+            ['Para qué sirve', 'La bajada genera fuerza muy rápido: la vía clásica para pasar de 1 a varias.'],
+            ['Cómo progresar', 'Alarga la bajada a 6–8 s cuando las 3 salgan controladas.']
+          ],
+          temporizador: { series: 3, reps: 3, descanso: 120, descansos: [90, 120, 150], preparacion: 5 }
+        }
+      ]
+    },
+    {
+      titulo: 'Complementarios', nota: 'Descanso 60 s',
+      ejercicios: [
+        {
+          nombre: 'Jalón a una mano',
+          indicacion: 'De rodillas bajo la barra: el codo baja hasta las costillas, como en la dominada.',
+          ritmo: '1 s tirar · 2 s volver',
+          dosis: '3 × 12–15 c/brazo', dibujo: 'jalon', ancla: 'mosqueton',
+          claves: [
+            ['Inicio', 'De rodillas, la banda en el mosquetón y el brazo estirado.'],
+            ['Tirar', 'Baja el hombro y lleva el codo hacia las costillas.'],
+            ['Pausa', 'Aprieta 1 s abajo y vuelve en 2 s.'],
+            ['Cambio', 'Termina y cambia de brazo, sin descanso: eso es 1 serie.']
+          ],
+          agarre: {
+            titulo: 'MONTAJE', dibujo: 'bienMalJalon',
+            puntos: [
+              ['Banda', 'Engánchala al mosquetón central de la barra.'],
+              ['Posición', 'Arrodíllate debajo, con la mano libre en la cadera.'],
+              ['Dureza', 'Una banda con la que llegues justo a 12–15.']
+            ]
+          },
+          errores: [
+            ['Echarse atrás', 'Tronco recto: solo trabaja el brazo.'],
+            ['Tirar con la mano', 'Piensa en llevar el codo al bolsillo.'],
+            ['Girar el tronco', 'Los hombros siguen mirando al frente.'],
+            ['Soltar arriba', 'Vuelve controlando la banda.']
+          ],
+          info: [
+            ['Qué trabaja', 'Dorsal ancho y bíceps, con el mismo gesto que la dominada.'],
+            ['Cómo progresar', 'Banda más dura cuando las 15 salgan fáciles.']
+          ],
+          temporizador: { series: 3, reps: '12–15', lado: 'por brazo', descanso: 60, descansos: [45, 60, 75], preparacion: 5 }
+        },
+        {
+          nombre: 'Remo a una mano',
+          indicacion: 'Mirando a la pared: el codo va atrás pegado al costado hasta juntar el omóplato.',
+          ritmo: 'Pausa 1 s atrás · 2 s volver',
+          dosis: '3 × 12 c/brazo', dibujo: 'remo', ancla: 'media',
+          claves: [
+            ['Inicio', 'Brazo estirado hacia el ancla, pecho fuera y hombro bajo.'],
+            ['Tirar', 'Codo atrás, pegado al cuerpo.'],
+            ['Pausa', '1 s juntando el omóplato; vuelve en 2 s.'],
+            ['Cambio', 'Termina y cambia de brazo, sin descanso: eso es 1 serie.']
+          ],
+          agarre: {
+            titulo: 'MONTAJE', dibujo: 'bienMalRemo',
+            puntos: [
+              ['Ancla', 'Engancha la banda al ancla media, a la altura de la cintura.'],
+              ['Pies', 'Adelanta el pie contrario al brazo que trabaja.'],
+              ['Tensión', 'Retrocede hasta tener tensión con el brazo estirado.']
+            ]
+          },
+          errores: [
+            ['Echarse atrás', 'Tronco quieto. Si tiras con el cuerpo, acércate a la pared.'],
+            ['Codo abierto', 'Pegado al costado, no en cruz.'],
+            ['Girar el tronco', 'Los hombros siguen mirando a la pared.'],
+            ['Sin pausa', 'Junta el omóplato 1 s atrás.']
+          ],
+          info: [
+            ['Qué trabaja', 'Dorsal, romboides y trapecio medio: espalda gruesa y postura.'],
+            ['Cómo progresar', 'Retrocede un paso o usa una banda más dura.']
+          ],
+          temporizador: { series: 3, reps: 12, lado: 'por brazo', descanso: 60, descansos: [45, 60, 75], preparacion: 5 }
+        },
+        {
+          nombre: 'Pullover a una mano',
+          indicacion: 'Mirando al ancla alta, algo inclinado: baja el brazo recto en arco hasta el muslo.',
+          ritmo: 'Pausa 1 s abajo · 2 s volver',
+          dosis: '3 × 12 c/brazo', dibujo: 'pullover', ancla: 'alta',
+          claves: [
+            ['Inicio', 'Brazo recto apuntando al ancla, hombro bajo.'],
+            ['Bajar', 'En arco hasta el muslo, con el brazo recto o casi.'],
+            ['Pausa', 'Aprieta el dorsal 1 s y vuelve en 2 s.'],
+            ['Cambio', 'Termina y cambia de brazo, sin descanso: eso es 1 serie.']
+          ],
+          agarre: {
+            titulo: 'MONTAJE', dibujo: 'bienMalPullover',
+            puntos: [
+              ['Ancla', 'Engancha la banda al ancla alta.'],
+              ['Postura', 'Retrocede e inclínate un poco hacia delante desde la cadera.'],
+              ['Brazo', 'Mano libre en la cadera; el que trabaja, recto hacia el ancla.']
+            ]
+          },
+          errores: [
+            ['Doblar el codo', 'Brazo recto en arco: con el codo doblado se convierte en un remo.'],
+            ['Encoger el hombro', 'Hombro bajo antes de empezar.'],
+            ['Mover el tronco', 'La inclinación es fija; solo baja el brazo.'],
+            ['Subir rápido', 'Controla la vuelta hasta arriba.']
+          ],
+          info: [
+            ['Qué trabaja', 'Dorsal ancho aislado, sin que ayude el bíceps.'],
+            ['Cómo progresar', 'Retrocede un paso más o alarga la pausa abajo.']
+          ],
+          temporizador: { series: 3, reps: 12, lado: 'por brazo', descanso: 60, descansos: [45, 60, 75], preparacion: 5 }
+        }
+      ]
+    },
+    {
+      titulo: 'Final en la barra', nota: 'Descanso 60 s',
+      ejercicios: [
+        {
+          nombre: 'Colgarte al máximo',
+          indicacion: 'El mismo colgado del calentamiento, pero ahora buscas tu máximo.',
+          dosis: '2 series al máximo', dibujo: 'colgado', ancla: 'barra',
+          claves: [
+            ['Objetivo', 'Elige en el temporizador 30, 45 o 60 s.'],
+            ['Aguantar', 'Cuerpo recto y quieto, brazos estirados.'],
+            ['Si puedes', 'Al llegar al objetivo, sigue un poco más.'],
+            ['Apunta', 'Tu mejor tiempo, para superarlo la próxima semana.']
+          ],
+          agarre: {
+            dibujo: 'agarreNeutro',
+            puntos: [
+              ['Silla', 'Debajo de la barra, y manos secas.'],
+              ['Mangos', 'Paralelos, palmas enfrentadas.'],
+              ['Al abrirse', 'Cuando el agarre se abra, baja por la silla.']
+            ]
+          },
+          errores: [
+            ['Balancearse', 'Cuerpo vertical y quieto: si te balanceas para aguantar, la serie terminó.'],
+            ['Soltarse de golpe', 'Baja siempre por la silla.'],
+            ['Doblar los codos', 'Brazos estirados de principio a fin.'],
+            ['Aguantar el aire', 'Respira normal.']
+          ],
+          info: [
+            ['Para qué sirve', 'El agarre suele fallar antes que la espalda: entrenarlo sube tus dominadas.'],
+            ['Cómo progresar', 'Cuando pases de 60 s, prueba el agarre ancho.']
+          ],
+          temporizador: { series: 2, opciones: [30, 45, 60], descanso: 60, preparacion: 5 }
+        }
+      ]
+    }
+  ],
   // VIERNES · Pecho con foco en fuerza
   'Pecho · Fuerza': [
     { titulo: 'Calentamiento', ejercicios: CALENTAMIENTOS['Pecho · Fuerza'] },
@@ -1074,5 +1408,57 @@ const DIBUJOS = {
   bienMalIso: `
 <svg viewBox="0 0 280 140" fill="none" role="img" aria-label="Bien: codos a unos 45° del cuerpo. Mal: codos abiertos en cruz, todo el peso va al hombro">
 <text x="70" y="14" text-anchor="middle" fill="#7FB2E5" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✓ CODOS A 45°</text><text x="210" y="14" text-anchor="middle" fill="#F2913D" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✕ CODOS EN CRUZ</text><line x1="140" y1="10" x2="140" y2="132" stroke="#2E3238" stroke-width="2"/><g stroke="#F4F1EA" stroke-linecap="round" stroke-linejoin="round"><line x1="70" y1="50" x2="70" y2="124" stroke-width="7"/><line x1="54" y1="54" x2="86" y2="54" stroke-width="7"/><line x1="54" y1="54" x2="34" y2="80" stroke-width="5"/><line x1="86" y1="54" x2="106" y2="80" stroke-width="5"/><line x1="210" y1="50" x2="210" y2="124" stroke-width="7"/><line x1="194" y1="54" x2="226" y2="54" stroke-width="7"/><line x1="194" y1="54" x2="160" y2="54" stroke-width="5"/><line x1="226" y1="54" x2="260" y2="54" stroke-width="5"/></g><polygon points="65,36 70,26 75,36" fill="#F4F1EA"/><circle cx="70" cy="42" r="9" fill="#F4F1EA"/><polygon points="205,36 210,26 215,36" fill="#F4F1EA"/><circle cx="210" cy="42" r="9" fill="#F4F1EA"/><text x="70" y="136" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Mono, Consolas, monospace" font-size="9">desde arriba</text><text x="210" y="136" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Mono, Consolas, monospace" font-size="9">desde arriba</text>
+</svg>`,
+  dominada: `
+<svg viewBox="0 -30 240 450" fill="none" role="img" aria-label="Dominada de frente con agarre paralelo: desde colgado con los brazos estirados, tira con los codos hacia las costillas hasta pasar la barbilla por encima de la barra y baja controlando">
+<line x1="10" y1="412" x2="230" y2="412" stroke="#4A5059" stroke-width="2"/><line x1="20" y1="30" x2="220" y2="30" stroke="#9EA3AA" stroke-width="8" stroke-linecap="round"/><line x1="84" y1="30" x2="84" y2="14" stroke="#9EA3AA" stroke-width="7" stroke-linecap="round"/><line x1="156" y1="30" x2="156" y2="14" stroke="#9EA3AA" stroke-width="7" stroke-linecap="round"/><polyline points="86,30 88,78 90,126" stroke="#F4F1EA" stroke-width="13" stroke-linecap="round" stroke-linejoin="round" fill="none"><animate attributeName="points" values="86,30 88,78 90,126;86,30 56,52 90,30;86,30 56,52 90,30;86,30 88,78 90,126;86,30 88,78 90,126" keyTimes="0;0.333;0.444;0.889;1" dur="4.5s" repeatCount="indefinite"/></polyline><polyline points="154,30 152,78 150,126" stroke="#F4F1EA" stroke-width="13" stroke-linecap="round" stroke-linejoin="round" fill="none"><animate attributeName="points" values="154,30 152,78 150,126;154,30 184,52 150,30;154,30 184,52 150,30;154,30 152,78 150,126;154,30 152,78 150,126" keyTimes="0;0.333;0.444;0.889;1" dur="4.5s" repeatCount="indefinite"/></polyline><g><g stroke="#F4F1EA" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"><line x1="90" y1="126" x2="150" y2="126"/><line x1="120" y1="120" x2="120" y2="248"/><line x1="100" y1="248" x2="140" y2="248"/><polyline points="102,248 100,322 98,378"/><polyline points="138,248 140,322 142,378"/></g><circle cx="120" cy="104" r="22" fill="#F4F1EA"/><circle cx="112.1" cy="101.8" r="2.64" fill="#16181B"/><circle cx="127.9" cy="101.8" r="2.64" fill="#16181B"/><animateTransform attributeName="transform" type="translate" values="0 0;0 -96;0 -96;0 0;0 0" keyTimes="0;0.333;0.444;0.889;1" dur="4.5s" repeatCount="indefinite"/></g><text x="206" y="-8" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">barbilla</text><text x="206" y="8" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">sobre la barra</text><text x="206" y="330" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">brazos</text><text x="206" y="346" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">estirados</text>
+</svg>`,
+  dominadaAsistida: `
+<svg viewBox="0 -30 240 450" fill="none" role="img" aria-label="Dominada asistida de frente: la banda de ayuda cuelga de la barra y pasa bajo un pie; subes hasta pasar la barbilla y bajas en 2 segundos">
+<line x1="10" y1="412" x2="230" y2="412" stroke="#4A5059" stroke-width="2"/><line x1="20" y1="30" x2="220" y2="30" stroke="#9EA3AA" stroke-width="8" stroke-linecap="round"/><line x1="84" y1="30" x2="84" y2="14" stroke="#9EA3AA" stroke-width="7" stroke-linecap="round"/><line x1="156" y1="30" x2="156" y2="14" stroke="#9EA3AA" stroke-width="7" stroke-linecap="round"/><polyline points="86,30 88,78 90,126" stroke="#F4F1EA" stroke-width="13" stroke-linecap="round" stroke-linejoin="round" fill="none"><animate attributeName="points" values="86,30 88,78 90,126;86,30 56,52 90,30;86,30 56,52 90,30;86,30 88,78 90,126;86,30 88,78 90,126" keyTimes="0;0.25;0.35;0.85;1" dur="4s" repeatCount="indefinite"/></polyline><polyline points="154,30 152,78 150,126" stroke="#F4F1EA" stroke-width="13" stroke-linecap="round" stroke-linejoin="round" fill="none"><animate attributeName="points" values="154,30 152,78 150,126;154,30 184,52 150,30;154,30 184,52 150,30;154,30 152,78 150,126;154,30 152,78 150,126" keyTimes="0;0.25;0.35;0.85;1" dur="4s" repeatCount="indefinite"/></polyline><g><g stroke="#F4F1EA" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"><line x1="90" y1="126" x2="150" y2="126"/><line x1="120" y1="120" x2="120" y2="248"/><line x1="100" y1="248" x2="140" y2="248"/><polyline points="102,248 100,322 98,378"/><polyline points="138,248 140,322 142,378"/></g><circle cx="120" cy="104" r="22" fill="#F4F1EA"/><circle cx="112.1" cy="101.8" r="2.64" fill="#16181B"/><circle cx="127.9" cy="101.8" r="2.64" fill="#16181B"/><animateTransform attributeName="transform" type="translate" values="0 0;0 -96;0 -96;0 0;0 0" keyTimes="0;0.25;0.35;0.85;1" dur="4s" repeatCount="indefinite"/></g><polyline points="106,30 94,300 94,390 110,390 112,30" stroke="#F2913D" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"><animate attributeName="points" values="106,30 94,300 94,390 110,390 112,30;106,30 94,210 94,294 110,294 112,30;106,30 94,210 94,294 110,294 112,30;106,30 94,300 94,390 110,390 112,30;106,30 94,300 94,390 110,390 112,30" keyTimes="0;0.25;0.35;0.85;1" dur="4s" repeatCount="indefinite"/></polyline><text x="196" y="-8" text-anchor="middle" fill="#F2913D" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">la banda</text><text x="196" y="8" text-anchor="middle" fill="#F2913D" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">empuja abajo</text><text x="196" y="330" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">pie en</text><text x="196" y="346" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">la banda</text><text x="120" y="436" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Mono, Consolas, monospace" font-size="11">1 s subir · 2 s bajar</text>
+</svg>`,
+  negativa: `
+<svg viewBox="0 -30 240 450" fill="none" role="img" aria-label="Dominada negativa de frente: empiezas arriba con la barbilla sobre la barra y bajas en 5 segundos frenando todo el recorrido hasta estirar los brazos">
+<line x1="10" y1="412" x2="230" y2="412" stroke="#4A5059" stroke-width="2"/><line x1="20" y1="30" x2="220" y2="30" stroke="#9EA3AA" stroke-width="8" stroke-linecap="round"/><line x1="84" y1="30" x2="84" y2="14" stroke="#9EA3AA" stroke-width="7" stroke-linecap="round"/><line x1="156" y1="30" x2="156" y2="14" stroke="#9EA3AA" stroke-width="7" stroke-linecap="round"/><polyline points="86,30 56,52 90,30" stroke="#F4F1EA" stroke-width="13" stroke-linecap="round" stroke-linejoin="round" fill="none"><animate attributeName="points" values="86,30 56,52 90,30;86,30 56,52 90,30;86,30 88,78 90,126;86,30 88,78 90,126;86,30 56,52 90,30" keyTimes="0;0.1;0.8;0.9;1" dur="7s" repeatCount="indefinite"/></polyline><polyline points="154,30 184,52 150,30" stroke="#F4F1EA" stroke-width="13" stroke-linecap="round" stroke-linejoin="round" fill="none"><animate attributeName="points" values="154,30 184,52 150,30;154,30 184,52 150,30;154,30 152,78 150,126;154,30 152,78 150,126;154,30 184,52 150,30" keyTimes="0;0.1;0.8;0.9;1" dur="7s" repeatCount="indefinite"/></polyline><g><g stroke="#F4F1EA" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"><line x1="90" y1="126" x2="150" y2="126"/><line x1="120" y1="120" x2="120" y2="248"/><line x1="100" y1="248" x2="140" y2="248"/><polyline points="102,248 100,322 98,378"/><polyline points="138,248 140,322 142,378"/></g><circle cx="120" cy="104" r="22" fill="#F4F1EA"/><circle cx="112.1" cy="101.8" r="2.64" fill="#16181B"/><circle cx="127.9" cy="101.8" r="2.64" fill="#16181B"/><animateTransform attributeName="transform" type="translate" values="0 -96;0 -96;0 0;0 0;0 -96" keyTimes="0;0.1;0.8;0.9;1" dur="7s" repeatCount="indefinite"/></g><path d="M212 110 L212 230 M206.9 222.6 L212 230 L217.1 222.6" stroke="#F2913D" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><text x="206" y="-8" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">empieza</text><text x="206" y="8" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">arriba</text><text x="206" y="250" text-anchor="middle" fill="#F2913D" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">baja en 5 s</text>
+</svg>`,
+  negativaLarga: `
+<svg viewBox="0 -30 240 450" fill="none" role="img" aria-label="Dominada negativa de frente: empiezas arriba con la barbilla sobre la barra y bajas en 10 segundos frenando todo el recorrido hasta estirar los brazos">
+<line x1="10" y1="412" x2="230" y2="412" stroke="#4A5059" stroke-width="2"/><line x1="20" y1="30" x2="220" y2="30" stroke="#9EA3AA" stroke-width="8" stroke-linecap="round"/><line x1="84" y1="30" x2="84" y2="14" stroke="#9EA3AA" stroke-width="7" stroke-linecap="round"/><line x1="156" y1="30" x2="156" y2="14" stroke="#9EA3AA" stroke-width="7" stroke-linecap="round"/><polyline points="86,30 56,52 90,30" stroke="#F4F1EA" stroke-width="13" stroke-linecap="round" stroke-linejoin="round" fill="none"><animate attributeName="points" values="86,30 56,52 90,30;86,30 56,52 90,30;86,30 88,78 90,126;86,30 88,78 90,126;86,30 56,52 90,30" keyTimes="0;0.06;0.89;0.95;1" dur="12s" repeatCount="indefinite"/></polyline><polyline points="154,30 184,52 150,30" stroke="#F4F1EA" stroke-width="13" stroke-linecap="round" stroke-linejoin="round" fill="none"><animate attributeName="points" values="154,30 184,52 150,30;154,30 184,52 150,30;154,30 152,78 150,126;154,30 152,78 150,126;154,30 184,52 150,30" keyTimes="0;0.06;0.89;0.95;1" dur="12s" repeatCount="indefinite"/></polyline><g><g stroke="#F4F1EA" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"><line x1="90" y1="126" x2="150" y2="126"/><line x1="120" y1="120" x2="120" y2="248"/><line x1="100" y1="248" x2="140" y2="248"/><polyline points="102,248 100,322 98,378"/><polyline points="138,248 140,322 142,378"/></g><circle cx="120" cy="104" r="22" fill="#F4F1EA"/><circle cx="112.1" cy="101.8" r="2.64" fill="#16181B"/><circle cx="127.9" cy="101.8" r="2.64" fill="#16181B"/><animateTransform attributeName="transform" type="translate" values="0 -96;0 -96;0 0;0 0;0 -96" keyTimes="0;0.06;0.89;0.95;1" dur="12s" repeatCount="indefinite"/></g><path d="M212 110 L212 230 M206.9 222.6 L212 230 L217.1 222.6" stroke="#F2913D" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><text x="206" y="-8" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">empieza</text><text x="206" y="8" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">arriba</text><text x="206" y="250" text-anchor="middle" fill="#F2913D" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">baja en 10 s</text>
+</svg>`,
+  bienMalBarbilla: `
+<svg viewBox="0 0 280 140" fill="none" role="img" aria-label="Bien: barbilla por encima de la barra: repetición completa. Mal: la barbilla no llega: no cuenta">
+<text x="70" y="14" text-anchor="middle" fill="#7FB2E5" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✓ BARBILLA ARRIBA</text><text x="210" y="14" text-anchor="middle" fill="#F2913D" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✕ NO LLEGA</text><line x1="140" y1="10" x2="140" y2="132" stroke="#2E3238" stroke-width="2"/><g transform="translate(0,12)"><line x1="24" y1="26" x2="116" y2="26" stroke="#9EA3AA" stroke-width="4" stroke-linecap="round"/><line x1="164" y1="26" x2="256" y2="26" stroke="#9EA3AA" stroke-width="4" stroke-linecap="round"/><g stroke="#F4F1EA" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><polyline points="58,26 46,40 62,36"/><polyline points="82,26 94,40 78,36"/><line x1="70" y1="34" x2="70" y2="84"/><polyline points="63,108 70,84 77,108"/><polyline points="198,26 184,46 202,50"/><polyline points="222,26 236,46 218,50"/><line x1="210" y1="48" x2="210" y2="98"/><polyline points="203,122 210,98 217,122"/></g><circle cx="70" cy="16" r="9" fill="#F4F1EA"/><circle cx="66.8" cy="15.1" r="1.08" fill="#16181B"/><circle cx="73.2" cy="15.1" r="1.08" fill="#16181B"/><circle cx="210" cy="40" r="9" fill="#F4F1EA"/><circle cx="206.8" cy="39.1" r="1.08" fill="#16181B"/><circle cx="213.2" cy="39.1" r="1.08" fill="#16181B"/><text x="250" y="58" text-anchor="middle" fill="#F2913D" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="9">no llega</text></g>
+</svg>`,
+  bienMalAsistida: `
+<svg viewBox="0 0 280 140" fill="none" role="img" aria-label="Bien: subida vertical y controlada, sin balanceo. Mal: la banda te lanza y te balanceas: baja más despacio">
+<text x="70" y="14" text-anchor="middle" fill="#7FB2E5" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✓ CONTROLADA</text><text x="210" y="14" text-anchor="middle" fill="#F2913D" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✕ BALANCEO</text><line x1="140" y1="10" x2="140" y2="132" stroke="#2E3238" stroke-width="2"/><g transform="translate(0,12)"><line x1="24" y1="26" x2="116" y2="26" stroke="#9EA3AA" stroke-width="4" stroke-linecap="round"/><line x1="164" y1="26" x2="256" y2="26" stroke="#9EA3AA" stroke-width="4" stroke-linecap="round"/><g stroke="#F4F1EA" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><polyline points="58,26 56,58 82,58 84,26"/><line x1="70" y1="58" x2="70" y2="100"/><polyline points="64,124 70,100 76,124"/></g><polyline points="68,26 64,122 76,122 72,26" stroke="#F2913D" stroke-width="2"/><circle cx="70" cy="48" r="9" fill="#F4F1EA"/><circle cx="66.8" cy="47.1" r="1.08" fill="#16181B"/><circle cx="73.2" cy="47.1" r="1.08" fill="#16181B"/><g transform="rotate(-22 210 26)"><g stroke="#F4F1EA" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><polyline points="198,26 196,58 222,58 224,26"/><line x1="210" y1="58" x2="210" y2="100"/><polyline points="204,124 210,100 216,124"/></g><circle cx="210" cy="48" r="9" fill="#F4F1EA"/><circle cx="206.8" cy="47.1" r="1.08" fill="#16181B"/><circle cx="213.2" cy="47.1" r="1.08" fill="#16181B"/></g><path d="M232 80 q10 14 0 28 M242 76 q12 18 0 36" stroke="#F2913D" stroke-width="2" fill="none"/></g>
+</svg>`,
+  bienMalNegativa: `
+<svg viewBox="0 0 280 140" fill="none" role="img" aria-label="Bien: bajada controlada y constante, sin tramos rápidos. Mal: caer de golpe castiga codos y hombros">
+<text x="70" y="14" text-anchor="middle" fill="#7FB2E5" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✓ BAJADA LENTA</text><text x="210" y="14" text-anchor="middle" fill="#F2913D" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✕ CAER DE GOLPE</text><line x1="140" y1="10" x2="140" y2="132" stroke="#2E3238" stroke-width="2"/><g transform="translate(0,12)"><line x1="24" y1="26" x2="116" y2="26" stroke="#9EA3AA" stroke-width="4" stroke-linecap="round"/><line x1="164" y1="26" x2="256" y2="26" stroke="#9EA3AA" stroke-width="4" stroke-linecap="round"/><line x1="36" y1="36" x2="46" y2="36" stroke="#7FB2E5" stroke-width="2"/><line x1="36" y1="54" x2="46" y2="54" stroke="#7FB2E5" stroke-width="2"/><line x1="36" y1="72" x2="46" y2="72" stroke="#7FB2E5" stroke-width="2"/><line x1="36" y1="90" x2="46" y2="90" stroke="#7FB2E5" stroke-width="2"/><line x1="36" y1="108" x2="46" y2="108" stroke="#7FB2E5" stroke-width="2"/><line x1="36" y1="126" x2="46" y2="126" stroke="#7FB2E5" stroke-width="2"/><text x="41" y="140" text-anchor="middle" fill="#7FB2E5" font-family="IBM Plex Mono, Consolas, monospace" font-size="9">5 s</text><g stroke="#F4F1EA" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><polyline points="62,26 56,48 66,62"/><polyline points="86,26 92,48 82,62"/><line x1="74" y1="56" x2="74" y2="98"/><polyline points="68,122 74,98 80,122"/></g><circle cx="74" cy="46" r="9" fill="#F4F1EA"/><circle cx="70.8" cy="45.1" r="1.08" fill="#16181B"/><circle cx="77.2" cy="45.1" r="1.08" fill="#16181B"/><g stroke="#F4F1EA" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><line x1="198" y1="26" x2="200" y2="60"/><line x1="222" y1="26" x2="220" y2="60"/><line x1="210" y1="60" x2="210" y2="100"/><polyline points="204,124 210,100 216,124"/></g><circle cx="210" cy="52" r="9" fill="#F4F1EA"/><circle cx="206.8" cy="51.1" r="1.08" fill="#16181B"/><circle cx="213.2" cy="51.1" r="1.08" fill="#16181B"/><path d="M248 36 L248 100 M242.9 92.6 L248 100 L253.1 92.6" stroke="#F2913D" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><text x="248" y="116" text-anchor="middle" fill="#F2913D" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="9">de golpe</text></g>
+</svg>`,
+  jalon: `
+<svg viewBox="0 0 240 420" fill="none" role="img" aria-label="Jalón a una mano de frente: de rodillas bajo la barra con la banda en el mosquetón central, bajas el hombro y llevas el codo hacia las costillas como en una dominada, y vuelves en 2 segundos; la otra mano en la cadera">
+<line x1="10" y1="404" x2="230" y2="404" stroke="#4A5059" stroke-width="2"/><line x1="20" y1="30" x2="220" y2="30" stroke="#9EA3AA" stroke-width="8" stroke-linecap="round"/><circle cx="120" cy="42" r="7" stroke="#9EA3AA" stroke-width="3"/><text x="162" y="56" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="11">mosquetón</text><line x1="120" y1="48" x2="134" y2="96" stroke="#F2913D" stroke-width="3" stroke-linecap="round"><animate attributeName="x2" values="134;146;146;134;134" keyTimes="0;0.222;0.444;0.889;1" dur="4.5s" repeatCount="indefinite"/><animate attributeName="y2" values="96;212;212;96;96" keyTimes="0;0.222;0.444;0.889;1" dur="4.5s" repeatCount="indefinite"/></line><g stroke="#F4F1EA" stroke-linecap="round" stroke-linejoin="round"><line x1="120" y1="220" x2="120" y2="320" stroke-width="13"/><line x1="94" y1="226" x2="146" y2="226" stroke-width="13"/><line x1="102" y1="320" x2="138" y2="320" stroke-width="13"/><line x1="104" y1="320" x2="102" y2="398" stroke-width="13"/><line x1="136" y1="320" x2="138" y2="398" stroke-width="13"/><polyline points="96,226 76,272 102,312" stroke-width="12"/><polyline points="146,226 142,160 134,96" stroke="#F4F1EA" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" fill="none"><animate attributeName="points" values="146,226 142,160 134,96;146,226 160,282 146,212;146,226 160,282 146,212;146,226 142,160 134,96;146,226 142,160 134,96" keyTimes="0;0.222;0.444;0.889;1" dur="4.5s" repeatCount="indefinite"/></polyline></g><circle cx="120" cy="190" r="22" fill="#F4F1EA"/><circle cx="112.1" cy="187.8" r="2.64" fill="#16181B"/><circle cx="127.9" cy="187.8" r="2.64" fill="#16181B"/><text x="188" y="300" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">codo a las</text><text x="188" y="316" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">costillas</text><text x="46" y="380" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">de rodillas</text>
+</svg>`,
+  bienMalJalon: `
+<svg viewBox="0 0 280 140" fill="none" role="img" aria-label="Bien: tronco recto, el codo baja hasta las costillas. Mal: echarse hacia atrás para tirar con el cuerpo">
+<text x="70" y="14" text-anchor="middle" fill="#7FB2E5" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✓ TRONCO RECTO</text><text x="210" y="14" text-anchor="middle" fill="#F2913D" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✕ ECHARSE ATRÁS</text><line x1="140" y1="10" x2="140" y2="132" stroke="#2E3238" stroke-width="2"/><line x1="20" y1="129" x2="120" y2="129" stroke="#4A5059" stroke-width="2"/><line x1="160" y1="129" x2="260" y2="129" stroke="#4A5059" stroke-width="2"/><line x1="78" y1="22" x2="72" y2="30" stroke="#F2913D" stroke-width="2"/><line x1="226" y1="22" x2="212" y2="34" stroke="#F2913D" stroke-width="2"/><g transform="rotate(0 72 112)"><g stroke="#F4F1EA" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><line x1="72" y1="112" x2="72" y2="62"/><polyline points="72,66 78,46 74,28"/></g><polygon points="78,46 88,52 78,57" fill="#F4F1EA"/><circle cx="73" cy="50" r="8" fill="#F4F1EA"/></g><g stroke="#F4F1EA" stroke-width="5" stroke-linecap="round"><line x1="72" y1="112" x2="68" y2="126"/><line x1="68" y1="126" x2="38" y2="126"/></g><g transform="rotate(-22 222 112)"><g stroke="#F4F1EA" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><line x1="222" y1="112" x2="222" y2="62"/><polyline points="222,66 228,46 224,28"/></g><polygon points="228,46 238,52 228,57" fill="#F4F1EA"/><circle cx="223" cy="50" r="8" fill="#F4F1EA"/></g><g stroke="#F4F1EA" stroke-width="5" stroke-linecap="round"><line x1="222" y1="112" x2="218" y2="126"/><line x1="218" y1="126" x2="188" y2="126"/></g>
+</svg>`,
+  remo: `
+<svg viewBox="0 0 240 420" fill="none" role="img" aria-label="Remo a una mano de perfil: mirando a la pared con la banda en el ancla media, llevas el codo atrás pegado al costado hasta juntar el omóplato, pausa 1 segundo y vuelves en 2">
+<line x1="18" y1="20" x2="18" y2="404" stroke="#4A5059" stroke-width="3"/><line x1="18" y1="404" x2="232" y2="404" stroke="#4A5059" stroke-width="2"/><circle cx="18" cy="250" r="6" fill="#9EA3AA"/><text x="28" y="238" text-anchor="start" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="11">ancla media</text><line x1="18" y1="250" x2="66" y2="192" stroke="#F2913D" stroke-width="3" stroke-linecap="round"><animate attributeName="x2" values="66;120;120;66;66" keyTimes="0;0.222;0.444;0.889;1" dur="4.5s" repeatCount="indefinite"/><animate attributeName="y2" values="192;206;206;192;192" keyTimes="0;0.222;0.444;0.889;1" dur="4.5s" repeatCount="indefinite"/></line><g stroke="#F4F1EA" stroke-linecap="round" stroke-linejoin="round"><line x1="124" y1="118" x2="128" y2="250" stroke-width="13"/><polyline points="128,250 106,326 96,402" stroke-width="13"/><polyline points="128,250 146,328 158,402" stroke-width="13"/><polyline points="124,136 136,190 120,232" stroke-width="12"/><polyline points="124,136 96,168 66,192" stroke="#F4F1EA" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" fill="none"><animate attributeName="points" values="124,136 96,168 66,192;124,136 152,184 120,206;124,136 152,184 120,206;124,136 96,168 66,192;124,136 96,168 66,192" keyTimes="0;0.222;0.444;0.889;1" dur="4.5s" repeatCount="indefinite"/></polyline></g><polygon points="103,92 93,98 103,102" fill="#F4F1EA"/><circle cx="122" cy="92" r="22" fill="#F4F1EA"/><path d="M170 150 L206 150 M198.6 155.1 L206 150 L198.6 144.9" stroke="#F2913D" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><text x="190" y="176" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">codo atrás</text><text x="120" y="40" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Mono, Consolas, monospace" font-size="11">DE PERFIL</text>
+</svg>`,
+  bienMalRemo: `
+<svg viewBox="0 0 280 140" fill="none" role="img" aria-label="Bien: tronco quieto, el codo va atrás pegado al cuerpo. Mal: echarse hacia atrás para tirar: acércate a la pared">
+<text x="70" y="14" text-anchor="middle" fill="#7FB2E5" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✓ TRONCO QUIETO</text><text x="210" y="14" text-anchor="middle" fill="#F2913D" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✕ ECHARSE ATRÁS</text><line x1="140" y1="10" x2="140" y2="132" stroke="#2E3238" stroke-width="2"/><line x1="12" y1="126" x2="128" y2="126" stroke="#4A5059" stroke-width="2"/><line x1="152" y1="126" x2="268" y2="126" stroke="#4A5059" stroke-width="2"/><line x1="12" y1="24" x2="12" y2="126" stroke="#4A5059" stroke-width="2"/><line x1="152" y1="24" x2="152" y2="126" stroke="#4A5059" stroke-width="2"/><g stroke="#F4F1EA" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><line x1="80" y1="40" x2="82" y2="92"/><polyline points="82,92 72,110 66,124"/><polyline points="82,92 92,110 98,124"/><polyline points="80,46 94,62 76,70"/></g><line x1="12" y1="84" x2="76" y2="70" stroke="#F2913D" stroke-width="2"/><polygon points="74,28 64,34 74,38" fill="#F4F1EA"/><circle cx="79" cy="28" r="8" fill="#F4F1EA"/><g transform="rotate(14 222 92)"><g stroke="#F4F1EA" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><line x1="220" y1="40" x2="222" y2="92"/><polyline points="222,92 212,110 206,124"/><polyline points="222,92 232,110 238,124"/><polyline points="220,46 234,62 216,70"/></g><line x1="152" y1="84" x2="216" y2="70" stroke="#F2913D" stroke-width="2"/><polygon points="214,28 204,34 214,38" fill="#F4F1EA"/><circle cx="219" cy="28" r="8" fill="#F4F1EA"/></g>
+</svg>`,
+  pullover: `
+<svg viewBox="0 0 240 420" fill="none" role="img" aria-label="Pullover a una mano de perfil: mirando al ancla alta, algo inclinado hacia delante, bajas el brazo recto en arco hasta el muslo, aprietas el dorsal 1 segundo y vuelves en 2">
+<line x1="18" y1="20" x2="18" y2="404" stroke="#4A5059" stroke-width="3"/><line x1="18" y1="404" x2="232" y2="404" stroke="#4A5059" stroke-width="2"/><circle cx="18" cy="110" r="6" fill="#9EA3AA"/><text x="28" y="98" text-anchor="start" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="11">ancla alta</text><path d="M48 116 A96 96 0 0 0 137 232" stroke="#4A5059" stroke-width="2" stroke-dasharray="4 5"/><line x1="18" y1="110" x2="48" y2="116" stroke="#F2913D" stroke-width="3" stroke-linecap="round"><animate attributeName="x2" values="48;67;137;137;67;48" keyTimes="0;0.111;0.222;0.444;0.778;1" dur="4.5s" repeatCount="indefinite"/><animate attributeName="y2" values="116;196;232;232;196;116" keyTimes="0;0.111;0.222;0.444;0.778;1" dur="4.5s" repeatCount="indefinite"/></line><g stroke="#F4F1EA" stroke-linecap="round" stroke-linejoin="round"><line x1="142" y1="130" x2="160" y2="250" stroke-width="13"/><polyline points="160,250 142,326 130,402" stroke-width="13"/><polyline points="160,250 176,328 186,402" stroke-width="13"/><polyline points="144,142 170,188 158,226" stroke-width="12"/><polyline points="142,136 95,126 48,116" stroke="#F4F1EA" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" fill="none"><animate attributeName="points" values="142,136 95,126 48,116;142,136 104,166 67,196;142,136 139,184 137,232;142,136 139,184 137,232;142,136 104,166 67,196;142,136 95,126 48,116" keyTimes="0;0.111;0.222;0.444;0.778;1" dur="4.5s" repeatCount="indefinite"/></polyline></g><polygon points="115,100 105,106 115,110" fill="#F4F1EA"/><circle cx="134" cy="100" r="22" fill="#F4F1EA"/><text x="60" y="300" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">brazo recto</text><text x="60" y="316" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12">hasta el muslo</text><text x="120" y="40" text-anchor="middle" fill="#9EA3AA" font-family="IBM Plex Mono, Consolas, monospace" font-size="11">DE PERFIL</text>
+</svg>`,
+  bienMalPullover: `
+<svg viewBox="0 0 280 140" fill="none" role="img" aria-label="Bien: brazo recto que baja en arco hasta el muslo. Mal: codo doblado: se convierte en un remo">
+<text x="70" y="14" text-anchor="middle" fill="#7FB2E5" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✓ BRAZO RECTO</text><text x="210" y="14" text-anchor="middle" fill="#F2913D" font-family="IBM Plex Mono, Consolas, monospace" font-size="10" font-weight="600" letter-spacing="1">✕ CODO DOBLADO</text><line x1="140" y1="10" x2="140" y2="132" stroke="#2E3238" stroke-width="2"/><line x1="12" y1="126" x2="128" y2="126" stroke="#4A5059" stroke-width="2"/><line x1="152" y1="126" x2="268" y2="126" stroke="#4A5059" stroke-width="2"/><line x1="12" y1="24" x2="12" y2="126" stroke="#4A5059" stroke-width="2"/><line x1="152" y1="24" x2="152" y2="126" stroke="#4A5059" stroke-width="2"/><path d="M30 40 A60 60 0 0 0 76 94" stroke="#7FB2E5" stroke-width="1.5" stroke-dasharray="3 4"/><g stroke="#F4F1EA" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><line x1="80" y1="40" x2="88" y2="92"/><polyline points="88,92 78,110 72,124"/><polyline points="88,92 96,110 102,124"/><line x1="80" y1="46" x2="76" y2="94"/></g><polygon points="72,28 62,34 72,38" fill="#F4F1EA"/><circle cx="77" cy="28" r="8" fill="#F4F1EA"/><g stroke="#F4F1EA" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><line x1="220" y1="40" x2="228" y2="92"/><polyline points="228,92 218,110 212,124"/><polyline points="228,92 236,110 242,124"/><polyline points="220,46 202,62 216,82"/></g><polygon points="212,28 202,34 212,38" fill="#F4F1EA"/><circle cx="217" cy="28" r="8" fill="#F4F1EA"/>
 </svg>`
 };
