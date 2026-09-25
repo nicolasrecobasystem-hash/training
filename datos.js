@@ -2355,6 +2355,41 @@ const BLOQUES = {
   ]
 };
 
+// Frases que dice la voz (ElevenLabs) al terminar cada serie. Se pueden cambiar o añadir.
+// Cortas a propósito: se dicen mientras empieza el descanso.
+const FRASES_SERIE = [
+  'Estás en riesgo de vivir una vida tan cómoda que morirás sin conocer tu verdadero potencial.',
+  'Hace falta una autodisciplina implacable para programar el sufrimiento, cada día.',
+  'La negación es la máxima zona de confort.',
+  'Las conversaciones más importantes son las que tienes contigo mismo.',
+  'El dolor abre un pasadizo secreto en la mente: el que lleva a tu máximo rendimiento.',
+  'No te detengas cuando estés cansado. Detente cuando hayas terminado.',
+  'Todo el mundo fracasa alguna vez. Y la vida no tiene por qué ser justa.',
+  'Reconoce lo que vas a hacer y visualiza cada obstáculo antes de que llegue.',
+  'La victoria depende de sacar lo mejor de ti cuando te sientes de lo peor.',
+  'La mayoría de las guerras se ganan o se pierden en la mente.',
+  'Satisfecho es otra palabra para mediocre.',
+  'Acepta volver a ser el estúpido de la clase. Es la única manera de ampliar tu mente.',
+  'O mejoramos o empeoramos.',
+  'Ir más allá de tus límites cuesta un jodido esfuerzo. La duda y el dolor te van a recibir.',
+  'Ajústate, recalíbrate y sigue adelante para ser mejor.',
+  'Vuélvete adicto al trabajo duro. Sin ética de trabajo, el talento no sirve de nada.',
+  'Cuando corres hacia los problemas, se levanta la alfombra y sale tu oscuridad.',
+  'Solo tú sabes lo poderoso que es este mensaje.',
+  'Rodéate de gente que te diga lo que necesitas oír, no lo que quieres oír.',
+  '¿Cuándo y dónde lo vas a volver a intentar?',
+  'La vida es sufrimiento. Así es la naturaleza. Lucha.',
+  'No controlas todo. Lo que haces con cada oportunidad decide cómo acaba tu historia.',
+  'En cada fracaso hay algo que ganar. El próximo examen va a llegar.',
+  'La responsabilidad personal da respeto propio, y el respeto propio siempre ilumina el camino.',
+  'No hay más tiempo que perder. Las horas se evaporan como charcos en el desierto.',
+  'Eres capaz de mucho más de lo que crees.',
+  'Hace falta mucha fuerza para arriesgarlo todo en público por un sueño.',
+  'Cuando estás determinado, todo lo que tienes delante se convierte en combustible.',
+  'Los pequeños logros son la leña: las pequeñas chispas acaban quemando el bosque entero.',
+  'El héroe eres tú.'
+];
+
 // Dibujos (SVG). Se pueden añadir más con otro nombre.
 const DIBUJOS = {
   colgado: `

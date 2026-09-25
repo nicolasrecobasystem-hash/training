@@ -1,7 +1,7 @@
 /* Service worker: permite abrir la app sin conexión (ejercicios, dibujos y temporizador).
    Estrategia "primero la red": si hay internet siempre carga la última versión publicada;
    si no hay, usa la última copia guardada. La música, la nube y las luces necesitan internet. */
-var CACHE = 'mi-semana-v5';
+var CACHE = 'mi-semana-v6';
 var BASICO = ['./', 'index.html', 'mando.html', 'app.js', 'datos.js', 'estilos.css', 'mando.js', 'mando.css',
   'manifest.webmanifest', 'mando.webmanifest', 'iconos/icono-180.png', 'iconos/icono-192.png', 'iconos/icono-512.png',
   'iconos/mando-180.png', 'iconos/mando-192.png', 'iconos/mando-512.png'];

@@ -531,6 +531,7 @@
     var c = cfg() || { series: 1, descanso: 30 };
     if (st.fase === 'prep') {
       pitido(990, 0.35, 1);
+      prepararFrase();
       if (esReps()) { st.fase = 'trabajo'; st.corriendo = false; st.pausado = false; st.contadas = 0; pintarTemporizador(); }
       else fase('trabajo', st.dur);
     } else if (st.fase === 'trabajo') {
@@ -546,6 +547,7 @@
     var c = cfg() || { series: 1, descanso: 30 };
     st.contadas = 0;
     pitido(880, 0.3, 3);
+    decirFrase();
     if (st.serie < c.series) fase('descanso', descansoActual());
     else {
       st.fase = 'hecho'; st.corriendo = false; st.quedan = 0;
@@ -553,6 +555,73 @@
       marcarHecho(ejActual(), claveDe(DIAS[st.sel]), true);
       if (yaEstaba) pintarTemporizador(); else pintar();
     }
+  }
+
+  // ---------- frase motivadora con voz al terminar cada serie (ElevenLabs, función "voz") ----------
+  // Cada frase se genera una sola vez y se guarda en este aparato (caché), así casi no gasta créditos.
+  var VOZ_FRASES = 'k8cFOyAg7B9qwBlDDNTC';
+  var frases = { audio: new Audio(), recientes: leerLS('miSemana.frasesRecientes', []), memoria: {}, hablando: false };
+  function listaFrases() { return typeof FRASES_SERIE !== 'undefined' && Array.isArray(FRASES_SERIE) ? FRASES_SERIE : []; }
+  function elegirFrase() {
+    var fs = listaFrases(); if (!fs.length) return -1;
+    var libres = fs.map(function (_, i) { return i; }).filter(function (i) { return frases.recientes.indexOf(i) < 0; });
+    if (!libres.length) { frases.recientes = []; libres = fs.map(function (_, i) { return i; }); }
+    var i = libres[Math.floor(Math.random() * libres.length)];
+    frases.recientes.push(i); if (frases.recientes.length > Math.min(20, fs.length - 1)) frases.recientes.shift();
+    escribirLS('miSemana.frasesRecientes', frases.recientes);
+    return i;
+  }
+  function claveFrase(txt) { var h = 0; for (var k = 0; k < txt.length; k++) h = (h * 31 + txt.charCodeAt(k)) | 0; return 'https://frases.local/' + VOZ_FRASES + '/' + (h >>> 0).toString(36) + '.mp3'; }
+  // Devuelve (promesa) una URL reproducible de la frase: de la caché o pidiéndola a ElevenLabs
+  function audioFrase(txt) {
+    var clave = claveFrase(txt);
+    if (frases.memoria[clave]) return Promise.resolve(frases.memoria[clave]);
+    var cajon = window.caches ? caches.open('mi-semana-frases').catch(function () { return null; }) : Promise.resolve(null);
+    return cajon.then(function (cj) {
+      return (cj ? cj.match(clave) : Promise.resolve(null)).then(function (hit) {
+        if (hit) return hit.blob();
+        if (!nube.sb || !nube.usuario) throw new Error('sin sesión');
+        return nube.sb.auth.getSession().then(function (r) {
+          var tok = r && r.data && r.data.session && r.data.session.access_token;
+          return fetch(NUBE_URL + '/functions/v1/voz', { method: 'POST', headers: { Authorization: 'Bearer ' + tok, apikey: NUBE_CLAVE, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ accion: 'decir', texto: txt, voz: VOZ_FRASES }) });
+        }).then(function (res) {
+          if (!res.ok || !/audio/.test(res.headers.get('Content-Type') || '')) throw new Error('voz ' + res.status);
+          return res.blob();
+        }).then(function (b) {
+          if (cj) cj.put(clave, new Response(b, { headers: { 'Content-Type': 'audio/mpeg' } })).catch(function () {});
+          return b;
+        });
+      });
+    }).then(function (b) { var u = URL.createObjectURL(b); frases.memoria[clave] = u; return u; });
+  }
+  // Baja la música mientras habla y la sube después
+  function bajarMusica(bajar) {
+    try {
+      if (rep.modo === 'audio') audioEl.volume = bajar ? 0.25 : 1;
+      else if (rep.player && rep.player.setVolume) rep.player.setVolume(bajar ? 25 : 100);
+    } catch (e) {}
+  }
+  function decirFrase() {
+    if (frases.hablando) return;
+    var i = frases.siguiente != null ? frases.siguiente : elegirFrase(); frases.siguiente = null;
+    if (i < 0 || !listaFrases()[i]) return;
+    var txt = listaFrases()[i];
+    frases.hablando = true;
+    audioFrase(txt).then(function (u) {
+      setTimeout(function () {   // después del pitido de fin de serie
+        var a = frases.audio; a.src = u; a.volume = 1;
+        bajarMusica(true);
+        a.onended = a.onerror = function () { frases.hablando = false; bajarMusica(false); };
+        var p = a.play(); if (p && p.catch) p.catch(function () { frases.hablando = false; bajarMusica(false); });
+      }, 900);
+    }).catch(function () { frases.hablando = false; });
+    // Deja lista otra frase para la próxima serie
+    setTimeout(prepararFrase, 8000);
+  }
+  function prepararFrase() {
+    if (frases.siguiente == null) frases.siguiente = elegirFrase();
+    var t = listaFrases()[frases.siguiente]; if (t) audioFrase(t).catch(function () {});
   }
   function descansoActual() {
     var c = cfg() || {};
