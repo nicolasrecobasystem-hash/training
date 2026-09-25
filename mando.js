@@ -8,11 +8,24 @@
   var raiz = document.getElementById('mando');
   var sb = null, usuario = null, canal = null, listo = false;
   var estado = null, llegoEn = 0, vistaActual = '', dibujoActual = null, errorLogin = '';
+  // Pantallas grandes abiertas con tu cuenta: { id: { e: estado, t: cuándo llegó } }. El mando sigue a UNA.
+  var pantallas = {}, objetivo = null, elegidaAMano = false;
+  function vivas() { var ahora = Date.now(); return Object.keys(pantallas).filter(function (k) { return ahora - pantallas[k].t < 12000; }); }
+  function elegirPantalla() {
+    var vs = vivas();
+    if (objetivo && vs.indexOf(objetivo) < 0) { objetivo = null; elegidaAMano = false; }
+    if (elegidaAMano) return;
+    // La mejor: la que está a la vista y que tocaste por última vez. Solo se cambia si otra es
+    // claramente mejor (así no salta de una a otra mientras miras).
+    function nota(k) { var e = pantallas[k].e; return [(e.visible !== false) ? 1 : 0, e.toque || 0]; }
+    function mejor(a, b) { var A = nota(a), B = nota(b); return A[0] !== B[0] ? A[0] > B[0] : A[1] > B[1]; }
+    vs.forEach(function (k) { if (!objetivo || mejor(k, objetivo)) objetivo = k; });
+  }
 
   function esc(t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
   function $(s) { return raiz.querySelector(s); }
   function hora(z) { try { return new Date().toLocaleTimeString('es-ES', { timeZone: z, hour: '2-digit', minute: '2-digit' }); } catch (e) { return '--:--'; } }
-  function conectado() { return listo && estado && Date.now() - llegoEn < 12000; }
+  function conectado() { elegirPantalla(); if (objetivo) { estado = pantallas[objetivo].e; llegoEn = pantallas[objetivo].t; } return listo && !!objetivo; }
 
   // ---------- barra de arriba (siempre) ----------
   function htmlTop() {
@@ -24,14 +37,16 @@
     if (c) {
       var on = conectado();
       c.className = 'm-con ' + (on ? 'on' : (usuario ? 'off' : ''));
-      c.querySelector('span').textContent = on ? 'PANTALLA' : (usuario ? 'SIN PANTALLA' : '');
+      var n = vivas().length;
+      c.querySelector('span').textContent = on ? (n > 1 ? (estado.equipo || 'PANTALLA').toUpperCase() + ' · ' + n + ' ABIERTAS ⇄' : 'PANTALLA') : (usuario ? 'SIN PANTALLA' : '');
+      c.setAttribute('data-a', n > 1 ? 'cambiar-pantalla' : '');
     }
   }
 
   // ---------- órdenes ----------
   function mandar(accion, extra) {
     if (!canal || !listo) return;
-    var p = { accion: accion };
+    var p = { accion: accion, para: objetivo };
     if (extra) for (var k in extra) p[k] = extra[k];
     canal.send({ type: 'broadcast', event: 'cmd', payload: p });
     pedirPantallaEncendida();
@@ -135,9 +150,9 @@
   }
 
   function pintar() {
-    var v, e = estado;
+    var on = !!usuario && conectado(), v, e = estado;
     if (!usuario) v = 'login';
-    else if (!conectado()) v = 'espera';
+    else if (!on) v = 'espera';
     else if (e.pidiendoMood) v = 'mood';
     else if (e.pantalla === 'calent') v = 'calent';
     else v = 'semana';
@@ -155,7 +170,12 @@
     var b = ev.target.closest('[data-a]');
     if (!b || b.disabled) return;
     var a = b.getAttribute('data-a');
+    if (!a) return;
     if (a === 'entrar') entrar();
+    else if (a === 'cambiar-pantalla') {   // pasa a la siguiente pantalla abierta
+      var vs = vivas(); if (vs.length < 2) return;
+      objetivo = vs[(vs.indexOf(objetivo) + 1) % vs.length]; elegidaAMano = true; vistaActual = ''; pintar();
+    }
     else if (a === 'salir') { if (sb) sb.auth.signOut(); }
     else if (a === 'dia') mandar('dia', { i: +b.getAttribute('data-i') });
     else if (a === 'start') { var i = DIAS.map(function (d) { return d.nombre; }).indexOf(estado.dia); mandar('start', { dia: i }); }
@@ -178,10 +198,15 @@
   function conectarCanal() {
     if (canal) return;
     canal = sb.channel('mando-' + usuario.id, { config: { broadcast: { self: false } } });
-    canal.on('broadcast', { event: 'estado' }, function (m) { estado = m.payload; llegoEn = Date.now(); pintar(); })
+    canal.on('broadcast', { event: 'estado' }, function (m) {
+      var e = m.payload || {}, id = e.id || 'antigua';
+      pantallas[id] = { e: e, t: Date.now() };
+      var antes = objetivo; elegirPantalla();
+      if (id === objetivo || antes !== objetivo) pintar();   // las otras pantallas no repintan: nada de parpadeos
+    })
       .subscribe(function (s) { listo = s === 'SUBSCRIBED'; if (listo) saludar(); pintar(); });
   }
-  function desconectar() { if (canal) { try { sb.removeChannel(canal); } catch (e) {} } canal = null; listo = false; estado = null; }
+  function desconectar() { if (canal) { try { sb.removeChannel(canal); } catch (e) {} } canal = null; listo = false; estado = null; pantallas = {}; objetivo = null; }
 
   // ---------- arranque ----------
   pintar();

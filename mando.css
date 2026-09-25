@@ -88,3 +88,5 @@ button:active{transform:scale(.97)}
 .m-form .m-pri{min-height:70px;font-size:30px}
 .m-error{color:var(--acento);font-size:15px;min-height:1.2em}
 .m-salir{align-self:center;background:none;border:0;color:var(--tenue);font-size:13px;text-decoration:underline}
+
+.m-con[data-a="cambiar-pantalla"]{cursor:pointer;border:1px solid var(--linea2);border-radius:999px;padding:4px 10px;color:var(--texto)}

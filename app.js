@@ -1324,7 +1324,15 @@
   // ---------- mando (tableta): la pantalla grande manda su estado y obedece las órdenes ----------
   // La tableta abre mando.html con la misma cuenta. Se hablan por un canal de Supabase Realtime
   // (broadcast, sin tablas): esta pantalla es la que manda de verdad (temporizador, música, historial).
-  var mando = { canal: null, listo: false, ultimo: 0, reloj: null, envioEn: 0 };
+  // Cada pantalla abierta tiene su id: si hay varias (Mac, iPhone, otra pestaña), el mando elige UNA
+  // y solo esa obedece. Así no se duplican las órdenes ni el temporizador ni las luces.
+  var mando = { canal: null, listo: false, ultimo: 0, reloj: null, envioEn: 0, id: Math.random().toString(36).slice(2, 8), toque: 0 };
+  function nombreEquipo() {
+    var u = navigator.userAgent || '';
+    return /iPhone/.test(u) ? 'iPhone' : /iPad/.test(u) || (/Macintosh/.test(u) && navigator.maxTouchPoints > 1) ? 'iPad' : /Silk|KF[A-Z]{2}/.test(u) ? 'Fire' : /Android/.test(u) ? 'Android' : /Macintosh/.test(u) ? 'Mac' : /Windows/.test(u) ? 'PC' : 'Pantalla';
+  }
+  ['pointerdown', 'keydown'].forEach(function (ev) { document.addEventListener(ev, function () { mando.toque = Date.now(); avisarMando(); }, true); });
+  document.addEventListener('visibilitychange', function () { enviarEstado(); });
   function conectarMando() {
     if (!nube.sb || !nube.usuario || mando.canal) return;
     mando.canal = nube.sb.channel('mando-' + nube.usuario.id, { config: { broadcast: { self: false } } });
@@ -1352,7 +1360,7 @@
     var nombreCancion = '';
     if (rep.visible && rep.actual) { var cc = cancionPorItem(rep.actual); nombreCancion = cc ? cc.nombre : (esArchivo(rep.actual) ? nombreArchivo(rep.actual) : 'YouTube'); }
     return {
-      t: Date.now(), pantalla: st.pantalla, dia: d.nombre, grupo: g, pidiendoMood: !!st.pidiendoMood, mood: st.mood,
+      t: Date.now(), id: mando.id, equipo: nombreEquipo(), visible: document.visibilityState === 'visible', toque: mando.toque, pantalla: st.pantalla, dia: d.nombre, grupo: g, pidiendoMood: !!st.pidiendoMood, mood: st.mood,
       moods: moods.map(function (m) { return { n: m, c: biblioteca.filter(function (x) { return x.moods.indexOf(m) >= 0; }).length }; }),
       ultimoMood: ultimoMood,
       bloque: { titulo: b ? b.titulo : '', i: st.bloque, n: bs.length }, hueco: st.hueco, nHuecos: l.length,
@@ -1393,6 +1401,8 @@
     st.bloque = nb; st.hueco = paso > 0 ? 0 : Math.max(0, (bloques()[nb].ejercicios || []).length - 1); st.verInfo = false; reiniciar(); pintar();
   }
   function ejecutarMando(o) {
+    // Solo obedece la pantalla elegida en el mando (o, si el mando es antiguo, la que está a la vista)
+    if (o.para ? o.para !== mando.id : document.visibilityState !== 'visible') return;
     var enCalent = st.pantalla === 'calent';
     switch (o.accion) {
       case 'start':
