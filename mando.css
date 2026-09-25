@@ -147,3 +147,13 @@ body:has(#mando.modo-ent.f-azul){background:var(--azulF)}body:has(#mando.modo-en
 
 .m-int{border:1px solid currentColor;border-radius:999px;padding:4px 10px;font-family:var(--mono);font-size:12px;background:transparent}
 .m-int.n1{color:var(--azul)}.m-int.n2{color:var(--amarillo)}.m-int.n3{color:var(--acento)}
+/* Voz: contar repeticiones */
+.m-voz{flex:none;width:58px;height:48px;border-radius:14px;border:1px solid var(--linea);background:transparent;color:var(--suave);font-size:18px;line-height:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+.m-voz small{font-family:var(--mono);font-size:10px;letter-spacing:.05em}
+.m-voz.lista,.m-voz.conectando{color:var(--acento);border-color:currentColor}
+.m-voz.escuchando{color:#fff;background:#d92b2b;border-color:#d92b2b;animation:m-late 1.4s ease-in-out infinite}
+.m-voz.error{color:#ff8a8a;border-color:currentColor}
+@keyframes m-late{50%{box-shadow:0 0 0 6px rgba(217,43,43,.25)}}
+#mando.modo-ent .m-voz{color:inherit;border-color:currentColor}
+#mando.modo-ent .m-voz.escuchando{background:rgba(0,0,0,.28);border-color:transparent;color:inherit}
+.m-oido{min-height:1.3em;text-align:left;font-family:var(--mono);font-size:14px;opacity:.8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}

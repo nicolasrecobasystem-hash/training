@@ -531,7 +531,7 @@
     var c = cfg() || { series: 1, descanso: 30 };
     if (st.fase === 'prep') {
       pitido(990, 0.35, 1);
-      if (esReps()) { st.fase = 'trabajo'; st.corriendo = false; st.pausado = false; pintarTemporizador(); }
+      if (esReps()) { st.fase = 'trabajo'; st.corriendo = false; st.pausado = false; st.contadas = 0; pintarTemporizador(); }
       else fase('trabajo', st.dur);
     } else if (st.fase === 'trabajo') {
       finSerie();
@@ -544,6 +544,7 @@
   // Fin de una serie (por tiempo o al pulsar "Serie hecha"): descanso o completado
   function finSerie() {
     var c = cfg() || { series: 1, descanso: 30 };
+    st.contadas = 0;
     pitido(880, 0.3, 3);
     if (st.serie < c.series) fase('descanso', descansoActual());
     else {
@@ -563,7 +564,7 @@
     var ejK = ejActual() ? ejActual().nombre : '';
     if (c && c.opciones && (c.opciones.indexOf(st.dur) < 0 || st.durDe !== ejK)) { st.dur = c.porDefecto || c.opciones[0]; st.durDe = ejK; }   // al cambiar de ejercicio, su duración por defecto
     if (c && c.descansos && (c.descansos.indexOf(st.desc) < 0 || st.descDe !== ejK)) st.descDe = ejK, st.desc = c.descansos.indexOf(c.descanso) >= 0 ? c.descanso : c.descansos[0];
-    st.fase = 'espera'; st.corriendo = false; st.pausado = false; st.serie = 1; st.quedan = st.dur; st.total = st.dur;
+    st.fase = 'espera'; st.corriendo = false; st.pausado = false; st.serie = 1; st.quedan = st.dur; st.total = st.dur; st.contadas = 0;
   }
   function botonPrincipal() {
     activarAudio();
@@ -1149,6 +1150,7 @@
     var mostrado = st.fase === 'espera' ? st.dur : st.quedan;
     var tiempo = Math.floor(mostrado / 60) + ':' + (mostrado % 60 < 10 ? '0' : '') + (mostrado % 60);
     if (c.reps && (st.fase === 'espera' || st.fase === 'trabajo')) tiempo = esc(String(c.reps)) + '<small>REPS</small>';
+    if (c.reps && st.fase === 'trabajo' && st.contadas) tiempo = st.contadas + '<small>/ ' + esc(String(c.reps)) + '</small>';   // contadas con la voz
     if (st.fase === 'hecho') tiempo = '✓';
     return tiempo;
   }
@@ -1460,7 +1462,7 @@
       modo: st.pantalla === 'calent' ? modoCal() : '', color: colorModo(), bloqueTit: b ? b.titulo : '',
       siguiente: sig, ultimo: st.pantalla === 'calent' && !sig,
       temp: c ? { fase: st.fase, quedan: st.fase === 'espera' ? st.dur : st.quedan, total: st.total, serie: st.serie, series: c.series, reps: c.reps || 0,
-        corriendo: st.corriendo, pausado: st.pausado, lado: c.lado || '', descanso: descansoActual(), etiqueta: etiquetaPrincipal(c) } : null,
+        corriendo: st.corriendo, pausado: st.pausado, contadas: st.contadas || 0, lado: c.lado || '', descanso: descansoActual(), etiqueta: etiquetaPrincipal(c) } : null,
       musica: { sonando: !!rep.visible, pausada: musicaPausada(), nombre: nombreCancion, hay: !!(ex && enlacesMusica(ex, g, st.mood).length) }
     };
   }
@@ -1518,6 +1520,13 @@
       case 'cancion': if (enCalent) arrancarMusica(true); else if (rep.visible) reproducir(rep.lista, rep.etiqueta); break;
       case 'pausa-musica': pausarMusica(); break;
       case 'terminar': if (enCalent) terminarDia(); break;
+      case 'reps':   // el mando oyó un número ("uno, dos, tres…")
+        if (enCalent && st.fase === 'trabajo' && esReps() && o.n > (st.contadas || 0)) {
+          st.contadas = o.n; pitido(1200, 0.06, 1); pintarTemporizador();
+          var tope = parseInt(String(cfg().reps).split(/[–-]/).pop(), 10);
+          if (tope && o.n >= tope) setTimeout(function () { if (st.fase === 'trabajo') finSerie(); pintarTemporizador(); enviarEstado(); }, 700);
+        }
+        break;
       case 'int-ciclo': if (enCalent) cicloIntensidad(); break;
       case 'mood-cambiar': cambiarMood(typeof o.i === 'number' ? o.i : -1); break;
       case 'semana': reiniciar(); cerrarRep(); st.pantalla = 'semana'; st.pidiendoMood = false; pintar(); break;
