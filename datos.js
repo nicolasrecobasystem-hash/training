@@ -2387,7 +2387,10 @@ const FRASES_SERIE = [
   'Hace falta mucha fuerza para arriesgarlo todo en público por un sueño.',
   'Cuando estás determinado, todo lo que tienes delante se convierte en combustible.',
   'Los pequeños logros son la leña: las pequeñas chispas acaban quemando el bosque entero.',
-  'El héroe eres tú.'
+  'El héroe eres tú.',
+  'No dejes que el dolor de un pasado imperfecto frene la gloria de tu futuro.',
+  'El nivel mundial empieza donde termina tu zona de confort.',
+  'Donde vive tu mayor incomodidad, vive también tu mayor oportunidad.'
 ];
 
 // Dibujos (SVG). Se pueden añadir más con otro nombre.

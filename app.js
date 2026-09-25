@@ -607,7 +607,7 @@
     var i = frases.siguiente != null ? frases.siguiente : elegirFrase(); frases.siguiente = null;
     if (i < 0 || !listaFrases()[i]) return;
     var txt = listaFrases()[i];
-    frases.hablando = true;
+    frases.dicha = txt; frases.hablando = true;
     audioFrase(txt).then(function (u) {
       setTimeout(function () {   // después del pitido de fin de serie
         var a = frases.audio; a.src = u; a.volume = 1;
@@ -618,6 +618,13 @@
     }).catch(function () { frases.hablando = false; });
     // Deja lista otra frase para la próxima serie
     setTimeout(prepararFrase, 8000);
+  }
+  // Frase en pantalla: en PREPÁRATE y TRABAJO la que vas a oír; en DESCANSO la que acabas de oír
+  function fraseVisible() {
+    if (st.pantalla !== 'calent' || !cfg()) return '';
+    if (st.fase === 'descanso') return frases.dicha || '';
+    if (st.fase === 'prep' || st.fase === 'trabajo') { if (frases.siguiente == null) prepararFrase(); return listaFrases()[frases.siguiente] || ''; }
+    return '';
   }
   function prepararFrase() {
     if (frases.siguiente == null) frases.siguiente = elegirFrase();
@@ -826,7 +833,7 @@
         '<div class="ent-der"><div class="ent-fase mono t-fase" id="e-fase"></div><div class="ent-tiempo" id="e-tiempo"></div>' +
         '<div class="ent-nom">' + esc(ex ? ex.nombre : '') + '</div><div class="ent-sub" id="e-sub"></div>' +
         '<div class="ent-puntos" id="e-puntos"></div><div class="ent-barra"><i id="e-barra"></i></div>' +
-        '<div class="ent-ritmo"><span class="ent-int">Intensidad ' + INTENSIDADES[intensidadEj(ex)].toLowerCase() + ' <b>' + puntosInt(intensidadEj(ex)) + '</b></span>' + (ex && ex.ritmo ? ' · Ritmo · ' + esc(ex.ritmo) : '') + '</div></div></div>' +
+        '<div class="ent-ritmo"><span class="ent-int">Intensidad ' + INTENSIDADES[intensidadEj(ex)].toLowerCase() + ' <b>' + puntosInt(intensidadEj(ex)) + '</b></span>' + (ex && ex.ritmo ? ' · Ritmo · ' + esc(ex.ritmo) : '') + '</div><div class="ent-frase" id="e-frase"></div></div></div>' +
         '<div class="ent-pie">' +
         '<div class="ent-caja">Siguiente <b>' + esc(nombreSiguiente() || '—') + '</b></div>' +
         '<div class="ent-caja">Ancla <b>' + esc(textoAncla(ex)) + '</b></div>' +
@@ -1249,6 +1256,8 @@
       var pct = (st.fase === 'espera' || (c.reps && st.fase === 'trabajo')) ? 100 : (st.fase === 'hecho' ? 100 : Math.round(st.quedan / Math.max(1, st.total) * 100));
       el('e-barra').style.width = pct + '%';
       el('e-pri').textContent = etiquetaPrincipal(c);
+      var fr = fraseVisible(), ef = el('e-frase');
+      if (ef && ef.getAttribute('data-t') !== fr) { ef.setAttribute('data-t', fr); ef.textContent = fr ? '«' + fr + '»' : ''; }
     } else {
       var zona = document.getElementById('zona-temp');
       if (!zona) return;
@@ -1531,7 +1540,7 @@
       modo: st.pantalla === 'calent' ? modoCal() : '', color: colorModo(), bloqueTit: b ? b.titulo : '',
       siguiente: sig, ultimo: st.pantalla === 'calent' && !sig,
       temp: c ? { fase: st.fase, quedan: st.fase === 'espera' ? st.dur : st.quedan, total: st.total, serie: st.serie, series: c.series, reps: c.reps || 0,
-        corriendo: st.corriendo, pausado: st.pausado, contadas: st.contadas || 0, lado: c.lado || '', descanso: descansoActual(), etiqueta: etiquetaPrincipal(c) } : null,
+        corriendo: st.corriendo, pausado: st.pausado, contadas: st.contadas || 0, frase: fraseVisible(), lado: c.lado || '', descanso: descansoActual(), etiqueta: etiquetaPrincipal(c) } : null,
       musica: { sonando: !!rep.visible, pausada: musicaPausada(), nombre: nombreCancion, hay: !!(ex && enlacesMusica(ex, g, st.mood).length) }
     };
   }

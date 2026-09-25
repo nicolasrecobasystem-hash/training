@@ -101,7 +101,7 @@
       '<div class="m-cab"><div class="m-ante"></div><h1 class="m-nombre"></h1></div>' +
       '<div class="m-apr"><div class="m-chips"></div><div class="m-dibujo"></div><div class="m-fases"></div></div>' +
       '<div class="m-ent"><div class="m-ent-top"><div class="m-fase"></div><button type="button" class="m-parar" data-a="reiniciar">✕ Parar</button></div>' +
-      '<div class="m-tiempo"></div><div class="m-oido"></div><div class="m-ent-pie"><div class="m-puntos"></div><div class="m-serie"></div></div></div>' +
+      '<div class="m-tiempo"></div><div class="m-oido"></div><div class="m-ent-pie"><div class="m-puntos"></div><div class="m-serie"></div></div><div class="m-frase"></div></div>' +
       '<button type="button" class="m-pri" data-a="principal"></button>' +
       '<div class="m-fila"><button type="button" class="m-sec ant" data-a="ant">← Anterior</button>' +
       '<button type="button" class="m-sec sig" data-a="sig"></button></div>' +
@@ -148,6 +148,7 @@
       $('.m-oido').textContent = voz.on && t.reps && t.fase === 'trabajo' ? (voz.oido ? '“' + voz.oido + '”' : (voz.estado === 'escuchando' ? 'Te escucho: cuenta en voz alta…' : '')) : '';
       var hechas = t.fase === 'hecho' ? t.series : (t.fase === 'descanso' ? t.serie : t.serie - 1);
       $('.m-puntos').innerHTML = Array.apply(null, Array(t.series)).map(function (_, i) { return '<i class="' + (i < hechas ? 'on' : '') + '"></i>'; }).join('');
+      $('.m-frase').textContent = t.frase ? '«' + t.frase + '»' : '';
       $('.m-serie').textContent = ('Serie ' + Math.min(t.serie, t.series) + ' / ' + t.series + (t.lado ? ' · ' + t.lado : '') + (ex && ex.intensidad ? ' · int. ' + ['', 'baja', 'media', 'alta'][ex.intensidad] : '')).toUpperCase();
     }
     var pri = $('.m-pri');
