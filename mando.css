@@ -94,3 +94,53 @@ button:active{transform:scale(.97)}
 .m-salir{align-self:center;background:none;border:0;color:var(--tenue);font-size:13px;text-decoration:underline}
 
 .m-con[data-a="cambiar-pantalla"]{cursor:pointer;border:1px solid var(--linea2);border-radius:999px;padding:4px 10px;color:var(--texto)}
+
+/* ============ Rediseño: Aprender (oscuro) y Entrenar (color de la fase = color de las luces) ============ */
+:root{--morado:#8B3DFF;--rojo:#FF3B30;--azulF:#2F6BFF;--blancoF:#F4F1EA}
+#mando.modo-apr,#mando.modo-ent{--fbg:var(--fondo);--ftx:var(--texto);--caja:var(--panel);background:var(--fbg);color:var(--ftx)}
+#mando.modo-ent.f-morado{--fbg:var(--morado);--ftx:#F4F1EA;--caja:rgba(0,0,0,.24)}
+#mando.modo-ent.f-rojo{--fbg:var(--rojo);--ftx:#16181B;--caja:rgba(0,0,0,.16)}
+#mando.modo-ent.f-azul{--fbg:var(--azulF);--ftx:#F4F1EA;--caja:rgba(0,0,0,.24)}
+#mando.modo-ent.f-blanco{--fbg:var(--blancoF);--ftx:#16181B;--caja:rgba(0,0,0,.08)}
+body:has(#mando.modo-ent.f-morado){background:var(--morado)}body:has(#mando.modo-ent.f-rojo){background:var(--rojo)}
+body:has(#mando.modo-ent.f-azul){background:var(--azulF)}body:has(#mando.modo-ent.f-blanco){background:var(--blancoF)}
+#mando.modo-ent .m-top,#mando.modo-ent .m-top b,#mando.modo-ent .m-ante{color:inherit}
+#mando .m-cab{flex:none}
+#mando .m-nombre{font-size:clamp(30px,6.4vw,48px)}
+/* aprender */
+.m-apr{display:none;flex:1 1 0;min-height:0;flex-direction:column;gap:10px}
+#mando.modo-apr .m-apr{display:flex}
+.m-chips{display:flex;gap:6px;flex-wrap:wrap}.m-chips span{border:1px solid var(--linea2);border-radius:999px;padding:4px 10px;font-family:var(--mono);font-size:12px;color:var(--suave)}
+.m-chips span.c{border-color:var(--acento);color:var(--acento)}.m-chips span.ok{border-color:var(--azul);color:var(--azul)}
+.m-apr .m-dibujo{flex:1 1 0;min-height:120px}
+.m-fases{display:flex;gap:4px;height:8px;flex:none}.m-fases i{border-radius:4px;min-width:6px}
+.m-fases i.morado{background:var(--morado)}.m-fases i.rojo{background:var(--rojo)}.m-fases i.azul{background:var(--azulF)}.m-fases i.blanco{background:var(--blancoF)}
+#mando.modo-apr .m-pri{background:var(--morado);color:#F4F1EA;min-height:110px;box-shadow:0 0 36px -10px var(--morado)}
+/* entrenar */
+.m-ent{display:none;flex:1 1 0;min-height:0;flex-direction:column;justify-content:center}
+#mando.modo-ent .m-ent{display:flex}
+.m-ent-top{display:flex;justify-content:space-between;align-items:center}
+.m-fase{font-family:var(--mono);font-size:16px;letter-spacing:.16em}
+.m-parar{background:var(--caja);color:inherit;border:0;border-radius:999px;padding:8px 14px;font-size:14px;font-weight:600}
+#mando .m-ent .m-tiempo{font-size:clamp(110px,33vw,210px);line-height:.9;text-align:left;color:inherit}
+#mando .m-ent .m-tiempo small{font-size:.24em;color:inherit;opacity:.85;margin-left:8px}
+.m-ent-pie{display:flex;align-items:center;gap:14px;margin-top:10px}
+.m-puntos{display:flex;gap:8px}.m-puntos i{width:18px;height:18px;border-radius:50%;border:3px solid currentColor}.m-puntos i.on{background:currentColor}
+.m-serie{font-family:var(--mono);font-size:13px;letter-spacing:.08em;opacity:.9}
+#mando.modo-ent .m-pri{min-height:clamp(140px,22vh,200px);background:#16181B;color:#F4F1EA;font-size:clamp(40px,9vw,60px);line-height:.95}
+#mando.modo-ent.f-morado .m-pri,#mando.modo-ent.f-azul .m-pri{background:rgba(0,0,0,.34)}
+/* botones comunes */
+#mando .m-fila{grid-template-columns:1fr 1fr}
+#mando.modo-ent .m-sec{background:var(--caja);border:0;color:inherit}
+#mando.modo-ent .m-sec small{color:inherit;opacity:.8}
+#mando.modo-ent .m-sec.fin{background:#16181B;color:#F4F1EA}
+#mando.modo-ent .m-musica{background:var(--caja);border:0}
+#mando.modo-ent .m-cancion b,#mando.modo-ent .m-cancion small,#mando.modo-ent .m-cancion .nota{color:inherit}
+.m-moodchip{flex:none;max-width:42%;height:48px;border-radius:999px;border:1px solid currentColor;background:transparent;color:var(--acento);padding:0 14px;font-family:var(--mono);font-size:13px;letter-spacing:.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#mando.modo-ent .m-moodchip{color:inherit}
+/* hoja para elegir el mood */
+.m-velo{position:fixed;inset:0;z-index:20;background:rgba(10,11,13,.86);display:flex;align-items:flex-end;justify-content:center}
+.m-velo[hidden]{display:none}
+.m-hoja{width:100%;max-width:820px;background:var(--fondo);color:var(--texto);border-radius:24px 24px 0 0;padding:22px 18px max(22px,env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:12px}
+.m-hoja .m-ante{color:var(--acento)}.m-tit{font-family:var(--display);font-weight:400;font-size:40px;margin:0;text-transform:uppercase}
+#mando.modo-ent .m-serie,#mando.modo-ent .m-cancion,#mando.modo-ent .m-sec.sig{color:inherit}

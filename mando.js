@@ -92,61 +92,71 @@
     return htmlTop() + '<div class="m-centro"><div class="m-ante">' + esc(e.dia + ' · ' + e.grupo) + '</div><h1 class="m-tit">¿Con qué mood entrenas?</h1>' +
       '<div class="m-moods">' + bs + '</div><button type="button" class="m-salir" data-a="cancelar-mood">Cancelar</button></div>';
   }
+  // Pantalla del ejercicio en el mando. Dos modos, igual que la pantalla grande:
+  //  APRENDER (parado, oscuro): nombre, datos, dibujo pequeño y botón INICIAR morado.
+  //  ENTRENAR (del color de la fase = color de las luces): tiempo gigante y un botón enorme.
+  var eligiendoMood = false;
   function htmlCalent() {
     return htmlTop() +
-      '<div class="m-cab"><div class="m-ante"></div><h1 class="m-nombre"></h1><div class="m-dosis"></div></div>' +
-      '<div class="m-dibujo"></div>' +
-      '<div class="m-temp"><div class="m-fase"></div><div class="m-serie"></div><div class="m-tiempo"></div><div class="m-barra"><i></i></div><div class="m-desc"></div></div>' +
+      '<div class="m-cab"><div class="m-ante"></div><h1 class="m-nombre"></h1></div>' +
+      '<div class="m-apr"><div class="m-chips"></div><div class="m-dibujo"></div><div class="m-fases"></div></div>' +
+      '<div class="m-ent"><div class="m-ent-top"><div class="m-fase"></div><button type="button" class="m-parar" data-a="reiniciar">✕ Parar</button></div>' +
+      '<div class="m-tiempo"></div><div class="m-ent-pie"><div class="m-puntos"></div><div class="m-serie"></div></div></div>' +
       '<button type="button" class="m-pri" data-a="principal"></button>' +
       '<div class="m-fila"><button type="button" class="m-sec ant" data-a="ant">← Anterior</button>' +
-      '<button type="button" class="m-sec" data-a="reiniciar">↺</button>' +
       '<button type="button" class="m-sec sig" data-a="sig"></button></div>' +
-      '<div class="m-musica"><button type="button" class="m-cancion" data-a="cancion" aria-label="Cambiar de canción"></button><button type="button" class="m-ico" data-a="pausa-musica" aria-label="Pausar o seguir la música"></button>' +
-      '<button type="button" class="m-ico otra" data-a="cancion">⏭ Otra</button></div>';
+      '<div class="m-musica"><button type="button" class="m-cancion" data-a="cancion" aria-label="Cambiar de canción"></button>' +
+      '<button type="button" class="m-moodchip" data-a="abrir-moods" aria-label="Cambiar el mood"></button></div>' +
+      '<div class="m-velo" hidden></div>';
   }
-  var COLORES = { espera: 'var(--texto)', prep: 'var(--amarillo)', trabajo: 'var(--acento)', descanso: 'var(--azul)', hecho: 'var(--azul)' };
   function textoFase(t) {
     return { espera: t.serie > 1 ? 'SIGUIENTE SERIE' : 'LISTO', prep: 'PREPÁRATE', trabajo: t.reps ? 'HAZ LAS REPS' : '¡AGUANTA!', descanso: 'DESCANSO', hecho: '¡COMPLETADO!' }[t.fase] || '';
   }
+  function htmlMoodsMando(e) {
+    var bs = (e.moods || []).map(function (m, i) {
+      return '<button type="button" class="m-mood' + (e.mood === m.n ? ' ultimo' : '') + '" data-a="mood-cambiar" data-i="' + i + '"><b>' + esc(m.n) + '</b><span>' + m.c + (m.c === 1 ? ' canción' : ' canciones') + (e.mood === m.n ? ' · ahora' : '') + '</span></button>';
+    }).join('') + '<button type="button" class="m-mood' + (!e.mood ? ' ultimo' : '') + '" data-a="mood-cambiar" data-i="-1"><b>Todas</b><span>mezcladas</span></button>';
+    return '<div class="m-hoja"><div class="m-ante">CAMBIAR LA MÚSICA</div><h2 class="m-tit">¿Qué mood?</h2><div class="m-moods">' + bs + '</div>' +
+      '<button type="button" class="m-salir" data-a="cerrar-moods">Cancelar</button></div>';
+  }
   function actualizarCalent(e) {
-    var ex = e.ej;
-    $('.m-ante').textContent = e.dia + ' · ' + e.grupo + ' · ' + e.bloque.titulo + ' (' + (e.bloque.i + 1) + '/' + e.bloque.n + ')';
+    var ex = e.ej, t = e.temp, m = e.musica || {};
+    var ent = e.modo === 'entrenar';
+    raiz.className = ent ? 'modo-ent f-' + (e.color || 'blanco') : 'modo-apr';
+    $('.m-ante').textContent = (e.bloque.titulo + ' · ' + (e.hueco + 1) + ' de ' + e.nHuecos).toUpperCase();
     $('.m-nombre').textContent = ex ? ex.nombre : '[Por definir]';
-    $('.m-dosis').innerHTML = (ex && ex.dosis ? '<span class="n">' + esc(ex.dosis) + '</span>' : '') +
-      '<span>Ejercicio ' + (e.hueco + 1) + ' de ' + e.nHuecos + '</span>' + (ex && ex.hecho ? '<span class="m-hecho">✓ HECHO</span>' : '');
-    // La animación solo se cambia cuando cambia el ejercicio (si no, se reiniciaría a cada segundo)
-    var clave = ex ? ex.nombre + '|' + ex.dibujo : '';
-    if (clave !== dibujoActual) {
-      dibujoActual = clave;
-      var svg = ex && ex.dibujo && typeof DIBUJOS !== 'undefined' ? DIBUJOS[ex.dibujo] : '';
-      $('.m-dibujo').innerHTML = svg || '<div class="m-vacio">[Dibujo del ejercicio]</div>';
-    }
-    var t = e.temp, pri = $('.m-pri');
-    if (t) {
-      var col = COLORES[t.fase] || 'var(--texto)';
-      $('.m-fase').innerHTML = textoFase(t) + (t.pausado ? ' · PAUSA' : '');
-      $('.m-fase').style.color = col;
-      $('.m-serie').textContent = 'SERIE ' + t.serie + ' / ' + t.series + (t.lado ? ' · ' + String(t.lado).toUpperCase() : '');
+    if (!ent) {
+      $('.m-chips').innerHTML = ex ? '<span class="c">' + esc(ex.dosis) + '</span>' + (t ? '<span>desc. ' + t.descanso + ' s</span>' : '') + (ex.ancla ? '<span>' + esc(ex.ancla) + '</span>' : '') + (ex.hecho ? '<span class="ok">✓ hecho</span>' : '') : '';
+      var clave = ex ? ex.nombre + '|' + ex.dibujo : '';
+      if (clave !== dibujoActual) {
+        dibujoActual = clave;
+        var svg = ex && ex.dibujo && typeof DIBUJOS !== 'undefined' ? DIBUJOS[ex.dibujo] : '';
+        $('.m-dibujo').innerHTML = svg || '<div class="m-vacio">[Dibujo del ejercicio]</div>';
+      }
+      var trab = t ? (t.reps ? (parseInt(t.reps, 10) || 10) * 3 : t.quedan) : 20;
+      $('.m-fases').innerHTML = t ? '<i class="morado" style="flex:5"></i><i class="rojo" style="flex:' + trab + '"></i><i class="azul" style="flex:' + t.descanso + '"></i><i class="blanco" style="flex:5"></i>' : '';
+    } else if (t) {
+      $('.m-fase').textContent = textoFase(t) + (t.pausado ? ' · PAUSA' : '');
       var q = Math.max(0, t.quedan | 0);
       var txt = Math.floor(q / 60) + ':' + (q % 60 < 10 ? '0' : '') + (q % 60);
-      if (t.reps && (t.fase === 'espera' || t.fase === 'trabajo' || t.fase === 'hecho')) txt = t.reps + '<small>REPS</small>';
-      $('.m-tiempo').innerHTML = txt; $('.m-tiempo').style.color = col;
-      var pct = (t.fase === 'espera' || (t.reps && t.fase === 'trabajo')) ? 100 : (t.fase === 'hecho' ? 0 : Math.round(q / Math.max(1, t.total) * 100));
-      var bar = $('.m-barra i'); bar.style.width = pct + '%'; bar.style.background = col;
-      $('.m-desc').textContent = t.reps ? t.reps + ' REPETICIONES · DESCANSO ' + t.descanso + ' s' : '';
-      pri.textContent = t.etiqueta; pri.disabled = false;
-      pri.className = 'm-pri' + (t.etiqueta.indexOf('Serie hecha') === 0 ? ' serie' : (t.corriendo ? ' pausa' : ''));
-    } else {
-      $('.m-fase').textContent = ''; $('.m-serie').textContent = ''; $('.m-tiempo').innerHTML = '—'; $('.m-desc').textContent = '';
-      pri.textContent = 'Sin temporizador'; pri.disabled = true; pri.className = 'm-pri';
+      if (t.reps && (t.fase === 'espera' || t.fase === 'trabajo')) txt = esc(String(t.reps)) + '<small>REPS</small>';
+      if (t.fase === 'hecho') txt = '✓';
+      $('.m-tiempo').innerHTML = txt;
+      var hechas = t.fase === 'hecho' ? t.series : (t.fase === 'descanso' ? t.serie : t.serie - 1);
+      $('.m-puntos').innerHTML = Array.apply(null, Array(t.series)).map(function (_, i) { return '<i class="' + (i < hechas ? 'on' : '') + '"></i>'; }).join('');
+      $('.m-serie').textContent = ('Serie ' + Math.min(t.serie, t.series) + ' / ' + t.series + (t.lado ? ' · ' + t.lado : '')).toUpperCase();
     }
+    var pri = $('.m-pri');
+    pri.textContent = t ? t.etiqueta : 'Sin temporizador'; pri.disabled = !t;
     $('.m-sec.ant').disabled = e.bloque.i === 0 && e.hueco === 0;
-    var sig = $('.m-sec[data-a="sig"], .m-sec[data-a="terminar"]');
-    if (e.ultimo) { sig.setAttribute('data-a', 'terminar'); sig.className = 'm-sec fin'; sig.innerHTML = 'Terminar ✓'; }
+    var sig = $('.m-sec.sig');
+    if (e.ultimo) { sig.setAttribute('data-a', 'terminar'); sig.className = 'm-sec sig fin'; sig.innerHTML = 'Terminar ✓'; }
     else { sig.setAttribute('data-a', 'sig'); sig.className = 'm-sec sig'; sig.innerHTML = 'Siguiente →<small>' + esc(e.siguiente) + '</small>'; }
-    var m = e.musica || {};
-    $('.m-cancion').innerHTML = m.sonando ? '<span class="nota">♪</span><b>' + esc(m.nombre) + '</b><small>toca para cambiar</small>' : (m.hay ? '<span class="nota">♪</span><b>Poner música</b><small>toca para empezar</small>' : '<span class="nota">♪</span>Sin canciones para este ejercicio');
-    $('.m-ico[data-a="pausa-musica"]').textContent = m.sonando && !m.pausada ? '⏸' : '▶';
+    $('.m-cancion').innerHTML = m.sonando ? '<span class="nota">♪</span><b>' + esc(m.nombre) + '</b><small>toca para cambiar</small>' : (m.hay ? '<span class="nota">♪</span><b>Poner música</b><small>toca para empezar</small>' : '<span class="nota">♪</span><b>Sin canciones</b><small>cambia el mood →</small>');
+    $('.m-moodchip').textContent = (e.mood || 'Todas') + ' ▾';
+    var velo = $('.m-velo');
+    if (eligiendoMood) { if (velo.hidden) { velo.hidden = false; velo.innerHTML = htmlMoodsMando(e); } }
+    else if (!velo.hidden) { velo.hidden = true; velo.innerHTML = ''; }
   }
 
   function pintar() {
@@ -161,7 +171,7 @@
       vistaActual = firma; dibujoActual = null;
       raiz.innerHTML = v === 'login' ? htmlLogin() : v === 'espera' ? htmlEspera() : v === 'mood' ? htmlMood(e) : v === 'calent' ? htmlCalent() : htmlSemana(e);
     }
-    if (v === 'calent') actualizarCalent(e);
+    if (v === 'calent') actualizarCalent(e); else { raiz.className = ''; eligiendoMood = false; }
     pintarTop();
   }
 
@@ -180,6 +190,9 @@
     else if (a === 'dia') mandar('dia', { i: +b.getAttribute('data-i') });
     else if (a === 'start') { var i = DIAS.map(function (d) { return d.nombre; }).indexOf(estado.dia); mandar('start', { dia: i }); }
     else if (a === 'mood') mandar('mood', { i: +b.getAttribute('data-i') });
+    else if (a === 'abrir-moods') { eligiendoMood = true; pintar(); }
+    else if (a === 'cerrar-moods') { eligiendoMood = false; pintar(); }
+    else if (a === 'mood-cambiar') { eligiendoMood = false; mandar('mood-cambiar', { i: +b.getAttribute('data-i') }); pintar(); }
     else mandar(a);
   });
   raiz.addEventListener('keydown', function (ev) { if (ev.key === 'Enter' && (ev.target.id === 'm-clave' || ev.target.id === 'm-correo')) entrar(); });

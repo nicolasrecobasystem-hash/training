@@ -239,6 +239,9 @@
     document.getElementById('rep-tit').textContent = rep.etiqueta;
     document.getElementById('rep-mini').textContent = rep.mini ? '▢' : '–';
     avisarMando();
+    // En modo Entrenar, la franja de abajo muestra la canción que suena
+    var em = document.querySelector('.ent-mus');
+    if (em && rep.actual) { var cn = cancionPorItem(rep.actual); em.setAttribute('data-acc', 'rep-otra'); em.querySelector('b').textContent = cn ? cn.nombre : (esArchivo(rep.actual) ? nombreArchivo(rep.actual) : 'YouTube'); }
   }
   // Audio de tus archivos (Supabase Storage, privado): se pide un enlace temporal firmado
   var audioEl = document.getElementById('rep-audio-el');
@@ -563,6 +566,8 @@
   }
   function botonPrincipal() {
     activarAudio();
+    if (st.fase === 'descanso' && st.corriendo) { parar(); terminarFase(); return; }   // saltar el descanso
+    if (st.fase === 'hecho') { if (hayEjSiguiente()) moverEjercicio(1); else terminarDia(); return; }
     var prep = (cfg() && cfg().preparacion) || 5;
     if (esReps() && st.fase === 'trabajo' && !st.corriendo) {
       finSerie();
@@ -676,81 +681,132 @@
       (uso ? '<div class="pared-uso' + (a ? ' on' : '') + '">' + uso + '</div>' : '') + '</div>';
   }
 
-  function htmlCalentamiento() {
-    var d = DIAS[st.sel], l = lista(), ex = ejActual();
-    function vacio(t) { return '<div class="vacio">' + t + '</div>'; }
-    function claveHtml(c) {
-      return '<div class="clave"><div class="k">' + esc(c[0].toUpperCase()) + '</div><div class="v">' + esc(c[1]) + '</div></div>';
-    }
+  // ---------- pantalla de ejercicio: modo APRENDER (parado, oscuro) y modo ENTRENAR (del color de la luz) ----------
+  var COLOR_MODO = { prep: 'morado', trabajo: 'rojo', descanso: 'azul', espera: 'blanco', hecho: 'blanco' };
+  function entrenando() { return st.corriendo || st.pausado || st.fase === 'prep' || st.fase === 'trabajo' || st.fase === 'descanso' || st.fase === 'hecho' || (st.fase === 'espera' && st.serie > 1); }
+  function modoCal() { return entrenando() ? 'entrenar' : 'aprender'; }
+  function colorModo() { return COLOR_MODO[st.fase] || 'blanco'; }
+  function hayEjSiguiente() { return lista()[st.hueco + 1] !== undefined || !!bloques()[st.bloque + 1]; }
+  function nombreSiguiente() {
+    var l = lista();
+    if (l[st.hueco + 1] !== undefined) return l[st.hueco + 1] ? l[st.hueco + 1].nombre : '[Por definir]';
+    var b = bloques()[st.bloque + 1]; return b ? b.titulo : '';
+  }
+  function textoAncla(ex) { return !ex ? '' : ex.ancla && ANCLAS[ex.ancla] ? ANCLAS[ex.ancla] : (ex.anclaNota || 'Sin ancla'); }
+  function terminarDia() {
+    var kf = claveFecha(new Date()), gf = claveDe(DIAS[st.sel]), rf = registroDe(kf) || { grupo: gf, hechos: [] };
+    rf.grupo = gf; rf.total = totalDe(gf); rf.terminado = true; historial[kf] = rf; guardarHistorial();
+    reiniciar(); cerrarRep(); st.pantalla = 'semana'; st.completado = true; pintar();
+  }
+  // Cambiar el mood a mitad del entreno (desde la píldora ♪ o desde el mando)
+  function cambiarMood(i) {
+    st.mood = i < 0 ? null : (moods[i] || null);
+    ultimoMood = st.mood || ''; escribirLS(LS_ULTIMO, ultimoMood); subirNube();
+    st.eligiendoMood = false; musicaSonandoDe = '';
+    if (st.pantalla === 'calent' && (rep.visible || entrenando())) arrancarMusica(true);
+    pintar();
+  }
+  function htmlElegirMood() {
+    function n(m) { return biblioteca.filter(function (c) { return !m || c.moods.indexOf(m) >= 0; }).length; }
+    var bs = moods.map(function (m, i) {
+      return '<button type="button" class="mood' + (st.mood === m ? ' ultimo' : '') + '" data-acc="mood-cambiar" data-i="' + i + '"><span class="n">' + esc(m) + '</span><span class="c">' + n(m) + ' canciones' + (st.mood === m ? ' · ahora' : '') + '</span></button>';
+    }).join('') + '<button type="button" class="mood ninguno' + (!st.mood ? ' ultimo' : '') + '" data-acc="mood-cambiar" data-i="-1"><span class="n">Ninguno</span><span class="c">todas mezcladas · ' + n(null) + ' canciones</span></button>';
+    return '<div class="velo" data-acc="cerrar-elegir-mood"><div class="modal" role="dialog" aria-modal="true"><div class="antetitulo">CAMBIAR LA MÚSICA</div>' +
+      '<h2 class="titulo-m">¿QUÉ MOOD QUIERES AHORA?</h2><div class="moods">' + bs + '</div>' +
+      '<div class="modal-pie"><button type="button" class="btn-sec" data-acc="cerrar-elegir-mood">Cancelar</button></div></div></div>';
+  }
+  // Tramos de colores de un ejercicio (morado, rojo, azul, blanco) con su duración aproximada
+  function htmlFases(c) {
+    if (!c) return '';
+    var trab = c.reps ? (parseInt(c.reps, 10) || 10) * 3 : st.dur, pr = c.preparacion || 5, de = descansoActual();
+    return '<div class="fases" title="Cómo cambiarán la pantalla y las luces"><i class="morado" style="flex:' + pr + '"></i><i class="rojo" style="flex:' + trab + '"></i><i class="azul" style="flex:' + de + '"></i><i class="blanco" style="flex:' + Math.max(4, pr) + '"></i></div>';
+  }
 
-    // Menú compacto de ejercicios (arriba)
-    var nMenu = Math.max(1, l.length);
-    var menu = Array.apply(null, Array(nMenu)).map(function (_, i) {
-      var e = l[i];
-      var hc = estaHecho(e, claveDe(d));
-      var cls = 'hueco' + (e ? ' lleno' : '') + (i === st.hueco ? ' activo' : '') + (hc ? ' hecho' : '');
-      return '<button type="button" class="' + cls + '" data-acc="hueco" data-i="' + i + '" aria-pressed="' + (i === st.hueco) + '">' +
-        '<div class="num">' + (hc ? '✓' : (i + 1)) + '</div>' +
-        '<div class="n">' + esc(e ? e.nombre : '[Ejercicio]') + '</div>' +
-        '<div class="d">' + esc(e ? e.dosis : '[Series × reps]') + '</div></button>';
-    }).join('');
-
-    // Panel 1: nombre, figura y claves
-    var p1;
-    if (ex) {
-      var fig = ex.dibujo && DIBUJOS[ex.dibujo] ? '<div class="fig">' + DIBUJOS[ex.dibujo] + '</div>' : vacio('[Dibujo]');
-      var hayInfo = ex.info && ex.info.length;
-      p1 = '<div class="p-cab"><div class="p-nombre">' + esc(ex.nombre.toUpperCase()) + '</div><div class="p-dosis">' + esc(ex.dosis) +
-        (hayInfo ? '<button type="button" class="btn-info' + (st.verInfo ? ' on' : '') + '" data-acc="info" aria-pressed="' + !!st.verInfo + '" aria-label="Qué trabaja y cómo progresar">ⓘ</button>' : '') + '</div></div>' +
-        '<div class="p-ind"><span>' + esc(ex.indicacion || '') + '</span>' +
-        (enlacesMusica(ex, claveDe(d), st.mood).length ? '<button type="button" class="btn-musica" data-acc="musica" aria-label="Poner otra canción de este ejercicio">' +
-          (musicaSonandoDe === claveDe(d) + '|' + ex.nombre ? '♪ Otra canción' : '♪ Música') + '</button>' : '') + '</div>' +
-        '<div class="p-fila">' + (ex.ritmo ? '<div class="p-ritmo">RITMO · ' + esc(ex.ritmo.toUpperCase()) + '</div>' : '<span></span>') +
-          (estaHecho(ex, claveDe(d))
-            ? '<button type="button" class="btn-hecho on" data-acc="hecho" aria-pressed="true" title="Pulsa para desmarcar">✓ Hecho hoy</button>'
-            : '<button type="button" class="btn-hecho" data-acc="hecho" aria-pressed="false">Marcar hecho</button>') + '</div>' +
-        (st.verInfo && hayInfo
-          ? '<div class="info-lista">' + ex.info.map(function (x) {
-              return '<div class="info-item"><div class="k">' + esc(x[0].toUpperCase()) + '</div><div class="v">' + esc(x[1]) + '</div></div>';
-            }).join('') + '</div>'
-          : '<div class="con">' + fig + '<div class="claves">' + (ex.claves || []).map(claveHtml).join('') + '</div></div>');
-    } else {
-      p1 = vacio('[Dibujo del ejercicio]');
-    }
-
-    // Panel 2: detalle del agarre
-    var ag = ex && ex.agarre;
-    var p2 = '<div class="p-tit">' + esc(ag && ag.titulo ? ag.titulo : 'AGARRE') + '</div>' + (ag
-      ? (ag.dibujo && DIBUJOS[ag.dibujo] ? '<div class="ag-fig">' + DIBUJOS[ag.dibujo] + '</div>' : '') +
-        '<div class="ag-puntos">' + (ag.puntos || []).map(claveHtml).join('') + '</div>'
-      : vacio('[Por definir]'));
-
-    // Panel 3: errores comunes
-    var er = ex && ex.errores;
-    var p3 = '<div class="p-tit">ERRORES COMUNES</div>' + (er && er.length
-      ? '<div class="errores">' + er.map(function (x) {
-          return '<div class="error"><div class="x" aria-hidden="true">✕</div><div><div class="e">' + esc(x[0]) + '</div><div class="ok">→ ' + esc(x[1]) + '</div></div></div>';
-        }).join('') + '</div>'
-      : vacio('[Por definir]'));
-
-    return '<div class="pantalla calent">' +
-      '<div class="barra-sup"><button type="button" class="btn-sec" data-acc="volver">← Semana</button>' +
+  function htmlCabecera(d, ent) {
+    return '<div class="barra-sup"><button type="button" class="btn-sec" data-acc="volver">← Semana</button>' +
       '<div class="cab-paso"><span class="antetitulo">PASO ' + (st.bloque + 1) + ' DE ' + bloques().length + '</span><h2 class="titulo-m">' + esc(bloqueActual().titulo.toUpperCase()) + '</h2>' +
-      (bloqueActual().nota ? '<span class="nota-bloque">' + esc(bloqueActual().nota) + '</span>' : '') + '</div>' +
-      '<div class="barra-der">' + (st.mood ? '<div class="mood-lbl">♪ ' + esc(st.mood.toUpperCase()) + '</div>' : '') +
+      (bloqueActual().nota && !ent ? '<span class="nota-bloque">' + esc(bloqueActual().nota) + '</span>' : '') + '</div>' +
+      '<div class="barra-der"><button type="button" class="mood-lbl" data-acc="elegir-mood" title="Cambiar el mood de la música">♪ ' + esc((st.mood || 'Todas').toUpperCase()) + ' ▾</button>' +
       '<div class="mono dia-lbl">' + esc(d.nombre.toUpperCase() + ' · ' + d.grupo.toUpperCase()) + '</div>' +
       '<div class="puntos">' + bloques().map(function (b, i) {
         return '<button type="button" class="punto' + (i === st.bloque ? ' on' : (i < st.bloque ? ' hecho' : '')) + '" data-acc="bloque" data-i="' + i + '" aria-label="Ir a ' + esc(b.titulo) + '"' + (i === st.bloque ? ' aria-current="step"' : '') + '></button>';
-      }).join('') + '</div></div></div>' +
+      }).join('') + '</div></div></div>';
+  }
+
+  function htmlCalentamiento() {
+    var d = DIAS[st.sel], l = lista(), ex = ejActual(), c = cfg(), g = claveDe(d);
+    function vacio(t) { return '<div class="vacio">' + t + '</div>'; }
+    var fig = ex && ex.dibujo && DIBUJOS[ex.dibujo] ? DIBUJOS[ex.dibujo] : vacio('[Dibujo del ejercicio]');
+    st.modoPintado = modoCal();
+
+    // ===== ENTRENAR: toda la pantalla del color de la fase =====
+    if (st.modoPintado === 'entrenar') {
+      var sonando = rep.visible && rep.actual ? (cancionPorItem(rep.actual) || {}).nombre || (esArchivo(rep.actual) ? nombreArchivo(rep.actual) : 'YouTube') : '';
+      return '<div class="pantalla calent ent f-' + colorModo() + '">' + htmlCabecera(d, true) +
+        '<div class="ent-cuerpo"><div class="ent-fig">' + fig + '</div>' +
+        '<div class="ent-der"><div class="ent-fase mono t-fase" id="e-fase"></div><div class="ent-tiempo" id="e-tiempo"></div>' +
+        '<div class="ent-nom">' + esc(ex ? ex.nombre : '') + '</div><div class="ent-sub" id="e-sub"></div>' +
+        '<div class="ent-puntos" id="e-puntos"></div><div class="ent-barra"><i id="e-barra"></i></div>' +
+        (ex && ex.ritmo ? '<div class="ent-ritmo">Ritmo · ' + esc(ex.ritmo) + '</div>' : '') + '</div></div>' +
+        '<div class="ent-pie">' +
+        '<div class="ent-caja">Siguiente <b>' + esc(nombreSiguiente() || '—') + '</b></div>' +
+        '<div class="ent-caja">Ancla <b>' + esc(textoAncla(ex)) + '</b></div>' +
+        '<button type="button" class="ent-caja ent-mus" data-acc="' + (rep.visible ? 'rep-otra' : 'musica') + '" title="Cambiar de canción">♪ <b>' + esc(sonando || 'Poner música') + '</b><span>· toca para cambiar</span></button>' +
+        '<button type="button" class="ent-caja ent-btn" data-acc="reiniciar" title="Parar y volver a la explicación">✕ Parar</button>' +
+        '<button type="button" class="ent-pri" id="e-pri" data-acc="principal"></button></div></div>' +
+        (st.eligiendoMood ? htmlElegirMood() : '');
+    }
+
+    // ===== APRENDER: oscuro, con pestañas =====
+    var nMenu = Math.max(1, l.length);
+    var menu = Array.apply(null, Array(nMenu)).map(function (_, i) {
+      var e = l[i], hc = estaHecho(e, g);
+      var cls = 'hueco' + (e ? ' lleno' : '') + (i === st.hueco ? ' activo' : '') + (hc ? ' hecho' : '');
+      return '<button type="button" class="' + cls + '" data-acc="hueco" data-i="' + i + '" aria-pressed="' + (i === st.hueco) + '">' +
+        '<div class="num">' + (hc ? '✓' : (i + 1)) + '</div><div class="n">' + esc(e ? e.nombre : '[Ejercicio]') + '</div>' +
+        '<div class="d">' + esc(e ? e.dosis : '[Series × reps]') + '</div></button>';
+    }).join('');
+    var ag = ex && ex.agarre;
+    var tabs = [['pasos', 'Pasos'], ['pared', 'Tu pared'], ['montaje', ag && ag.titulo === 'MONTAJE' ? 'Montaje' : 'Agarre'], ['errores', 'Errores']];
+    if (ex && ex.info && ex.info.length) tabs.push(['info', 'Para qué']);
+    tabs.push(['musica', '♪ Música']);
+    var tab = st.tab && tabs.some(function (t) { return t[0] === st.tab; }) ? st.tab : 'pasos';
+    var cont = '';
+    if (!ex) cont = vacio('[Por definir]');
+    else if (tab === 'pasos') cont = '<div class="apr-pasos">' + (ex.claves || []).map(function (k, i) {
+      return '<div class="apr-paso"><span>' + (i + 1) + ' · ' + esc(k[0].toUpperCase()) + '</span>' + esc(k[1]) + '</div>'; }).join('') + '</div>';
+    else if (tab === 'pared') { var a = ANCLAS[ex.ancla] ? ex.ancla : '';
+      cont = '<div class="apr-pared"><div class="pared-fig">' + svgPared(a) + '</div><div class="apr-pared-txt"><div class="k">USA</div><b>' + esc(textoAncla(ex)) + '</b>' +
+        (a && ex.anclaNota ? '<p>' + esc(ex.anclaNota) + '</p>' : '') + '</div></div>'; }
+    else if (tab === 'montaje') cont = ag ? '<div class="apr-montaje">' + (ag.dibujo && DIBUJOS[ag.dibujo] ? '<div class="apr-mfig">' + DIBUJOS[ag.dibujo] + '</div>' : '') +
+      '<div class="apr-mpuntos">' + (ag.puntos || []).map(function (p) { return '<div class="apr-paso"><span>' + esc(p[0].toUpperCase()) + '</span>' + esc(p[1]) + '</div>'; }).join('') + '</div></div>' : vacio('[Por definir]');
+    else if (tab === 'errores') cont = ex.errores && ex.errores.length ? '<div class="apr-errores">' + ex.errores.map(function (x) {
+      return '<div class="apr-error"><b>✕ ' + esc(x[0]) + '</b>' + esc(x[1]) + '</div>'; }).join('') + '</div>' : vacio('[Por definir]');
+    else if (tab === 'info') cont = '<div class="apr-pasos">' + ex.info.map(function (x) { return '<div class="apr-paso"><span>' + esc(x[0].toUpperCase()) + '</span>' + esc(x[1]) + '</div>'; }).join('') + '</div>';
+    else if (tab === 'musica') {
+      var ls = cancionesPara(ex, g, st.mood).slice(0, 8);
+      cont = '<div class="apr-musica"><div class="apr-moods">' + ['<button type="button" class="pastilla' + (!st.mood ? ' on' : '') + '" data-acc="mood-cambiar" data-i="-1">Todas</button>']
+        .concat(moods.map(function (m, i) { return '<button type="button" class="pastilla' + (st.mood === m ? ' on' : '') + '" data-acc="mood-cambiar" data-i="' + i + '">' + esc(m) + '</button>'; })).join('') + '</div>' +
+        (ls.length ? '<div class="apr-canciones">' + ls.map(function (cn) {
+          return '<button type="button" class="apr-cancion' + (rep.visible && rep.actual === cn.item ? ' on' : '') + '" data-acc="tocar-cancion" data-id="' + esc(cn.id) + '">▶ ' + esc(cn.nombre) + '</button>'; }).join('') + '</div>'
+          : '<div class="vacio">No hay canciones para este mood y esta intensidad.</div>') + '</div>';
+    }
+    var chips = ex ? '<span class="c">' + esc(ex.dosis || '') + '</span>' + (c ? '<span>descanso ' + descansoActual() + ' s</span>' : '') +
+      '<span>' + esc(textoAncla(ex)) + '</span>' + (ex.ritmo ? '<span>' + esc(ex.ritmo) + '</span>' : '') : '';
+    return '<div class="pantalla calent apr">' + htmlCabecera(d, false) +
       '<div class="menu-ej" style="grid-template-columns:repeat(' + nMenu + ',minmax(0,1fr))">' + menu + '</div>' +
-      '<div class="cuerpo"><div class="panel p-fig">' + p1 + '</div>' + htmlPared(ex) +
-      '<div class="panel p-ag">' + p2 + '</div><div class="panel p-err">' + p3 + '</div></div>' +
+      '<div class="apr-cuerpo"><div class="panel apr-fig"><div class="fig">' + fig + '</div>' +
+      (ex ? (estaHecho(ex, g) ? '<button type="button" class="btn-hecho on" data-acc="hecho" aria-pressed="true">✓ Hecho hoy</button>' : '<button type="button" class="btn-hecho" data-acc="hecho" aria-pressed="false">Marcar hecho</button>') : '') + '</div>' +
+      '<div class="apr-der"><div class="p-nombre apr-nom">' + esc(ex ? ex.nombre.toUpperCase() : '[EJERCICIO]') + '</div>' +
+      '<div class="apr-chips mono">' + chips + '</div>' + (ex && ex.indicacion ? '<div class="apr-ind">' + esc(ex.indicacion) + '</div>' : '') +
+      '<div class="apr-tabs">' + tabs.map(function (t) { return '<button type="button" class="apr-tabb' + (t[0] === tab ? ' on' : '') + '" data-acc="tab" data-t="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div>' +
+      '<div class="apr-tab">' + cont + '</div></div></div>' +
       '<div class="pie"><div id="zona-temp" style="flex-grow:1;display:flex"></div>' +
-      (st.bloque > 0 ? '<button type="button" class="btn-ant" data-acc="anterior" aria-label="Anterior: ' + esc(bloques()[st.bloque - 1].titulo) + '" title="Anterior: ' + esc(bloques()[st.bloque - 1].titulo) + '">←</button>' : '') +
+      (st.bloque > 0 ? '<button type="button" class="btn-ant" data-acc="anterior" title="Anterior: ' + esc(bloques()[st.bloque - 1].titulo) + '">←</button>' : '') +
       (st.bloque < bloques().length - 1
-        ? '<button type="button" class="btn-sig on" data-acc="siguiente" aria-label="Siguiente: ' + esc(bloques()[st.bloque + 1].titulo) + '"><span class="sig-k">SIGUIENTE →</span><span class="sig-n">' + esc(bloques()[st.bloque + 1].titulo) + '</span></button>'
-        : '<button type="button" class="btn-sig on fin" data-acc="terminar">Terminar ✓</button>') + '</div>' +
-      '</div>';
+        ? '<button type="button" class="btn-sig on" data-acc="siguiente"><span class="sig-k">SIGUIENTE →</span><span class="sig-n">' + esc(bloques()[st.bloque + 1].titulo) + '</span></button>'
+        : '<button type="button" class="btn-sig on fin" data-acc="terminar">Terminar ✓</button>') + '</div></div>' +
+      (st.eligiendoMood ? htmlElegirMood() : '');
   }
 
   // Ventana "¿Con qué mood entrenas?" al pulsar START
@@ -1074,42 +1130,50 @@
 
   // Texto del botón principal (lo usa también el mando de la tableta)
   function etiquetaPrincipal(c) {
-    return (c.reps && st.fase === 'trabajo') ? 'Serie hecha ✓' : st.corriendo ? 'Pausar' : (st.pausado ? 'Continuar' : (st.fase === 'hecho' ? 'Repetir' : (st.serie > 1 ? 'Iniciar serie ' + st.serie : 'Iniciar')));
+    if (st.fase === 'descanso' && st.corriendo) return 'Saltar descanso';
+    if (st.fase === 'hecho') return hayEjSiguiente() ? 'Siguiente →' : 'Terminar ✓';
+    return (c.reps && st.fase === 'trabajo') ? 'Serie hecha ✓' : st.corriendo ? 'Pausar' : (st.pausado ? 'Continuar' : (st.serie > 1 ? 'Iniciar serie ' + st.serie : 'Iniciar'));
   }
-  function pintarTemporizador() {
-    var zona = document.getElementById('zona-temp');
-    if (!zona) return;
-    var c = cfg();
-    if (!c) { zona.innerHTML = '<div class="sin-temp">SIGUIENTE: [por definir]</div>'; return; }
-    var colores = { espera: 'var(--texto)', prep: 'var(--amarillo)', trabajo: 'var(--acento)', descanso: 'var(--azul)', hecho: 'var(--azul)' };
-    var textos = { espera: st.serie > 1 ? 'SIGUIENTE SERIE' : 'LISTO', prep: 'PREPÁRATE', trabajo: c.reps ? 'HAZ LAS REPS' : '¡AGUANTA!', descanso: 'DESCANSO', hecho: '¡COMPLETADO!' };
+  function textoTiempo(c) {
     var mostrado = st.fase === 'espera' ? st.dur : st.quedan;
     var tiempo = Math.floor(mostrado / 60) + ':' + (mostrado % 60 < 10 ? '0' : '') + (mostrado % 60);
-    if (c.reps && (st.fase === 'espera' || st.fase === 'trabajo' || st.fase === 'hecho')) tiempo = c.reps + '<small>REPS</small>';
-    var pct = (st.fase === 'espera' || (c.reps && st.fase === 'trabajo')) ? 100 : (st.fase === 'hecho' ? 0 : Math.round(st.quedan / Math.max(1, st.total) * 100));
-    var etiqueta = etiquetaPrincipal(c);
-    var col = colores[st.fase];
-    var pastillas = '';
-    if (c.reps) {
-      if (c.descansos && st.fase === 'espera' && !st.pausado) {
-        pastillas = '<div class="t-dur"><span>DESCANSO</span>' + c.descansos.map(function (d) {
-          return '<button type="button" class="pastilla' + (d === st.desc ? ' on' : '') + '" data-acc="desc" data-s="' + d + '" aria-pressed="' + (d === st.desc) + '">' + d + ' s</button>';
-        }).join('') + '</div>';
-      } else {
-        pastillas = '<div class="t-dur"><span>' + c.reps + ' REPETICIONES · DESCANSO ' + descansoActual() + ' s</span></div>';
+    if (c.reps && (st.fase === 'espera' || st.fase === 'trabajo')) tiempo = esc(String(c.reps)) + '<small>REPS</small>';
+    if (st.fase === 'hecho') tiempo = '✓';
+    return tiempo;
+  }
+  function pintarTemporizador() {
+    if (st.pantalla !== 'calent') return;
+    if (st.modoPintado !== modoCal()) { pintar(); return; }   // cambia de Aprender a Entrenar (o al revés)
+    var c = cfg();
+    if (st.modoPintado === 'entrenar') {
+      var pan = vista.querySelector('.pantalla.calent');
+      if (pan) pan.className = 'pantalla calent ent f-' + colorModo();
+      if (!c) return;
+      var textos = { espera: 'SIGUIENTE SERIE', prep: 'PREPÁRATE', trabajo: c.reps ? 'HAZ LAS REPS' : '¡AGUANTA!', descanso: 'DESCANSO', hecho: '¡COMPLETADO!' };
+      var el = function (id) { return document.getElementById(id); };
+      el('e-fase').textContent = textos[st.fase] + (st.pausado ? ' · PAUSA' : '');
+      el('e-tiempo').innerHTML = textoTiempo(c);
+      el('e-sub').textContent = 'Serie ' + Math.min(st.serie, c.series) + ' / ' + c.series + (c.lado ? ' · ' + c.lado : '') + (c.reps && st.fase === 'descanso' ? ' · hecha' : '');
+      var hechas = st.fase === 'hecho' ? c.series : (st.fase === 'descanso' ? st.serie : st.serie - 1);
+      el('e-puntos').innerHTML = Array.apply(null, Array(c.series)).map(function (_, i) { return '<i class="' + (i < hechas ? 'on' : '') + '"></i>'; }).join('');
+      var pct = (st.fase === 'espera' || (c.reps && st.fase === 'trabajo')) ? 100 : (st.fase === 'hecho' ? 100 : Math.round(st.quedan / Math.max(1, st.total) * 100));
+      el('e-barra').style.width = pct + '%';
+      el('e-pri').textContent = etiquetaPrincipal(c);
+    } else {
+      var zona = document.getElementById('zona-temp');
+      if (!zona) return;
+      if (!c) { zona.innerHTML = '<div class="sin-temp">Sin temporizador</div>'; }
+      else {
+        var pastillas = c.reps
+          ? (c.descansos ? '<div class="t-dur"><span>DESCANSO</span>' + c.descansos.map(function (s) {
+              return '<button type="button" class="pastilla' + (s === st.desc ? ' on' : '') + '" data-acc="desc" data-s="' + s + '" aria-pressed="' + (s === st.desc) + '">' + s + ' s</button>'; }).join('') + '</div>'
+              : '<div class="t-dur"><span>DESCANSO ' + descansoActual() + ' s</span></div>')
+          : '<div class="t-dur"><span>DURACIÓN</span>' + c.opciones.map(function (s) {
+              return '<button type="button" class="pastilla' + (s === st.dur ? ' on' : '') + '" data-acc="dur" data-s="' + s + '" aria-pressed="' + (s === st.dur) + '">' + s + ' s</button>'; }).join('') + '</div>';
+        zona.innerHTML = '<div class="apr-temp"><div class="apr-temp-izq"><div class="t-fase mono">LISTO · ' + c.series + (c.series === 1 ? ' SERIE' : ' SERIES') + (c.lado ? ' ' + esc(String(c.lado).toUpperCase()) : '') + '</div>' +
+          htmlFases(c) + '</div>' + pastillas + '<button type="button" class="btn-iniciar" data-acc="principal">' + etiquetaPrincipal(c) + '</button></div>';
       }
-    } else if (st.fase === 'espera' && st.serie === 1 && !st.pausado) {
-      pastillas = '<div class="t-dur"><span>DURACIÓN</span>' + c.opciones.map(function (s) {
-        return '<button type="button" class="pastilla' + (s === st.dur ? ' on' : '') + '" data-acc="dur" data-s="' + s + '" aria-pressed="' + (s === st.dur) + '">' + s + ' s</button>';
-      }).join('') + '</div>';
     }
-    zona.innerHTML = '<div class="temporizador">' +
-      '<div class="t-estado"><div class="t-fase" style="color:' + col + '">' + textos[st.fase] + (st.pausado ? ' · PAUSA' : '') + '</div>' +
-      '<div class="t-serie">SERIE ' + st.serie + ' / ' + c.series + (c.lado ? ' · ' + esc(String(c.lado).toUpperCase()) : '') + '</div></div>' +
-      '<div class="t-tiempo" aria-live="polite" style="color:' + col + '">' + tiempo + '</div>' +
-      '<div class="t-medio"><div class="t-barra"><i style="width:' + pct + '%;background:' + col + '"></i></div>' + pastillas + '</div>' +
-      '<button type="button" class="btn-pri" data-acc="principal">' + etiqueta + '</button>' +
-      '<button type="button" class="btn-rei" data-acc="reiniciar">Reiniciar</button></div>';
     avisarMando();
     lucesPorFase();
   }
@@ -1117,6 +1181,7 @@
   function pintar() {
     vista.innerHTML = st.pantalla === 'semana' ? htmlSemana() + (st.pidiendoMood ? htmlMood() : '') + (st.completado ? htmlCompletado() : '') : (st.pantalla === 'config' ? htmlConfig() + (st.subida ? htmlSubida() : '') : st.pantalla === 'calendario' ? htmlCalendario() : htmlCalentamiento());
     if (st.pidiendoMood) { var f = vista.querySelector('.mood.ultimo') || vista.querySelector('.mood'); if (f) f.focus(); }
+    app.classList.toggle('ent-activo', st.pantalla === 'calent' && st.modoPintado === 'entrenar');
     if (st.pantalla === 'calent') pintarTemporizador();
     if (st.pantalla === 'config') { actualizarEstadoCfg(); pintarNube(); }
     avisarMando();
@@ -1162,10 +1227,14 @@
     else if (acc === 'anterior') { irABloque(st.bloque - 1); }
     else if (acc === 'info') { st.verInfo = !st.verInfo; pintar(); }
     else if (acc === 'bloque') { irABloque(+b.getAttribute('data-i')); }
-    else if (acc === 'terminar') {
-      var kf = claveFecha(new Date()), gf = claveDe(DIAS[st.sel]), rf = registroDe(kf) || { grupo: gf, hechos: [] };
-      rf.grupo = gf; rf.total = totalDe(gf); rf.terminado = true; historial[kf] = rf; guardarHistorial();
-      reiniciar(); cerrarRep(); st.pantalla = 'semana'; st.completado = true; pintar();
+    else if (acc === 'terminar') { terminarDia(); }
+    else if (acc === 'tab') { st.tab = b.getAttribute('data-t'); pintar(); }
+    else if (acc === 'elegir-mood') { st.eligiendoMood = true; pintar(); }
+    else if (acc === 'cerrar-elegir-mood') { if (b === ev.target || b.tagName === 'BUTTON') { st.eligiendoMood = false; pintar(); } }
+    else if (acc === 'mood-cambiar') { cambiarMood(+b.getAttribute('data-i')); }
+    else if (acc === 'tocar-cancion') {
+      var tc = cancionPorId(b.getAttribute('data-id')), exT = ejActual();
+      if (tc) { var lsT = enlacesMusica(exT, claveDe(DIAS[st.sel]), st.mood); reproducir([tc.item], '♪ ' + (st.mood || 'Mezcla') + ' · ' + (exT ? exT.nombre : '')); rep.lista = lsT.length ? lsT : [tc.item]; musicaSonandoDe = claveDe(DIAS[st.sel]) + '|' + (exT ? exT.nombre : ''); pintar(); }
     }
     else if (acc === 'hecho') { var eh = ejActual(), gh = claveDe(DIAS[st.sel]); marcarHecho(eh, gh, !estaHecho(eh, gh)); pintar(); }
     else if (acc === 'calendario') { reiniciar(); cerrarRep(); st.pantalla = 'calendario'; st.calMes = null; st.calSel = claveFecha(new Date()); pintar(); }
@@ -1290,6 +1359,7 @@
   // Esc cierra la ventana de mood · Enter añade un mood nuevo
   document.addEventListener('keydown', function (ev) {
     if (ev.key === 'Escape' && st.pidiendoMood) { st.pidiendoMood = false; pintar(); }
+    if (ev.key === 'Escape' && st.eligiendoMood) { st.eligiendoMood = false; pintar(); }
     if (ev.key === 'Escape' && st.completado) { st.completado = false; pintar(); }
     if (ev.key === 'Escape' && st.subida) { st.subida = null; pintar(); }
     if (ev.key === 'Enter' && ev.target.id === 'mood-nuevo') { ev.preventDefault(); anadirMood(); }
@@ -1364,7 +1434,8 @@
       moods: moods.map(function (m) { return { n: m, c: biblioteca.filter(function (x) { return x.moods.indexOf(m) >= 0; }).length }; }),
       ultimoMood: ultimoMood,
       bloque: { titulo: b ? b.titulo : '', i: st.bloque, n: bs.length }, hueco: st.hueco, nHuecos: l.length,
-      ej: ex ? { nombre: ex.nombre, dosis: ex.dosis || '', dibujo: ex.dibujo || '', indicacion: ex.indicacion || '', ritmo: ex.ritmo || '', hecho: estaHecho(ex, g) } : null,
+      ej: ex ? { nombre: ex.nombre, dosis: ex.dosis || '', dibujo: ex.dibujo || '', indicacion: ex.indicacion || '', ritmo: ex.ritmo || '', hecho: estaHecho(ex, g), ancla: textoAncla(ex) } : null,
+      modo: st.pantalla === 'calent' ? modoCal() : '', color: colorModo(), bloqueTit: b ? b.titulo : '',
       siguiente: sig, ultimo: st.pantalla === 'calent' && !sig,
       temp: c ? { fase: st.fase, quedan: st.fase === 'espera' ? st.dur : st.quedan, total: st.total, serie: st.serie, series: c.series, reps: c.reps || 0,
         corriendo: st.corriendo, pausado: st.pausado, lado: c.lado || '', descanso: descansoActual(), etiqueta: etiquetaPrincipal(c) } : null,
@@ -1424,13 +1495,8 @@
       case 'hecho': if (enCalent && ejActual()) { var g = claveDe(DIAS[st.sel]); marcarHecho(ejActual(), g, !estaHecho(ejActual(), g)); pintar(); } break;
       case 'cancion': if (enCalent) arrancarMusica(true); else if (rep.visible) reproducir(rep.lista, rep.etiqueta); break;
       case 'pausa-musica': pausarMusica(); break;
-      case 'terminar':
-        if (enCalent) {
-          var kf = claveFecha(new Date()), gf = claveDe(DIAS[st.sel]), rf = registroDe(kf) || { grupo: gf, hechos: [] };
-          rf.grupo = gf; rf.total = totalDe(gf); rf.terminado = true; historial[kf] = rf; guardarHistorial();
-          reiniciar(); cerrarRep(); st.pantalla = 'semana'; st.completado = true; pintar();
-        }
-        break;
+      case 'terminar': if (enCalent) terminarDia(); break;
+      case 'mood-cambiar': cambiarMood(typeof o.i === 'number' ? o.i : -1); break;
       case 'semana': reiniciar(); cerrarRep(); st.pantalla = 'semana'; st.pidiendoMood = false; pintar(); break;
     }
     enviarEstado();
