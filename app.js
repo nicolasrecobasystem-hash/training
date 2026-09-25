@@ -194,7 +194,7 @@
   var rep = { lista: [], actual: '', etiqueta: '', player: null, visible: false, mini: true, esLista: false, pendiente: null };
   var cajaRep = document.getElementById('reproductor');
   cajaRep.innerHTML =
-    '<div class="rep-cab"><span id="rep-tit" class="rep-tit">♪</span>' +
+    '<div class="rep-cab"><button type="button" id="rep-tit" class="rep-tit" data-acc="rep-otra" title="Cambiar de canción">♪</button>' +
     '<button type="button" data-acc="rep-otra" aria-label="Otra canción">⏭ Otra</button>' +
     '<button type="button" id="rep-mini" data-acc="rep-mini" aria-label="Cambiar el tamaño del vídeo">–</button>' +
     '<button type="button" data-acc="rep-cerrar" aria-label="Parar la música y cerrar">✕</button></div>' +

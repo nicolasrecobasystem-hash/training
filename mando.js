@@ -101,7 +101,7 @@
       '<div class="m-fila"><button type="button" class="m-sec ant" data-a="ant">← Anterior</button>' +
       '<button type="button" class="m-sec" data-a="reiniciar">↺</button>' +
       '<button type="button" class="m-sec sig" data-a="sig"></button></div>' +
-      '<div class="m-musica"><div class="m-cancion"></div><button type="button" class="m-ico" data-a="pausa-musica" aria-label="Pausar o seguir la música"></button>' +
+      '<div class="m-musica"><button type="button" class="m-cancion" data-a="cancion" aria-label="Cambiar de canción"></button><button type="button" class="m-ico" data-a="pausa-musica" aria-label="Pausar o seguir la música"></button>' +
       '<button type="button" class="m-ico otra" data-a="cancion">⏭ Otra</button></div>';
   }
   var COLORES = { espera: 'var(--texto)', prep: 'var(--amarillo)', trabajo: 'var(--acento)', descanso: 'var(--azul)', hecho: 'var(--azul)' };
@@ -145,7 +145,7 @@
     if (e.ultimo) { sig.setAttribute('data-a', 'terminar'); sig.className = 'm-sec fin'; sig.innerHTML = 'Terminar ✓'; }
     else { sig.setAttribute('data-a', 'sig'); sig.className = 'm-sec sig'; sig.innerHTML = 'Siguiente →<small>' + esc(e.siguiente) + '</small>'; }
     var m = e.musica || {};
-    $('.m-cancion').innerHTML = m.sonando ? '♪ <b>' + esc(m.nombre) + '</b>' + (e.mood ? ' · ' + esc(e.mood) : '') : (m.hay ? 'Música lista: suena al pulsar Iniciar' : 'Sin canciones para este ejercicio');
+    $('.m-cancion').innerHTML = m.sonando ? '<span class="nota">♪</span><b>' + esc(m.nombre) + '</b><small>toca para cambiar</small>' : (m.hay ? '<span class="nota">♪</span><b>Poner música</b><small>toca para empezar</small>' : '<span class="nota">♪</span>Sin canciones para este ejercicio');
     $('.m-ico[data-a="pausa-musica"]').textContent = m.sonando && !m.pausada ? '⏸' : '▶';
   }
 

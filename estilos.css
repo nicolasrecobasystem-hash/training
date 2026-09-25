@@ -354,3 +354,7 @@ button:disabled{cursor:not-allowed}
   body::after{content:"↻  Gira el iPhone para verlo en grande";position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%);
     background:#1F2227;border:1px solid #F2913D;color:#F4F1EA;font:600 15px "IBM Plex Sans",Helvetica,sans-serif;padding:10px 16px;border-radius:12px;white-space:nowrap;z-index:50;pointer-events:none}
 }
+
+/* El título del reproductor también cambia de canción al pulsarlo */
+.rep-cab button.rep-tit{flex:1 1 auto;min-width:0;height:auto;background:none;border:0;padding:0;text-align:left;cursor:pointer;color:var(--acento);font-family:var(--mono);font-size:12px}
+.rep-cab button.rep-tit:hover{text-decoration:underline}

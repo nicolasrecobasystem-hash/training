@@ -61,7 +61,11 @@ button:active{transform:scale(.97)}
 
 /* música */
 .m-musica{display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--linea);border-radius:16px;padding:8px 8px 8px 16px}
-.m-cancion{flex:1;min-width:0;font-size:15px;color:var(--suave);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.m-cancion{flex:1;min-width:0;min-height:62px;font-size:15px;color:var(--suave);background:none;border:0;border-radius:12px;text-align:left;padding:4px 8px;display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;column-gap:10px;align-items:center}
+.m-cancion .nota{grid-row:1/3;font-size:28px;color:var(--acento)}
+.m-cancion b,.m-cancion small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.m-cancion small{font-family:var(--mono);font-size:11px;color:var(--tenue);letter-spacing:.06em}
+.m-cancion:active{background:var(--fondo)}
 .m-cancion b{color:var(--texto);font-weight:600}
 .m-ico{width:62px;height:62px;border-radius:14px;border:1px solid var(--linea2);background:var(--fondo);font-size:24px;display:flex;align-items:center;justify-content:center}
 .m-ico.otra{border-color:var(--acento);color:var(--acento);width:auto;padding:0 16px;font-size:16px;font-weight:600;gap:6px}
