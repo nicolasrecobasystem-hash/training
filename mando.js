@@ -89,7 +89,11 @@
       return '<button type="button" class="m-mood' + (e.ultimoMood === m.n ? ' ultimo' : '') + '" data-a="mood" data-i="' + i + '"><b>' + esc(m.n) + '</b><span>' + m.c + (m.c === 1 ? ' canción' : ' canciones') + '</span></button>';
     }).join('');
     bs += '<button type="button" class="m-mood' + (e.ultimoMood === '' ? ' ultimo' : '') + '" data-a="mood" data-i="-1"><b>Ninguno</b><span>todas mezcladas</span></button>';
-    return htmlTop() + '<div class="m-centro"><div class="m-ante">' + esc(e.dia + ' · ' + e.grupo) + '</div><h1 class="m-tit">¿Con qué mood entrenas?</h1>' +
+    var ps = e.personasTodas || [];
+    var quien = ps.length ? '<div class="m-ante">¿QUIÉN ENTRENA?</div><div class="m-quien">' + ps.concat(ps.length > 1 ? ['duo'] : []).map(function (p) {
+      return '<button type="button" class="' + (e.quien === p ? 'on' : '') + '" data-a="quien" data-v="' + esc(p) + '"><b>' + (p === 'duo' ? 'Dúo' : esc(p)) + '</b><span>' + (p === 'duo' ? 'por turnos' : 'solo') + '</span></button>';
+    }).join('') + '</div>' : '';
+    return htmlTop() + '<div class="m-centro">' + quien + '<div class="m-ante">' + esc(e.dia + ' · ' + e.grupo) + '</div><h1 class="m-tit">¿Con qué mood entrenas?</h1>' +
       '<div class="m-moods">' + bs + '</div><button type="button" class="m-salir" data-a="cancelar-mood">Cancelar</button></div>';
   }
   // Pantalla del ejercicio en el mando. Dos modos, igual que la pantalla grande:
@@ -138,7 +142,8 @@
       var trab = t ? (t.reps ? (parseInt(t.reps, 10) || 10) * 3 : t.quedan) : 20;
       $('.m-fases').innerHTML = t ? '<i class="morado" style="flex:5"></i><i class="rojo" style="flex:' + trab + '"></i><i class="azul" style="flex:' + t.descanso + '"></i><i class="blanco" style="flex:5"></i>' : '';
     } else if (t) {
-      $('.m-fase').textContent = textoFase(t) + (t.pausado ? ' · PAUSA' : '');
+      var duo = (t.personas || []).length > 1;
+      $('.m-fase').textContent = (t.persona && /espera|prep|trabajo/.test(t.fase) ? t.persona.toUpperCase() + ' · ' : '') + (duo && t.fase === 'descanso' ? 'DESCANSO JUNTOS' : textoFase(t)) + (t.pausado ? ' · PAUSA' : '');
       var q = Math.max(0, t.quedan | 0);
       var txt = Math.floor(q / 60) + ':' + (q % 60 < 10 ? '0' : '') + (q % 60);
       if (t.reps && (t.fase === 'espera' || t.fase === 'trabajo')) txt = esc(String(t.reps)) + '<small>REPS</small>';
@@ -176,7 +181,7 @@
     else if (e.pidiendoMood) v = 'mood';
     else if (e.pantalla === 'calent') v = 'calent';
     else v = 'semana';
-    var firma = v === 'semana' ? v + e.dia + e.pantalla : v === 'mood' ? v + e.ultimoMood + e.moods.length : v;
+    var firma = v === 'semana' ? v + e.dia + e.pantalla : v === 'mood' ? v + e.ultimoMood + e.moods.length + e.quien : v;
     if (firma !== vistaActual) {
       vistaActual = firma; dibujoActual = null;
       raiz.innerHTML = v === 'login' ? htmlLogin() : v === 'espera' ? htmlEspera() : v === 'mood' ? htmlMood(e) : v === 'calent' ? htmlCalent() : htmlSemana(e);
@@ -281,7 +286,7 @@
   function vozSincronizar(e) {
     var t = e && e.temp;
     var quiere = voz.on && e && e.pantalla === 'calent' && t && t.reps && (t.fase === 'prep' || t.fase === 'trabajo');
-    var clave = e && e.ej && t ? e.ej.nombre + '|' + t.serie : '';
+    var clave = e && e.ej && t ? e.ej.nombre + '|' + t.serie + '|' + (t.turno || 0) : '';
     if (clave !== voz.clave) { voz.clave = clave; voz.cuenta = 0; voz.oido = ''; }
     if (t && t.contadas > voz.cuenta && t.fase === 'trabajo') voz.cuenta = t.contadas;
     if (quiere) {
@@ -307,6 +312,7 @@
     else if (a === 'dia') mandar('dia', { i: +b.getAttribute('data-i') });
     else if (a === 'start') { var i = DIAS.map(function (d) { return d.nombre; }).indexOf(estado.dia); mandar('start', { dia: i }); }
     else if (a === 'mood') mandar('mood', { i: +b.getAttribute('data-i') });
+    else if (a === 'quien') mandar('quien', { v: b.getAttribute('data-v') });
     else if (a === 'voz') vozAlternar();
     else if (a === 'abrir-moods') { eligiendoMood = true; pintar(); }
     else if (a === 'cerrar-moods') { eligiendoMood = false; pintar(); }

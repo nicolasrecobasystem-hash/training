@@ -2355,6 +2355,9 @@ const BLOQUES = {
   ]
 };
 
+// Personas que pueden entrenar (sin contraseña: solo se eligen al empezar). La primera es la de por defecto.
+const PERSONAS_ENTRENO = ['Diego', 'Emelith'];
+
 // Frases que dice la voz (ElevenLabs) al terminar cada serie. Se pueden cambiar o añadir.
 // Cortas a propósito: se dicen mientras empieza el descanso.
 const FRASES_SERIE = [

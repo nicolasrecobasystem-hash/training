@@ -8,7 +8,8 @@
   var st = {
     pantalla: 'semana', sel: hoy, hueco: 0, bloque: 0, completado: false, desc: 30, cfgVista: 'biblio', filtroMood: '', filtroInt: 0, mood: null, pidiendoMood: false,
     fase: 'espera', corriendo: false, pausado: false,
-    serie: 1, dur: 20, quedan: 20, total: 20
+    serie: 1, dur: 20, quedan: 20, total: 20,
+    personas: [], turno: 0, verPersona: ''
   };
 
   var iv = null, finEn = 0, ultimoSeg = 0, restanteMs = 0, audio = null;
@@ -310,7 +311,7 @@
   var NUBE_URL = 'https://idjlewvzuzqywthrwibv.supabase.co';
   var NUBE_CLAVE = 'sb_publishable_rgLetEILYTeBPvEqWcAyrA_82D41Npt';   // clave pública (publishable)
   var nube = { sb: null, usuario: null, estado: 'apagada', msg: '', pendiente: false, reloj: null };
-  function datosParaNube() { return { version: 3, moods: moods, biblioteca: biblioteca, ejIntensidad: ejIntensidad, ultimoMood: ultimoMood, historial: historial, luces: luces }; }
+  function datosParaNube() { return { version: 3, moods: moods, biblioteca: biblioteca, ejIntensidad: ejIntensidad, ultimoMood: ultimoMood, historial: historial, historialPersonas: historialPersonas, luces: luces }; }
 
   // ---------- historial: qué ejercicios hiciste cada día ----------
   // { "2026-09-24": { grupo: "Hombro", hechos: ["Hombro|Colgarte de la barra", ...], total: 10, terminado: true } }
@@ -321,28 +322,56 @@
     return f.getFullYear() + '-' + (f.getMonth() < 9 ? '0' : '') + (f.getMonth() + 1) + '-' + (f.getDate() < 10 ? '0' : '') + f.getDate();
   }
   function totalDe(g) { var n = 0; bloquesDe(g).forEach(function (b) { n += ejs(b).length; }); return n; }
-  function registroDe(k) { var r = historial[k]; return r && Array.isArray(r.hechos) ? r : null; }
-  function estaHecho(ex, g) { var r = registroDe(claveFecha(new Date())); return !!(ex && r && r.hechos.indexOf(g + '|' + ex.nombre) >= 0); }
-  function guardarHistorial() { escribirLS(LS_HIST, historial); subirNube(); }
+  // Cada persona tiene su historial. El de la primera (Diego) es el de siempre ("historial");
+  // los demás van en historialPersonas: { "Emelith": { "2026-09-26": {...} } }
+  var PERSONAS = typeof PERSONAS_ENTRENO !== 'undefined' && PERSONAS_ENTRENO.length ? PERSONAS_ENTRENO : ['Yo'];
+  var LS_HIST_P = 'miSemana.historialPersonas.v1';
+  var historialPersonas = leerLS(LS_HIST_P, null);
+  if (!historialPersonas || typeof historialPersonas !== 'object' || Array.isArray(historialPersonas)) historialPersonas = {};
+  function hist(p) {
+    if (!p || p === PERSONAS[0]) return historial;
+    if (!historialPersonas[p] || typeof historialPersonas[p] !== 'object') historialPersonas[p] = {};
+    return historialPersonas[p];
+  }
+  function personaVista() { return st.verPersona || PERSONAS[0]; }
+  // Quién entrena ahora (en dúo, todos los de la sesión)
+  function personasSesion() { return st.pantalla === 'calent' && st.personas.length ? st.personas : [personaVista()]; }
+  function registroDe(k, p) { var r = hist(p || personaVista())[k]; return r && Array.isArray(r.hechos) ? r : null; }
+  function estaHecho(ex, g) { var r = registroDe(claveFecha(new Date()), personasSesion()[0]); return !!(ex && r && r.hechos.indexOf(g + '|' + ex.nombre) >= 0); }
+  function guardarHistorial() { escribirLS(LS_HIST, historial); escribirLS(LS_HIST_P, historialPersonas); subirNube(); }
   function marcarHecho(ex, g, valor) {
     if (!ex) return;
-    var k = claveFecha(new Date()), r = registroDe(k) || { grupo: g, hechos: [] };
-    var id = g + '|' + ex.nombre, i = r.hechos.indexOf(id);
-    if (valor && i < 0) r.hechos.push(id);
-    if (!valor && i >= 0) r.hechos.splice(i, 1);
-    r.grupo = g; r.total = totalDe(g);
-    if (r.hechos.length || r.terminado) historial[k] = r; else delete historial[k];
+    var k = claveFecha(new Date());
+    personasSesion().forEach(function (p) {
+      var h = hist(p), r = registroDe(k, p) || { grupo: g, hechos: [] };
+      var id = g + '|' + ex.nombre, i = r.hechos.indexOf(id);
+      if (valor && i < 0) r.hechos.push(id);
+      if (!valor && i >= 0) r.hechos.splice(i, 1);
+      r.grupo = g; r.total = totalDe(g);
+      if (r.hechos.length || r.terminado) h[k] = r; else delete h[k];
+    });
     guardarHistorial();
   }
+  // Repeticiones contadas con la voz, por persona: r.reps["Grupo|Ejercicio"] = [12, 10, 9]
+  function guardarReps(p, n) {
+    var ex = ejActual(); if (!ex || !n) return;
+    var g = claveDe(DIAS[st.sel]), k = claveFecha(new Date()), h = hist(p);
+    var r = registroDe(k, p) || { grupo: g, hechos: [], total: totalDe(g) };
+    if (!r.reps || typeof r.reps !== 'object') r.reps = {};
+    (r.reps[g + '|' + ex.nombre] = r.reps[g + '|' + ex.nombre] || []).push(n);
+    h[k] = r; guardarHistorial();
+  }
   // Mezcla el historial de la nube con el de este navegador (no se pierde nada)
-  function mezclarHistorial(otro) {
+  function mezclarHistorial(otro, destino) {
     if (!otro || typeof otro !== 'object') return;
+    destino = destino || historial;
     Object.keys(otro).forEach(function (k) {
       var o = otro[k]; if (!o || !Array.isArray(o.hechos)) return;
-      var r = registroDe(k);
-      if (!r) { historial[k] = { grupo: o.grupo, hechos: o.hechos.slice(), total: o.total, terminado: !!o.terminado }; return; }
+      var r = destino[k] && Array.isArray(destino[k].hechos) ? destino[k] : null;
+      if (!r) { destino[k] = { grupo: o.grupo, hechos: o.hechos.slice(), total: o.total, terminado: !!o.terminado, reps: o.reps }; return; }
       o.hechos.forEach(function (h) { if (r.hechos.indexOf(h) < 0) r.hechos.push(h); });
       r.terminado = r.terminado || !!o.terminado; r.total = Math.max(r.total || 0, o.total || 0);
+      if (o.reps && !r.reps) r.reps = o.reps;
     });
   }
   function aplicarDeNube(d) {
@@ -353,6 +382,10 @@
     if (d.ejIntensidad && typeof d.ejIntensidad === 'object' && !Array.isArray(d.ejIntensidad)) ejIntensidad = d.ejIntensidad;
     if (d.ultimoMood === null || typeof d.ultimoMood === 'string') ultimoMood = d.ultimoMood;
     if (d.historial) { mezclarHistorial(d.historial); escribirLS(LS_HIST, historial); }
+    if (d.historialPersonas && typeof d.historialPersonas === 'object') {
+      Object.keys(d.historialPersonas).forEach(function (p) { mezclarHistorial(d.historialPersonas[p], hist(p)); });
+      escribirLS(LS_HIST_P, historialPersonas);
+    }
     if (d.luces && typeof d.luces === 'object' && Array.isArray(d.luces.devs)) { luces = d.luces; escribirLS(LS_LUCES, luces); }
     asegurarMoods();
     escribirLS(LS_BIBLIO, biblioteca); escribirLS(LS_MOODS, moods); escribirLS(LS_INTENS, ejIntensidad); escribirLS(LS_ULTIMO, ultimoMood);
@@ -545,10 +578,14 @@
   // Fin de una serie (por tiempo o al pulsar "Serie hecha"): descanso o completado
   function finSerie() {
     var c = cfg() || { series: 1, descanso: 30 };
+    if (st.contadas) guardarReps(personaTurno(), st.contadas);
     st.contadas = 0;
     pitido(880, 0.3, 3);
     decirFrase();
-    if (st.serie < c.series) fase('descanso', descansoActual());
+    // Dúo: al acabar uno, empieza el otro (el que acaba descansa mientras tanto)
+    if (st.personas.length > 1 && st.turno < st.personas.length - 1) { st.turno += 1; fase('prep', c.preparacion || 5); return; }
+    st.turno = 0;
+    if (st.serie < c.series) fase('descanso', descansoActual());   // descanso juntos
     else {
       st.fase = 'hecho'; st.corriendo = false; st.quedan = 0;
       var yaEstaba = estaHecho(ejActual(), claveDe(DIAS[st.sel]));
@@ -640,7 +677,26 @@
     var ejK = ejActual() ? ejActual().nombre : '';
     if (c && c.opciones && (c.opciones.indexOf(st.dur) < 0 || st.durDe !== ejK)) { st.dur = c.porDefecto || c.opciones[0]; st.durDe = ejK; }   // al cambiar de ejercicio, su duración por defecto
     if (c && c.descansos && (c.descansos.indexOf(st.desc) < 0 || st.descDe !== ejK)) st.descDe = ejK, st.desc = c.descansos.indexOf(c.descanso) >= 0 ? c.descanso : c.descansos[0];
-    st.fase = 'espera'; st.corriendo = false; st.pausado = false; st.serie = 1; st.quedan = st.dur; st.total = st.dur; st.contadas = 0;
+    st.fase = 'espera'; st.corriendo = false; st.pausado = false; st.serie = 1; st.quedan = st.dur; st.total = st.dur; st.contadas = 0; st.turno = 0;
+  }
+  function esDuo() { return st.personas.length > 1; }
+  function personaTurno() { return st.personas[st.turno] || st.personas[0] || PERSONAS[0]; }
+  // Quién entrena: 'Diego', 'Emelith'… o 'duo'
+  var LS_QUIEN = 'miSemana.quien';
+  st.quien = leerLS(LS_QUIEN, PERSONAS[0]);
+  if (st.quien !== 'duo' && PERSONAS.indexOf(st.quien) < 0) st.quien = PERSONAS[0];
+  function elegirQuien(v) { if (v === 'duo' || PERSONAS.indexOf(v) >= 0) { st.quien = v; escribirLS(LS_QUIEN, v); } }
+  function htmlQuien() {
+    var ops = PERSONAS.map(function (p) { return { v: p, n: p, s: 'solo' }; });
+    if (PERSONAS.length > 1) ops.push({ v: 'duo', n: 'Dúo', s: PERSONAS.slice(0, 2).join(' + ') + ' · por turnos' });
+    return '<div class="quien"><div class="antetitulo">¿QUIÉN ENTRENA?</div><div class="quien-ops">' + ops.map(function (o) {
+      return '<button type="button" class="quien-op' + (st.quien === o.v ? ' on' : '') + '" data-acc="quien" data-v="' + esc(o.v) + '" aria-pressed="' + (st.quien === o.v) + '"><b>' + esc(o.n) + '</b><span>' + esc(o.s) + '</span></button>';
+    }).join('') + '</div></div>';
+  }
+  function htmlTurnos() {
+    if (!esDuo()) return '';
+    var todos = st.fase === 'descanso' || st.fase === 'hecho';
+    return st.personas.map(function (p, i) { return '<span class="' + (todos || i === st.turno ? 'on' : '') + '">' + esc(p) + '</span>'; }).join('<i>→</i>');
   }
   function botonPrincipal() {
     activarAudio();
@@ -780,8 +836,12 @@
   }
   function puntosInt(n) { return '<i class="' + (n >= 1 ? 'on' : '') + '"></i><i class="' + (n >= 2 ? 'on' : '') + '"></i><i class="' + (n >= 3 ? 'on' : '') + '"></i>'; }
   function terminarDia() {
-    var kf = claveFecha(new Date()), gf = claveDe(DIAS[st.sel]), rf = registroDe(kf) || { grupo: gf, hechos: [] };
-    rf.grupo = gf; rf.total = totalDe(gf); rf.terminado = true; historial[kf] = rf; guardarHistorial();
+    var kf = claveFecha(new Date()), gf = claveDe(DIAS[st.sel]);
+    personasSesion().forEach(function (p) {
+      var rf = registroDe(kf, p) || { grupo: gf, hechos: [] };
+      rf.grupo = gf; rf.total = totalDe(gf); rf.terminado = true; hist(p)[kf] = rf;
+    });
+    guardarHistorial();
     reiniciar(); cerrarRep(); st.pantalla = 'semana'; st.completado = true; pintar();
   }
   // Cambiar el mood a mitad del entreno (desde la píldora ♪ o desde el mando)
@@ -830,7 +890,7 @@
       var sonando = rep.visible && rep.actual ? (cancionPorItem(rep.actual) || {}).nombre || (esArchivo(rep.actual) ? nombreArchivo(rep.actual) : 'YouTube') : '';
       return '<div class="pantalla calent ent f-' + colorModo() + '">' + htmlCabecera(d, true) +
         '<div class="ent-cuerpo"><div class="ent-fig">' + fig + '</div>' +
-        '<div class="ent-der"><div class="ent-fase mono t-fase" id="e-fase"></div><div class="ent-tiempo" id="e-tiempo"></div>' +
+        '<div class="ent-der"><div class="ent-cabfase"><div class="ent-turnos" id="e-turnos"></div><div class="ent-fase mono t-fase" id="e-fase"></div></div><div class="ent-tiempo" id="e-tiempo"></div>' +
         '<div class="ent-nom">' + esc(ex ? ex.nombre : '') + '</div><div class="ent-sub" id="e-sub"></div>' +
         '<div class="ent-puntos" id="e-puntos"></div><div class="ent-barra"><i id="e-barra"></i></div>' +
         '<div class="ent-ritmo"><span class="ent-int">Intensidad ' + INTENSIDADES[intensidadEj(ex)].toLowerCase() + ' <b>' + puntosInt(intensidadEj(ex)) + '</b></span>' + (ex && ex.ritmo ? ' · Ritmo · ' + esc(ex.ritmo) : '') + '</div><div class="ent-frase" id="e-frase"></div></div></div>' +
@@ -948,7 +1008,9 @@
       '<div class="barra-der"><button type="button" class="btn-sec" data-acc="cal-mes" data-d="-1" aria-label="Mes anterior">‹</button>' +
       '<div class="cal-mes">' + esc(nomMes) + '</div>' +
       '<button type="button" class="btn-sec" data-acc="cal-mes" data-d="1" aria-label="Mes siguiente">›</button>' +
-      '<button type="button" class="btn-sec" data-acc="cal-hoy">Hoy</button></div></div>' +
+      '<button type="button" class="btn-sec" data-acc="cal-hoy">Hoy</button>' +
+      (PERSONAS.length > 1 ? '<div class="ver-persona">' + PERSONAS.map(function (p) { return '<button type="button" class="' + (p === personaVista() ? 'on' : '') + '" data-acc="ver-persona" data-v="' + esc(p) + '">' + esc(p) + '</button>'; }).join('') + '</div>' : '') +
+      '</div></div>' +
       '<div class="cal-cuerpo"><div class="panel cal-grid">' + celdas + '</div>' +
       '<div class="panel cal-detalle"><div class="antetitulo">' + esc(fsTxt.toUpperCase()) + '</div>' +
       '<div class="cal-grupo">' + esc(gs.toUpperCase()) + '</div><div class="cal-res">' + esc(resumen) + '</div>' +
@@ -979,6 +1041,7 @@
       '<button type="button" class="mood ninguno' + (ultimoMood === '' ? ' ultimo' : '') + '" data-acc="mood" data-i="-1"><span class="n">Ninguno</span><span class="c">todas mezcladas · ' + txt(cuenta(null)) + (ultimoMood === '' ? ' · la última vez' : '') + '</span></button>';
     return '<div class="velo" data-acc="cerrar-mood"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="tit-mood">' +
       '<div class="antetitulo">' + esc(d.nombre.toUpperCase() + ' · ' + d.grupo.toUpperCase()) + '</div>' +
+      htmlQuien() +
       '<h2 class="titulo-m" id="tit-mood">¿CON QUÉ MOOD ENTRENAS?</h2>' +
       '<div class="moods">' + botones + '</div>' +
       '<div class="modal-pie"><button type="button" class="btn-sec" data-acc="cerrar-mood">Cancelar</button></div>' +
@@ -1248,7 +1311,8 @@
       if (!c) return;
       var textos = { espera: 'SIGUIENTE SERIE', prep: 'PREPÁRATE', trabajo: c.reps ? 'HAZ LAS REPS' : '¡AGUANTA!', descanso: 'DESCANSO', hecho: '¡COMPLETADO!' };
       var el = function (id) { return document.getElementById(id); };
-      el('e-fase').textContent = textos[st.fase] + (st.pausado ? ' · PAUSA' : '');
+      el('e-fase').textContent = (st.fase === 'descanso' && esDuo() ? 'DESCANSO JUNTOS' : textos[st.fase]) + (st.pausado ? ' · PAUSA' : '');
+      el('e-turnos').innerHTML = htmlTurnos();
       el('e-tiempo').innerHTML = textoTiempo(c);
       el('e-sub').textContent = 'Serie ' + Math.min(st.serie, c.series) + ' / ' + c.series + (c.lado ? ' · ' + c.lado : '') + (c.reps && st.fase === 'descanso' ? ' · hecha' : '');
       var hechas = st.fase === 'hecho' ? c.series : (st.fase === 'descanso' ? st.serie : st.serie - 1);
@@ -1269,7 +1333,7 @@
               : '<div class="t-dur"><span>DESCANSO ' + descansoActual() + ' s</span></div>')
           : '<div class="t-dur"><span>DURACIÓN</span>' + c.opciones.map(function (s) {
               return '<button type="button" class="pastilla' + (s === st.dur ? ' on' : '') + '" data-acc="dur" data-s="' + s + '" aria-pressed="' + (s === st.dur) + '">' + s + ' s</button>'; }).join('') + '</div>';
-        zona.innerHTML = '<div class="apr-temp"><div class="apr-temp-izq"><div class="t-fase mono">LISTO · ' + c.series + (c.series === 1 ? ' SERIE' : ' SERIES') + (c.lado ? ' ' + esc(String(c.lado).toUpperCase()) : '') + '</div>' +
+        zona.innerHTML = '<div class="apr-temp"><div class="apr-temp-izq"><div class="t-fase mono">LISTO · ' + c.series + (c.series === 1 ? ' SERIE' : ' SERIES') + (c.lado ? ' ' + esc(String(c.lado).toUpperCase()) : '') + (esDuo() ? ' · DÚO: ' + esc(st.personas.join(' → ').toUpperCase()) : '') + '</div>' +
           htmlFases(c) + '</div>' + pastillas + htmlMusInline() + '<button type="button" class="btn-iniciar" data-acc="principal">' + etiquetaPrincipal(c) + '</button></div>';
       }
     }
@@ -1287,7 +1351,10 @@
     avisarMando();
   }
 
-  function empezar() { reiniciarLuces(); musicaSonandoDe = ''; st.pidiendoMood = false; st.pantalla = 'calent'; st.bloque = 0; st.hueco = 0; reiniciar(); pintar(); }
+  function empezar() {
+    st.personas = st.quien === 'duo' ? PERSONAS.slice(0, 2) : [st.quien || PERSONAS[0]];
+    st.verPersona = st.personas[0];
+    reiniciarLuces(); musicaSonandoDe = ''; st.pidiendoMood = false; st.pantalla = 'calent'; st.bloque = 0; st.hueco = 0; reiniciar(); pintar(); }
   function irABloque(i) {
     if (i < 0 || i >= bloques().length) return;
     st.bloque = i; st.hueco = 0; st.verInfo = false; reiniciar(); pintar();
@@ -1301,8 +1368,10 @@
     if (acc === 'dia') { st.sel = +b.getAttribute('data-i'); pintar(); }
     else if (acc === 'start') {
       // Pregunta el mood antes de empezar (si no hay moods, empieza directamente)
-      if (moods.length) { st.pidiendoMood = true; pintar(); } else { st.mood = null; empezar(); }
+      st.pidiendoMood = true; pintar();
     }
+    else if (acc === 'quien') { elegirQuien(b.getAttribute('data-v')); pintar(); }
+    else if (acc === 'ver-persona') { st.verPersona = b.getAttribute('data-v'); pintar(); }
     else if (acc === 'mood') {
       var mi = +b.getAttribute('data-i');
       st.mood = mi < 0 ? null : moods[mi];
@@ -1532,7 +1601,7 @@
     var nombreCancion = '';
     if (rep.visible && rep.actual) { var cc = cancionPorItem(rep.actual); nombreCancion = cc ? cc.nombre : (esArchivo(rep.actual) ? nombreArchivo(rep.actual) : 'YouTube'); }
     return {
-      t: Date.now(), id: mando.id, equipo: nombreEquipo(), visible: document.visibilityState === 'visible', toque: mando.toque, pantalla: st.pantalla, dia: d.nombre, grupo: g, pidiendoMood: !!st.pidiendoMood, mood: st.mood,
+      t: Date.now(), id: mando.id, equipo: nombreEquipo(), visible: document.visibilityState === 'visible', toque: mando.toque, pantalla: st.pantalla, dia: d.nombre, grupo: g, pidiendoMood: !!st.pidiendoMood, mood: st.mood, quien: st.quien, personasTodas: PERSONAS,
       moods: moods.map(function (m) { return { n: m, c: biblioteca.filter(function (x) { return x.moods.indexOf(m) >= 0; }).length }; }),
       ultimoMood: ultimoMood,
       bloque: { titulo: b ? b.titulo : '', i: st.bloque, n: bs.length }, hueco: st.hueco, nHuecos: l.length,
@@ -1540,7 +1609,7 @@
       modo: st.pantalla === 'calent' ? modoCal() : '', color: colorModo(), bloqueTit: b ? b.titulo : '',
       siguiente: sig, ultimo: st.pantalla === 'calent' && !sig,
       temp: c ? { fase: st.fase, quedan: st.fase === 'espera' ? st.dur : st.quedan, total: st.total, serie: st.serie, series: c.series, reps: c.reps || 0,
-        corriendo: st.corriendo, pausado: st.pausado, contadas: st.contadas || 0, frase: fraseVisible(), lado: c.lado || '', descanso: descansoActual(), etiqueta: etiquetaPrincipal(c) } : null,
+        corriendo: st.corriendo, pausado: st.pausado, contadas: st.contadas || 0, frase: fraseVisible(), turno: st.turno, persona: esDuo() ? personaTurno() : '', personas: st.personas, lado: c.lado || '', descanso: descansoActual(), etiqueta: etiquetaPrincipal(c) } : null,
       musica: { sonando: !!rep.visible, pausada: musicaPausada(), nombre: nombreCancion, hay: !!(ex && enlacesMusica(ex, g, st.mood).length) }
     };
   }
@@ -1582,13 +1651,14 @@
         if (st.pantalla !== 'semana') { reiniciar(); st.pantalla = 'semana'; }
         if (typeof o.dia === 'number' && DIAS[o.dia]) st.sel = o.dia;
         st.completado = false;
-        if (moods.length) { st.pidiendoMood = true; pintar(); } else { st.mood = null; empezar(); }
+        st.pidiendoMood = true; pintar();
         break;
       case 'dia': if (DIAS[o.i]) { st.sel = o.i; if (st.pantalla === 'semana') pintar(); } break;
       case 'mood':
         st.mood = o.i < 0 ? null : (moods[o.i] || null);
         ultimoMood = st.mood || ''; escribirLS(LS_ULTIMO, ultimoMood); subirNube();
         empezar(); break;
+      case 'quien': elegirQuien(o.v); if (st.pidiendoMood) pintar(); break;
       case 'cancelar-mood': st.pidiendoMood = false; pintar(); break;
       case 'principal': if (enCalent && cfg()) botonPrincipal(); break;
       case 'reiniciar': if (enCalent) { reiniciar(); pintarTemporizador(); } break;
