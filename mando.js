@@ -10,11 +10,20 @@
   var estado = null, llegoEn = 0, vistaActual = '', dibujoActual = null, errorLogin = '';
   // Pantallas grandes abiertas con tu cuenta: { id: { e: estado, t: cuándo llegó } }. El mando sigue a UNA.
   var pantallas = {}, objetivo = null, elegidaAMano = false;
+  // Emparejado por QR (sin contraseña): { canal: 'mando-<id de tu cuenta>', pantalla: '<id de la pantalla>' }
+  var par = null, miId = Math.random().toString(36).slice(2, 10);
+  try {
+    var q = (location.search.match(/[?&]par=([0-9a-f-]{36})\.([a-z0-9]{6})/) || []);
+    if (q[1]) { localStorage.setItem('miSemana.par', JSON.stringify({ canal: 'mando-' + q[1], pantalla: q[2] })); history.replaceState(null, '', location.pathname); }
+    par = JSON.parse(localStorage.getItem('miSemana.par') || 'null');
+    if (!par || !/^mando-[0-9a-f-]{36}$/.test(par.canal)) par = null;
+  } catch (e) { par = null; }
   function vivas() { var ahora = Date.now(); return Object.keys(pantallas).filter(function (k) { return ahora - pantallas[k].t < 12000; }); }
   function elegirPantalla() {
     var vs = vivas();
     if (objetivo && vs.indexOf(objetivo) < 0) { objetivo = null; elegidaAMano = false; }
     if (elegidaAMano) return;
+    if (par && par.pantalla && vs.indexOf(par.pantalla) >= 0 && !objetivo) { objetivo = par.pantalla; return; }   // la del QR, si está abierta
     // La mejor: la que está a la vista y que tocaste por última vez. Solo se cambia si otra es
     // claramente mejor (así no salta de una a otra mientras miras).
     function nota(k) { var e = pantallas[k].e; return [(e.visible !== false) ? 1 : 0, e.toque || 0]; }
@@ -36,9 +45,9 @@
     if (r) r.innerHTML = 'MIAMI <b>' + hora('America/New_York') + '</b><span class="sep">·</span>MADRID <b>' + hora('Europe/Madrid') + '</b>';
     if (c) {
       var on = conectado();
-      c.className = 'm-con ' + (on ? 'on' : (usuario ? 'off' : ''));
+      c.className = 'm-con ' + (on ? 'on' : (usuario || par ? 'off' : ''));
       var n = vivas().length;
-      c.querySelector('span').textContent = on ? (n > 1 ? (estado.equipo || 'PANTALLA').toUpperCase() + ' · ' + n + ' ABIERTAS ⇄' : 'PANTALLA') : (usuario ? 'SIN PANTALLA' : '');
+      c.querySelector('span').textContent = on ? (n > 1 ? (estado.equipo || 'PANTALLA').toUpperCase() + ' · ' + n + ' ABIERTAS ⇄' : 'PANTALLA') : (usuario || par ? 'SIN PANTALLA' : '');
       c.setAttribute('data-a', n > 1 ? 'cambiar-pantalla' : '');
     }
   }
@@ -66,12 +75,13 @@
       '<div class="m-form"><input id="m-correo" type="email" autocomplete="username" placeholder="Correo" value="' + esc(leer('miSemana.correo')) + '">' +
       '<input id="m-clave" type="password" autocomplete="current-password" placeholder="Contraseña">' +
       '<div class="m-error">' + esc(errorLogin) + '</div>' +
-      '<button type="button" class="m-pri" data-a="entrar">Entrar</button></div></div>';
+      '<button type="button" class="m-pri" data-a="entrar">Entrar</button></div>' +
+      '<p class="m-txt">¿Sin contraseña? En la pantalla grande pulsa <b>📱 Mando</b> y escanea el QR con esta tableta.</p></div>';
   }
   function htmlEspera() {
     return htmlTop() + '<div class="m-centro"><div class="m-ante">MANDO · MI SEMANA</div><h1 class="m-tit">Buscando la pantalla grande…</h1>' +
       '<p class="m-txt">Abre la app en la pantalla grande con la misma cuenta. En cuanto aparezca, aquí verás el ejercicio.</p>' +
-      '<button type="button" class="m-salir" data-a="salir">Salir de la cuenta</button></div>';
+      '<button type="button" class="m-salir" data-a="salir">' + (usuario ? 'Salir de la cuenta' : 'Olvidar el emparejamiento') + '</button></div>';
   }
   function htmlSemana(e) {
     var hoy = new Date().getDay();
@@ -175,8 +185,8 @@
   }
 
   function pintar() {
-    var on = !!usuario && conectado(), v, e = estado;
-    if (!usuario) v = 'login';
+    var on = !!(usuario || par) && conectado(), v, e = estado;
+    if (!usuario && !par) v = 'login';
     else if (!on) v = 'espera';
     else if (e.pidiendoMood) v = 'mood';
     else if (e.pantalla === 'calent') v = 'calent';
@@ -251,7 +261,7 @@
   function abrirWS() {
     if (voz.ws || voz.abriendo) return;
     voz.abriendo = true; voz.estado = 'conectando';
-    sb.functions.invoke('voz', { body: {} }).then(function (r) {
+    pedirToken().then(function (r) {
       voz.abriendo = false;
       var tok = r && r.data && r.data.token;
       if (!tok) return fallo((r && r.data && r.data.error) || 'No se pudo pedir permiso a ElevenLabs');
@@ -270,6 +280,16 @@
       ws.onclose = function () { if (voz.ws === ws) { voz.ws = null; if (voz.estado !== 'error') voz.estado = 'lista'; pintar(); } };
       ws.onerror = function () { if (voz.ws === ws) fallo('Se cortó la conexión con ElevenLabs'); };
     }).catch(function () { voz.abriendo = false; fallo('No se pudo pedir permiso a ElevenLabs'); });
+  }
+  // Con cuenta: se pide directo a Supabase. Emparejado por QR: se lo pide a la pantalla grande.
+  var esperaToken = null;
+  function pedirToken() {
+    if (usuario) return sb.functions.invoke('voz', { body: {} });
+    return new Promise(function (ok) {
+      var t = setTimeout(function () { esperaToken = null; ok({ data: { error: 'La pantalla grande no respondió' } }); }, 8000);
+      esperaToken = function (p) { clearTimeout(t); ok({ data: { token: p.token, error: p.error } }); };
+      mandar('token-voz', { de: miId });
+    });
   }
   function cerrarWS() { var w = voz.ws; voz.ws = null; if (w) { try { w.close(); } catch (e) {} } if (voz.estado !== 'error') voz.estado = 'lista'; }
   // Lo que oye: números en orden ("uno, dos, tres" o "1 2 3") y "listo" para terminar la serie
@@ -308,7 +328,10 @@
       var vs = vivas(); if (vs.length < 2) return;
       objetivo = vs[(vs.indexOf(objetivo) + 1) % vs.length]; elegidaAMano = true; vistaActual = ''; pintar();
     }
-    else if (a === 'salir') { if (sb) sb.auth.signOut(); }
+    else if (a === 'salir') {
+      if (usuario) { if (sb) sb.auth.signOut(); }
+      else { try { localStorage.removeItem('miSemana.par'); } catch (e) {} par = null; desconectar(); vistaActual = ''; pintar(); }
+    }
     else if (a === 'dia') mandar('dia', { i: +b.getAttribute('data-i') });
     else if (a === 'start') { var i = DIAS.map(function (d) { return d.nombre; }).indexOf(estado.dia); mandar('start', { dia: i }); }
     else if (a === 'mood') mandar('mood', { i: +b.getAttribute('data-i') });
@@ -334,7 +357,8 @@
   function saludar() { if (canal && listo) canal.send({ type: 'broadcast', event: 'hola', payload: { t: Date.now() } }); }
   function conectarCanal() {
     if (canal) return;
-    canal = sb.channel('mando-' + usuario.id, { config: { broadcast: { self: false } } });
+    canal = sb.channel(usuario ? 'mando-' + usuario.id : par.canal, { config: { broadcast: { self: false } } });
+    canal.on('broadcast', { event: 'token-voz' }, function (m) { var p = m.payload || {}; if (p.para === miId && esperaToken) { var f = esperaToken; esperaToken = null; f(p); } });
     canal.on('broadcast', { event: 'estado' }, function (m) {
       var e = m.payload || {}, id = e.id || 'antigua';
       pantallas[id] = { e: e, t: Date.now() };
@@ -354,7 +378,7 @@
     var u = sesion && sesion.user;
     setTimeout(function () {
       if (u && (!usuario || usuario.id !== u.id)) { usuario = u; errorLogin = ''; desconectar(); conectarCanal(); }
-      else if (!u) { usuario = null; desconectar(); }
+      else if (!u) { usuario = null; desconectar(); if (par) conectarCanal(); }
       vistaActual = ''; pintar();
     }, 0);
   });

@@ -753,6 +753,7 @@
     return '<div class="pantalla semana">' +
       '<div class="fila-sup"><div><div class="antetitulo">ELIGE UN DÍA</div><h1 class="titulo">MI SEMANA</h1></div>' +
       '<div class="fila-der"><div class="fecha-hoy">' + esc(fechaHoy) + '</div><div class="leyenda"><i></i>HOY</div>' +
+      '<button type="button" class="btn-sec" data-acc="qr">📱 Mando</button>' +
       '<button type="button" class="btn-sec" data-acc="calendario">📅 Calendario</button>' +
       '<button type="button" class="btn-sec" data-acc="config">⚙ Configuración</button></div></div>' +
       '<div class="dias">' + dias + '</div>' +
@@ -1342,7 +1343,7 @@
   }
 
   function pintar() {
-    vista.innerHTML = st.pantalla === 'semana' ? htmlSemana() + (st.pidiendoMood ? htmlMood() : '') + (st.completado ? htmlCompletado() : '') : (st.pantalla === 'config' ? htmlConfig() + (st.subida ? htmlSubida() : '') : st.pantalla === 'calendario' ? htmlCalendario() : htmlCalentamiento());
+    vista.innerHTML = st.pantalla === 'semana' ? htmlSemana() + (st.pidiendoMood ? htmlMood() : '') + (st.completado ? htmlCompletado() : '') + (st.verQR ? htmlQR() : '') : (st.pantalla === 'config' ? htmlConfig() + (st.subida ? htmlSubida() : '') : st.pantalla === 'calendario' ? htmlCalendario() : htmlCalentamiento());
     if (st.pidiendoMood) { var f = vista.querySelector('.mood.ultimo') || vista.querySelector('.mood'); if (f) f.focus(); }
     app.classList.toggle('ent-activo', st.pantalla === 'calent' && st.modoPintado === 'entrenar');
     app.classList.toggle('cal-activo', st.pantalla === 'calent');
@@ -1412,6 +1413,8 @@
     else if (acc === 'cal-mes') { var cm = calMes(); st.calMes = new Date(cm.getFullYear(), cm.getMonth() + (+b.getAttribute('data-d')), 1); pintar(); }
     else if (acc === 'cal-hoy') { st.calMes = null; st.calSel = claveFecha(new Date()); pintar(); }
     else if (acc === 'cal-dia') { st.calSel = b.getAttribute('data-k'); pintar(); }
+    else if (acc === 'qr') { st.verQR = true; pintar(); }
+    else if (acc === 'cerrar-qr') { if (b === ev.target || b.tagName === 'BUTTON') { st.verQR = false; pintar(); } }
     else if (acc === 'cerrar-fin') { if (b === ev.target || b.tagName === 'BUTTON') { st.completado = false; pintar(); } }
     else if (acc === 'desc') { st.desc = +b.getAttribute('data-s'); pintarTemporizador(); }
     else if (acc === 'dur') { st.dur = +b.getAttribute('data-s'); st.quedan = st.dur; st.total = st.dur; pintarTemporizador(); }
@@ -1557,7 +1560,7 @@
   }
   function pintarRelojes() {
     relojes.innerHTML = '<span>MIAMI <b>' + horaEn('America/New_York') + '</b></span><span class="sep">·</span><span>MADRID <b>' + horaEn('Europe/Madrid') + '</b></span>' +
-      (mando && mandoConectado() ? '<span class="sep">·</span><span class="mando-on">📱 MANDO</span>' : '');
+      (mando && mandoConectado() ? '<span class="sep">·</span><span class="mando-on" data-acc="qr">📱 MANDO</span>' : '');
   }
   pintarRelojes();
   setInterval(pintarRelojes, 15000);
@@ -1567,7 +1570,28 @@
   // (broadcast, sin tablas): esta pantalla es la que manda de verdad (temporizador, música, historial).
   // Cada pantalla abierta tiene su id: si hay varias (Mac, iPhone, otra pestaña), el mando elige UNA
   // y solo esa obedece. Así no se duplican las órdenes ni el temporizador ni las luces.
-  var mando = { canal: null, listo: false, ultimo: 0, reloj: null, envioEn: 0, id: Math.random().toString(36).slice(2, 8), toque: 0 };
+  // El id se guarda en esta pestaña (sessionStorage): al recargar sigue siendo la misma pantalla para el mando emparejado
+  var idPantalla = '';
+  try { idPantalla = sessionStorage.getItem('miSemana.pantallaId') || ''; } catch (e) {}
+  if (!/^[a-z0-9]{6}$/.test(idPantalla)) { idPantalla = Math.random().toString(36).slice(2, 8); try { sessionStorage.setItem('miSemana.pantallaId', idPantalla); } catch (e) {} }
+  var mando = { canal: null, listo: false, ultimo: 0, reloj: null, envioEn: 0, id: idPantalla, toque: 0 };
+  // QR para emparejar un mando sin contraseña: abre mando.html con el canal de tu cuenta y el id de esta pantalla
+  var URL_MANDO = 'https://nicolasrecobasystem-hash.github.io/training/mando.html';
+  function enlaceMando() { return nube.usuario ? URL_MANDO + '?par=' + nube.usuario.id + '.' + mando.id : ''; }
+  function htmlQR() {
+    var url = enlaceMando(), dentro = '';
+    if (!url) dentro = '<p class="fin-txt">Primero entra con tu correo en ⚙ Configuración (sección Nube). Después aparecerá aquí el QR.</p>';
+    else {
+      var svg = '';
+      try { var q = qrcode(0, 'M'); q.addData(url); q.make(); svg = q.createSvgTag({ cellSize: 6, margin: 2, scalable: true }); } catch (e) { svg = ''; }
+      dentro = '<div class="qr-caja">' + svg + '</div>' +
+        '<p class="fin-txt">Escanéalo con la cámara de la tableta o del móvil. Se abre el mando ya unido a <b>esta pantalla</b>, sin contraseña, y lo recuerda para la próxima vez.</p>' +
+        '<p class="qr-url mono">' + esc(url.replace(/^https:\/\//, '').replace(/\?par=.*/, '')) + '</p>';
+    }
+    return '<div class="velo" data-acc="cerrar-qr"><div class="modal qr" role="dialog" aria-modal="true"><div class="antetitulo">EMPAREJAR EL MANDO</div>' +
+      '<h2 class="titulo-m">ESCANEA EL QR</h2>' + dentro +
+      '<div class="modal-pie"><button type="button" class="btn-sec" data-acc="cerrar-qr">Cerrar</button></div></div></div>';
+  }
   function nombreEquipo() {
     var u = navigator.userAgent || '';
     return /iPhone/.test(u) ? 'iPhone' : /iPad/.test(u) || (/Macintosh/.test(u) && navigator.maxTouchPoints > 1) ? 'iPad' : /Silk|KF[A-Z]{2}/.test(u) ? 'Fire' : /Android/.test(u) ? 'Android' : /Macintosh/.test(u) ? 'Mac' : /Windows/.test(u) ? 'PC' : 'Pantalla';
@@ -1659,6 +1683,12 @@
         ultimoMood = st.mood || ''; escribirLS(LS_ULTIMO, ultimoMood); subirNube();
         empezar(); break;
       case 'quien': elegirQuien(o.v); if (st.pidiendoMood) pintar(); break;
+      case 'token-voz':   // un mando emparejado por QR (sin sesión) pide el permiso de voz a través de esta pantalla
+        if (nube.sb && nube.usuario && mando.canal) nube.sb.functions.invoke('voz', { body: {} }).then(function (r) {
+          var tok = r && r.data && r.data.token;
+          mando.canal.send({ type: 'broadcast', event: 'token-voz', payload: { para: o.de, token: tok || '', error: tok ? '' : ((r && r.data && r.data.error) || 'No se pudo pedir permiso') } });
+        });
+        return;
       case 'cancelar-mood': st.pidiendoMood = false; pintar(); break;
       case 'principal': if (enCalent && cfg()) botonPrincipal(); break;
       case 'reiniciar': if (enCalent) { reiniciar(); pintarTemporizador(); } break;
