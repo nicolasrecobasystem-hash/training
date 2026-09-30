@@ -484,3 +484,16 @@ button.ent-caja{cursor:pointer}
 .qr-caja svg{display:block;width:100%;height:auto}
 .qr-url{font-size:12px;opacity:.6;margin-top:6px}
 .mando-on{cursor:pointer}
+/* Guiones (modo aprendizaje) */
+.guion-form{display:flex;flex-direction:column;gap:10px;margin-bottom:16px}
+.guion-form input{background:var(--fondo,#111);border:1px solid var(--linea,#333);border-radius:10px;color:inherit;padding:10px 12px;font-size:16px}
+.guion-cols{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.guion-cols label{display:flex;flex-direction:column;gap:6px;font-family:var(--mono);font-size:11px;letter-spacing:.06em;opacity:.85}
+.guion-cols textarea{min-height:170px;resize:vertical;background:var(--fondo,#111);border:1px solid var(--linea,#333);border-radius:10px;color:inherit;padding:10px 12px;font-family:var(--sans);font-size:14px;line-height:1.45;letter-spacing:0}
+.guion-herr{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.guion-t{flex:1;display:flex;flex-direction:column;gap:2px;min-width:0}
+.guion-t b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.quien .cfg-nota-mini{margin-top:6px}
+.velo .modal{max-height:calc(100% - 16px);overflow-y:auto}
+.quien{margin:2px 0 14px}
+.quien-op{padding:10px 14px}

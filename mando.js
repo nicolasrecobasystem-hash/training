@@ -103,7 +103,11 @@
     var quien = ps.length ? '<div class="m-ante">¿QUIÉN ENTRENA?</div><div class="m-quien">' + ps.concat(ps.length > 1 ? ['duo'] : []).map(function (p) {
       return '<button type="button" class="' + (e.quien === p ? 'on' : '') + '" data-a="quien" data-v="' + esc(p) + '"><b>' + (p === 'duo' ? 'Dúo' : esc(p)) + '</b><span>' + (p === 'duo' ? 'por turnos' : 'solo') + '</span></button>';
     }).join('') + '</div>' : '';
-    return htmlTop() + '<div class="m-centro">' + quien + '<div class="m-ante">' + esc(e.dia + ' · ' + e.grupo) + '</div><h1 class="m-tit">¿Con qué mood entrenas?</h1>' +
+    var gs = e.guiones || [];
+    var audio = gs.length ? '<div class="m-ante">AUDIO</div><div class="m-quien m-audio">' + [{ id: '', t: 'Clásico' }].concat(gs).map(function (g) {
+      return '<button type="button" class="' + ((e.guion || '') === g.id ? 'on' : '') + '" data-a="guion" data-id="' + esc(g.id) + '"><b>' + (g.id ? '🎙 ' : '') + esc(g.t) + '</b><span>' + (g.id ? 'aprendizaje' : 'música + frases') + '</span></button>';
+    }).join('') + '</div>' : '';
+    return htmlTop() + '<div class="m-centro">' + quien + audio + '<div class="m-ante">' + esc(e.dia + ' · ' + e.grupo) + '</div><h1 class="m-tit">¿Con qué mood entrenas?</h1>' +
       '<div class="m-moods">' + bs + '</div><button type="button" class="m-salir" data-a="cancelar-mood">Cancelar</button></div>';
   }
   // Pantalla del ejercicio en el mando. Dos modos, igual que la pantalla grande:
@@ -172,7 +176,7 @@
     var sig = $('.m-sec.sig');
     if (e.ultimo) { sig.setAttribute('data-a', 'terminar'); sig.className = 'm-sec sig fin'; sig.innerHTML = 'Terminar ✓'; }
     else { sig.setAttribute('data-a', 'sig'); sig.className = 'm-sec sig'; sig.innerHTML = 'Siguiente →<small>' + esc(e.siguiente) + '</small>'; }
-    $('.m-cancion').innerHTML = m.sonando ? '<span class="nota">♪</span><b>' + esc(m.nombre) + '</b><small>toca para cambiar</small>' : (m.hay ? '<span class="nota">♪</span><b>Poner música</b><small>toca para empezar</small>' : '<span class="nota">♪</span><b>Sin canciones</b><small>cambia el mood →</small>');
+    $('.m-cancion').innerHTML = e.guionTit ? '<span class="nota">🎙</span><b>' + esc(e.guionTit) + '</b><small>' + (m.sonando ? '♪ ' + esc(m.nombre) + ' de fondo' : 'guion de aprendizaje') + '</small>' : m.sonando ? '<span class="nota">♪</span><b>' + esc(m.nombre) + '</b><small>toca para cambiar</small>' : (m.hay ? '<span class="nota">♪</span><b>Poner música</b><small>toca para empezar</small>' : '<span class="nota">♪</span><b>Sin canciones</b><small>cambia el mood →</small>');
     $('.m-moodchip').textContent = (e.mood || 'Todas') + ' ▾';
     vozSincronizar(e);
     var bv = $('.m-voz');
@@ -191,7 +195,7 @@
     else if (e.pidiendoMood) v = 'mood';
     else if (e.pantalla === 'calent') v = 'calent';
     else v = 'semana';
-    var firma = v === 'semana' ? v + e.dia + e.pantalla : v === 'mood' ? v + e.ultimoMood + e.moods.length + e.quien : v;
+    var firma = v === 'semana' ? v + e.dia + e.pantalla : v === 'mood' ? v + e.ultimoMood + e.moods.length + e.quien + (e.guion || '') + (e.guiones || []).length : v;
     if (firma !== vistaActual) {
       vistaActual = firma; dibujoActual = null;
       raiz.innerHTML = v === 'login' ? htmlLogin() : v === 'espera' ? htmlEspera() : v === 'mood' ? htmlMood(e) : v === 'calent' ? htmlCalent() : htmlSemana(e);
@@ -336,6 +340,7 @@
     else if (a === 'start') { var i = DIAS.map(function (d) { return d.nombre; }).indexOf(estado.dia); mandar('start', { dia: i }); }
     else if (a === 'mood') mandar('mood', { i: +b.getAttribute('data-i') });
     else if (a === 'quien') mandar('quien', { v: b.getAttribute('data-v') });
+    else if (a === 'guion') mandar('guion', { id: b.getAttribute('data-id') });
     else if (a === 'voz') vozAlternar();
     else if (a === 'abrir-moods') { eligiendoMood = true; pintar(); }
     else if (a === 'cerrar-moods') { eligiendoMood = false; pintar(); }

@@ -164,3 +164,4 @@ body:has(#mando.modo-ent.f-azul){background:var(--azulF)}body:has(#mando.modo-en
 .m-quien button b{font-size:18px}
 .m-quien button span{font-family:var(--mono);font-size:10px;color:var(--tenue)}
 .m-quien button.on{border-color:var(--acento);box-shadow:0 0 0 2px var(--acento) inset}
+.m-audio{grid-template-columns:repeat(2,1fr)}

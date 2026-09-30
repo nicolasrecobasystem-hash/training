@@ -26,17 +26,44 @@ Deno.serve(async (req) => {
   let cuerpo: any = {};
   try { cuerpo = await req.json(); } catch { /* vacío */ }
 
-  // Decir una frase en voz alta (texto a voz). Devuelve el audio MP3.
+  // Decir un texto en voz alta (texto a voz). Devuelve el audio MP3.
+  // Frases cortas: modelo multilingüe v2. Guiones (modelo 'eleven_v4'): trozos de hasta 4.000 caracteres,
+  // con etiquetas de emoción [así] y un ajuste más expresivo.
   if (cuerpo.accion === 'decir') {
-    const texto = String(cuerpo.texto || '').slice(0, 400);
+    const MODELOS = ['eleven_multilingual_v2', 'eleven_v4', 'eleven_v4_turbo', 'eleven_v3'];
+    const modelo = MODELOS.includes(cuerpo.modelo) ? cuerpo.modelo : 'eleven_multilingual_v2';
+    const texto = String(cuerpo.texto || '').slice(0, modelo === 'eleven_multilingual_v2' ? 400 : 4000);
     const vozId = /^[A-Za-z0-9]{10,40}$/.test(cuerpo.voz || '') ? cuerpo.voz : 'k8cFOyAg7B9qwBlDDNTC';
     if (!texto) return json({ error: 'Falta el texto' }, 400);
+    const pedido: any = { text: texto, model_id: modelo };
+    if (modelo !== 'eleven_multilingual_v2') pedido.voice_settings = { stability: 0.4, similarity_boost: 0.8 };
     const t = await fetch('https://api.elevenlabs.io/v1/text-to-speech/' + vozId + '?output_format=mp3_44100_128', {
       method: 'POST', headers: { 'xi-api-key': clave, 'Content-Type': 'application/json', Accept: 'audio/mpeg' },
-      body: JSON.stringify({ text: texto, model_id: 'eleven_multilingual_v2' }),
+      body: JSON.stringify(pedido),
     });
     if (!t.ok) return json({ error: 'ElevenLabs respondió ' + t.status, detalle: await t.text().catch(() => '') }, 502);
     return new Response(t.body, { headers: { ...CORS, 'Content-Type': 'audio/mpeg' } });
+  }
+
+  // Poner etiquetas de emoción a un guion con IA (Claude). Necesita el secreto ANTHROPIC_API_KEY.
+  if (cuerpo.accion === 'etiquetar') {
+    const claveIA = Deno.env.get('ANTHROPIC_API_KEY');
+    if (!claveIA) return json({ error: 'Falta el secreto ANTHROPIC_API_KEY en Supabase' }, 500);
+    const texto = String(cuerpo.texto || '').slice(0, 20000);
+    if (!texto.trim()) return json({ error: 'Falta el texto' }, 400);
+    const sistema = 'Preparas guiones en español para que los lea en voz alta el modelo Eleven v4 de ElevenLabs mientras alguien entrena en casa. ' +
+      'Añade etiquetas de emoción e interpretación entre corchetes y EN INGLÉS (por ejemplo [energetic], [excited], [calm], [warm], [serious], [whispering], [shouting], [laughing], [encouraging], [thoughtful], [pause], [sighs]) justo antes de la frase a la que afectan. ' +
+      'Úsalas con criterio: donde el sentido del texto cambia de tono, no en cada frase. Puedes ajustar la puntuación (puntos suspensivos, exclamaciones, comas) para dar ritmo natural. ' +
+      'NO cambies, quites ni añadas palabras del texto. Conserva los párrafos. Devuelve SOLO el guion con las etiquetas, sin comentarios.';
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'x-api-key': claveIA, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
+      body: JSON.stringify({ model: 'claude-sonnet-5-5', max_tokens: 16000, system: sistema, messages: [{ role: 'user', content: texto }] }),
+    });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) return json({ error: 'La IA respondió ' + r.status, detalle: d }, 502);
+    const salida = (d.content || []).filter((c: any) => c.type === 'text').map((c: any) => c.text).join('').trim();
+    return json({ texto: salida });
   }
 
   // Permiso temporal para escuchar (contar repeticiones)

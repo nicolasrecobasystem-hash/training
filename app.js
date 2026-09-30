@@ -300,6 +300,7 @@
     });
   }
   function cerrarRep() {
+    pararGuion();
     try { if (rep.player && rep.player.stopVideo) rep.player.stopVideo(); } catch (e) {}
     pararAudio();
     rep.visible = false; pintarRep();
@@ -311,7 +312,7 @@
   var NUBE_URL = 'https://idjlewvzuzqywthrwibv.supabase.co';
   var NUBE_CLAVE = 'sb_publishable_rgLetEILYTeBPvEqWcAyrA_82D41Npt';   // clave pública (publishable)
   var nube = { sb: null, usuario: null, estado: 'apagada', msg: '', pendiente: false, reloj: null };
-  function datosParaNube() { return { version: 3, moods: moods, biblioteca: biblioteca, ejIntensidad: ejIntensidad, ultimoMood: ultimoMood, historial: historial, historialPersonas: historialPersonas, luces: luces }; }
+  function datosParaNube() { return { version: 3, moods: moods, biblioteca: biblioteca, ejIntensidad: ejIntensidad, ultimoMood: ultimoMood, historial: historial, historialPersonas: historialPersonas, luces: luces, guiones: guiones }; }
 
   // ---------- historial: qué ejercicios hiciste cada día ----------
   // { "2026-09-24": { grupo: "Hombro", hechos: ["Hombro|Colgarte de la barra", ...], total: 10, terminado: true } }
@@ -387,6 +388,7 @@
       escribirLS(LS_HIST_P, historialPersonas);
     }
     if (d.luces && typeof d.luces === 'object' && Array.isArray(d.luces.devs)) { luces = d.luces; escribirLS(LS_LUCES, luces); }
+    if (Array.isArray(d.guiones)) { guiones = d.guiones.filter(function (x) { return x && x.id; }); escribirLS(LS_GUIONES, guiones); }
     asegurarMoods();
     escribirLS(LS_BIBLIO, biblioteca); escribirLS(LS_MOODS, moods); escribirLS(LS_INTENS, ejIntensidad); escribirLS(LS_ULTIMO, ultimoMood);
     var a = document.activeElement;
@@ -633,14 +635,17 @@
     }).then(function (b) { var u = URL.createObjectURL(b); frases.memoria[clave] = u; return u; });
   }
   // Baja la música mientras habla y la sube después
-  function bajarMusica(bajar) {
+  function bajarMusica() { ajustarVolumen(); }
+  // La música baja mientras habla una voz (frase de fin de serie o guion de aprendizaje)
+  function ajustarVolumen() {
+    var bajo = frases.hablando || guionSonando();
     try {
-      if (rep.modo === 'audio') audioEl.volume = bajar ? 0.25 : 1;
-      else if (rep.player && rep.player.setVolume) rep.player.setVolume(bajar ? 25 : 100);
+      if (rep.modo === 'audio') audioEl.volume = bajo ? 0.22 : 1;
+      else if (rep.player && rep.player.setVolume) rep.player.setVolume(bajo ? 22 : 100);
     } catch (e) {}
   }
   function decirFrase() {
-    if (frases.hablando) return;
+    if (frases.hablando || guionSonando()) return;   // en modo aprendizaje habla el guion
     var i = frases.siguiente != null ? frases.siguiente : elegirFrase(); frases.siguiente = null;
     if (i < 0 || !listaFrases()[i]) return;
     var txt = listaFrases()[i];
@@ -713,6 +718,7 @@
       arrancarIntervalo(); pintarTemporizador();
     } else {
       if (st.fase === 'espera' && st.serie === 1) arrancarMusica(false);
+      arrancarGuion();
       if (st.fase === 'hecho') st.serie = 1;
       fase('prep', prep);
     }
@@ -898,7 +904,7 @@
         '<div class="ent-pie">' +
         '<div class="ent-caja">Siguiente <b>' + esc(nombreSiguiente() || '—') + '</b></div>' +
         '<div class="ent-caja">Ancla <b>' + esc(textoAncla(ex)) + '</b></div>' +
-        '<button type="button" class="ent-caja ent-mus" data-acc="' + (rep.visible ? 'rep-otra' : 'musica') + '" title="Cambiar de canción">♪ <b>' + esc(sonando || 'Poner música') + '</b><span>· toca para cambiar</span></button>' +
+        (st.guion && guionPorId(st.guion) ? '<button type="button" class="ent-caja ent-mus" data-acc="pausa-musica" title="Pausar o seguir el guion">🎙 <b>' + esc(guionPorId(st.guion).titulo) + '</b><span>· ' + (guion.el && guion.el.paused && !guion.terminado && guion.id ? 'en pausa' : guion.terminado ? 'terminado' : 'toca para pausar') + '</span></button>' : '<button type="button" class="ent-caja ent-mus" data-acc="' + (rep.visible ? 'rep-otra' : 'musica') + '" title="Cambiar de canción">♪ <b>' + esc(sonando || 'Poner música') + '</b><span>· toca para cambiar</span></button>') +
         '<button type="button" class="ent-caja ent-btn" data-acc="reiniciar" title="Parar y volver a la explicación">✕ Parar</button>' +
         '<button type="button" class="ent-pri" id="e-pri" data-acc="principal"></button></div></div>' +
         (st.eligiendoMood ? htmlElegirMood() : '');
@@ -1042,7 +1048,7 @@
       '<button type="button" class="mood ninguno' + (ultimoMood === '' ? ' ultimo' : '') + '" data-acc="mood" data-i="-1"><span class="n">Ninguno</span><span class="c">todas mezcladas · ' + txt(cuenta(null)) + (ultimoMood === '' ? ' · la última vez' : '') + '</span></button>';
     return '<div class="velo" data-acc="cerrar-mood"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="tit-mood">' +
       '<div class="antetitulo">' + esc(d.nombre.toUpperCase() + ' · ' + d.grupo.toUpperCase()) + '</div>' +
-      htmlQuien() +
+      htmlQuien() + htmlModoAudio() +
       '<h2 class="titulo-m" id="tit-mood">¿CON QUÉ MOOD ENTRENAS?</h2>' +
       '<div class="moods">' + botones + '</div>' +
       '<div class="modal-pie"><button type="button" class="btn-sec" data-acc="cerrar-mood">Cancelar</button></div>' +
@@ -1057,7 +1063,7 @@
       '<input id="mood-nuevo" type="text" maxlength="24" placeholder="Nuevo mood…" aria-label="Nombre del nuevo mood">' +
       '<button type="button" class="btn-sec" data-acc="mood-anadir">+ Añadir</button>' +
       '<span id="mood-aviso" class="aviso-cfg mono"></span></div>';
-    var vista = st.cfgVista === 'ejercicios' || st.cfgVista === 'luces' ? st.cfgVista : 'biblio';
+    var vista = st.cfgVista === 'ejercicios' || st.cfgVista === 'luces' || st.cfgVista === 'guiones' ? st.cfgVista : 'biblio';
     var filtros = '';
     if (vista === 'biblio') {
       var fm = st.filtroMood || '', fi = +st.filtroInt || 0;
@@ -1073,6 +1079,7 @@
       '<button type="button" class="tab-mood' + (vista === 'biblio' ? ' activo' : '') + '" data-acc="cfg-vista" data-v="biblio" aria-pressed="' + (vista === 'biblio') + '">♫ Biblioteca<span>' + biblioteca.length + '</span></button>' +
       '<button type="button" class="tab-mood' + (vista === 'ejercicios' ? ' activo' : '') + '" data-acc="cfg-vista" data-v="ejercicios" aria-pressed="' + (vista === 'ejercicios') + '">Intensidad de los ejercicios</button>' +
       '<button type="button" class="tab-mood' + (vista === 'luces' ? ' activo' : '') + '" data-acc="cfg-vista" data-v="luces" aria-pressed="' + (vista === 'luces') + '">💡 Luces</button>' +
+      '<button type="button" class="tab-mood' + (vista === 'guiones' ? ' activo' : '') + '" data-acc="cfg-vista" data-v="guiones" aria-pressed="' + (vista === 'guiones') + '">🎙 Guiones<span>' + guiones.length + '</span></button>' +
       filtros + '</div>';
     return '<div class="pantalla config">' +
       '<div class="barra-sup"><button type="button" class="btn-sec" data-acc="volver">← Semana</button>' +
@@ -1081,7 +1088,7 @@
       '<button type="button" class="btn-sec" data-acc="cfg-importar">Cargar copia</button>' +
       '<input type="file" id="cfg-archivo" accept=".json,application/json" hidden></div></div>' +
       barraMoods + pestanas +
-      '<div class="panel cfg-panel">' + (vista === 'biblio' ? htmlBiblioteca() : vista === 'luces' ? htmlLuces() : htmlEjercicios()) + '</div>' +
+      '<div class="panel cfg-panel">' + (vista === 'biblio' ? htmlBiblioteca() : vista === 'luces' ? htmlLuces() : vista === 'guiones' ? htmlGuiones() : htmlEjercicios()) + '</div>' +
       '<div id="cfg-nube" class="cfg-nube"></div>' +
       '</div>';
   }
@@ -1413,6 +1420,13 @@
     else if (acc === 'cal-mes') { var cm = calMes(); st.calMes = new Date(cm.getFullYear(), cm.getMonth() + (+b.getAttribute('data-d')), 1); pintar(); }
     else if (acc === 'cal-hoy') { st.calMes = null; st.calSel = claveFecha(new Date()); pintar(); }
     else if (acc === 'cal-dia') { st.calSel = b.getAttribute('data-k'); pintar(); }
+    else if (acc === 'modo-audio') { elegirGuion(b.getAttribute('data-id') || ''); pintar(); }
+    else if (acc === 'guion-etiquetar') etiquetarGuion();
+    else if (acc === 'guion-generar') generarGuion();
+    else if (acc === 'guion-probar') probarGuion(b.getAttribute('data-id'));
+    else if (acc === 'guion-quitar') quitarGuion(b.getAttribute('data-id'));
+    else if (acc === 'guion-editar') editarGuion(b.getAttribute('data-id'));
+    else if (acc === 'guion-nuevo') { st.guionForm = null; pintar(); }
     else if (acc === 'qr') { st.verQR = true; pintar(); }
     else if (acc === 'cerrar-qr') { if (b === ev.target || b.tagName === 'BUTTON') { st.verQR = false; pintar(); } }
     else if (acc === 'cerrar-fin') { if (b === ev.target || b.tagName === 'BUTTON') { st.completado = false; pintar(); } }
@@ -1565,6 +1579,150 @@
   pintarRelojes();
   setInterval(pintarRelojes, 15000);
 
+
+  // ---------- modo APRENDIZAJE: guiones con voz (ElevenLabs v4) sobre la música del mood ----------
+  // Pegas un guion, la IA le pone emociones ([energetic], [calm]…), ElevenLabs lo convierte en audio
+  // y se guarda en tu nube (carpeta musica/<tu id>/guiones). Al entrenar suena de corrido con la música baja.
+  var LS_GUIONES = 'miSemana.guiones.v1', LS_GUION_ELEGIDO = 'miSemana.guionElegido';
+  var guiones = leerLS(LS_GUIONES, []);
+  if (!Array.isArray(guiones)) guiones = [];
+  st.guion = leerLS(LS_GUION_ELEGIDO, '');
+  var VOZ_GUIONES = VOZ_FRASES, MODELO_GUIONES = 'eleven_v4';
+  var guion = { el: new Audio(), id: '', terminado: false, reloj: null };
+  guion.el.addEventListener('ended', function () { guion.terminado = true; ajustarVolumen(); if (st.pantalla === 'calent') pintarTemporizador(); avisarMando(); });
+  function repintarGuion() { ajustarVolumen(); avisarMando(); if (st.pantalla === 'calent' && st.modoPintado === 'entrenar') pintar(); }
+  guion.el.addEventListener('pause', repintarGuion);
+  guion.el.addEventListener('playing', repintarGuion);
+  function guionPorId(id) { for (var i = 0; i < guiones.length; i++) if (guiones[i].id === id) return guiones[i]; return null; }
+  function guionSonando() { return !!(guion.id && guion.el && !guion.el.paused && !guion.terminado); }
+  function elegirGuion(id) { st.guion = id && guionPorId(id) && guionPorId(id).ruta ? id : ''; escribirLS(LS_GUION_ELEGIDO, st.guion); }
+  function guardarGuiones() { escribirLS(LS_GUIONES, guiones); subirNube(); }
+  function htmlModoAudio() {
+    var listos = guiones.filter(function (x) { return x.ruta; });
+    var ops = '<button type="button" class="quien-op' + (!st.guion ? ' on' : '') + '" data-acc="modo-audio" data-id=""><b>Clásico</b><span>música + frases</span></button>' +
+      listos.map(function (x) { return '<button type="button" class="quien-op' + (st.guion === x.id ? ' on' : '') + '" data-acc="modo-audio" data-id="' + esc(x.id) + '"><b>🎙 ' + esc(x.titulo) + '</b><span>aprendizaje' + (x.min ? ' · ' + x.min + ' min' : '') + '</span></button>'; }).join('');
+    return '<div class="quien"><div class="antetitulo">AUDIO</div><div class="quien-ops">' + ops + '</div>' +
+      (!listos.length ? '<div class="cfg-nota-mini">Para el modo aprendizaje crea un guion en ⚙ Configuración → 🎙 Guiones.</div>' : '') + '</div>';
+  }
+  function urlGuion(x) {
+    return nube.sb.storage.from('musica').createSignedUrl(x.ruta, 3 * 3600).then(function (r) { if (r.error || !r.data) throw r.error; return r.data.signedUrl; });
+  }
+  function arrancarGuion() {
+    var x = st.guion && guionPorId(st.guion);
+    if (!x || !x.ruta || guion.id === x.id || !nube.sb || !nube.usuario) return;
+    guion.id = x.id; guion.terminado = false;
+    urlGuion(x).then(function (u) {
+      if (guion.id !== x.id) return;
+      guion.el.src = u; guion.el.volume = 1;
+      var p = guion.el.play(); if (p && p.catch) p.catch(function () {});
+      clearInterval(guion.reloj); guion.reloj = setInterval(ajustarVolumen, 2000);   // YouTube a veces sube el volumen al cambiar de vídeo
+    }).catch(function () { guion.id = ''; });
+  }
+  function pararGuion() { try { guion.el.pause(); } catch (e) {} guion.id = ''; guion.terminado = false; clearInterval(guion.reloj); ajustarVolumen(); }
+
+  // --- Configuración → Guiones ---
+  function htmlGuiones() {
+    var f = st.guionForm || { titulo: '', texto: '', etiquetado: '' };
+    var sinSesion = !nube.usuario ? '<div class="biblio-aviso">Entra con tu correo (abajo) para crear guiones: el audio se guarda en tu nube.</div>' : '';
+    var form = '<div class="guion-form">' +
+      '<input id="g-titulo" type="text" maxlength="80" placeholder="Título del guion" value="' + esc(f.titulo) + '">' +
+      '<div class="guion-cols"><label>TU GUION<textarea id="g-texto" placeholder="Pega aquí tu guion…">' + esc(f.texto) + '</textarea></label>' +
+      '<label>CON EMOCIONES (lo que leerá la voz · puedes editarlo)<textarea id="g-etiq" placeholder="Pulsa «✨ Poner emociones» o escribe tus propias etiquetas: [energetic] ¡Vamos! [calm] Respira…">' + esc(f.etiquetado) + '</textarea></label></div>' +
+      '<div class="guion-herr"><button type="button" class="btn-sec" data-acc="guion-etiquetar">✨ Poner emociones (IA)</button>' +
+      '<button type="button" class="btn-pri" data-acc="guion-generar">🎙 Generar audio y guardar</button>' +
+      (st.guionForm && st.guionForm.id ? '<button type="button" class="btn-sec" data-acc="guion-nuevo">Nuevo guion</button>' : '') +
+      '<span id="g-estado" class="cfg-nota-mini">' + esc(st.guionEstado || '') + '</span></div></div>';
+    var filas = guiones.map(function (x) {
+      return '<div class="cancion"><span class="icono">🎙</span><div class="guion-t"><b>' + esc(x.titulo) + '</b><span class="cfg-nota-mini">' +
+        (x.ruta ? (x.min ? x.min + ' min · ' : '') + 'listo' : 'sin audio') + ' · ' + esc((x.creado || '').slice(0, 10)) + '</span></div>' +
+        '<button type="button" class="btn-ico" data-acc="guion-editar" data-id="' + esc(x.id) + '" aria-label="Editar">✎</button>' +
+        (x.ruta ? '<button type="button" class="btn-ico" data-acc="guion-probar" data-id="' + esc(x.id) + '" aria-label="Escuchar">' + (guion.probando === x.id ? '■' : '▶') + '</button>' : '') +
+        '<button type="button" class="btn-ico" data-acc="guion-quitar" data-id="' + esc(x.id) + '" aria-label="Quitar">✕</button></div>';
+    }).join('');
+    return sinSesion + form + '<div class="cfg-grupo">TU LIBRERÍA</div><div class="biblio-lista">' + (filas || '<div class="vacio">Aún no tienes guiones.</div>') + '</div>';
+  }
+  function leerForm() {
+    var f = st.guionForm || {};
+    f.titulo = (document.getElementById('g-titulo') || {}).value || '';
+    f.texto = (document.getElementById('g-texto') || {}).value || '';
+    f.etiquetado = (document.getElementById('g-etiq') || {}).value || '';
+    st.guionForm = f; return f;
+  }
+  function estadoGuion(t) { st.guionEstado = t; var e = document.getElementById('g-estado'); if (e) e.textContent = t; }
+  function tokenSesion() { return nube.sb.auth.getSession().then(function (r) { return r && r.data && r.data.session && r.data.session.access_token; }); }
+  function llamarVoz(cuerpo) {
+    return tokenSesion().then(function (tok) {
+      return fetch(NUBE_URL + '/functions/v1/voz', { method: 'POST', headers: { Authorization: 'Bearer ' + tok, apikey: NUBE_CLAVE, 'Content-Type': 'application/json' }, body: JSON.stringify(cuerpo) });
+    });
+  }
+  function etiquetarGuion() {
+    var f = leerForm();
+    if (!nube.usuario) return estadoGuion('Entra con tu correo primero.');
+    if (!f.texto.trim()) return estadoGuion('Pega primero tu guion.');
+    estadoGuion('La IA está poniendo las emociones…');
+    llamarVoz({ accion: 'etiquetar', texto: f.texto }).then(function (r) { return r.json(); }).then(function (d) {
+      if (!d.texto) throw new Error(d.error || 'sin respuesta');
+      f.etiquetado = d.texto; st.guionForm = f; st.guionEstado = 'Listo: revisa las emociones y pulsa «Generar audio».'; pintar();
+    }).catch(function (e) { estadoGuion('No se pudo: ' + (e.message || e)); });
+  }
+  // Parte el texto en trozos de ~3.500 caracteres por párrafos o frases (ElevenLabs tiene límite por pedido)
+  function trocear(t) {
+    var partes = [], actual = '';
+    t.split(/(\n\s*\n)/).forEach(function (bloque) {
+      var piezas = bloque.length > 3500 ? bloque.match(/[^.!?…]+[.!?…]*\s*/g) || [bloque] : [bloque];
+      piezas.forEach(function (p) {
+        if ((actual + p).length > 3500 && actual.trim()) { partes.push(actual.trim()); actual = ''; }
+        actual += p;
+      });
+    });
+    if (actual.trim()) partes.push(actual.trim());
+    return partes;
+  }
+  function generarGuion() {
+    var f = leerForm();
+    if (!nube.usuario) return estadoGuion('Entra con tu correo primero.');
+    var texto = (f.etiquetado.trim() || f.texto.trim());
+    if (!f.titulo.trim()) return estadoGuion('Ponle un título.');
+    if (!texto) return estadoGuion('Pega primero tu guion.');
+    var partes = trocear(texto), blobs = [], id = f.id || ('g' + Date.now().toString(36));
+    function siguiente(i) {
+      if (i >= partes.length) return subir();
+      estadoGuion('Generando la voz… parte ' + (i + 1) + ' de ' + partes.length);
+      llamarVoz({ accion: 'decir', texto: partes[i], voz: VOZ_GUIONES, modelo: MODELO_GUIONES }).then(function (r) {
+        if (!/audio/.test(r.headers.get('Content-Type') || '')) return r.json().then(function (d) { throw new Error((d && d.error) || ('error ' + r.status)); });
+        return r.blob();
+      }).then(function (b) { blobs.push(b); siguiente(i + 1); })
+        .catch(function (e) { estadoGuion('No se pudo generar: ' + (e.message || e)); });
+    }
+    function subir() {
+      var todo = new Blob(blobs, { type: 'audio/mpeg' }), ruta = nube.usuario.id + '/guiones/' + id + '.mp3';
+      estadoGuion('Guardando en tu nube…');
+      nube.sb.storage.from('musica').upload(ruta, todo, { contentType: 'audio/mpeg', upsert: true }).then(function (r) {
+        if (r.error) throw r.error;
+        var min = Math.max(1, Math.round(todo.size / (128000 / 8) / 60));   // mp3 a 128 kbps
+        var x = guionPorId(id);
+        if (!x) { x = { id: id, creado: new Date().toISOString() }; guiones.unshift(x); }
+        x.titulo = f.titulo.trim(); x.texto = f.texto; x.etiquetado = f.etiquetado; x.ruta = ruta; x.min = min; x.voz = VOZ_GUIONES; x.modelo = MODELO_GUIONES;
+        guardarGuiones(); st.guionForm = null; st.guionEstado = '✓ «' + x.titulo + '» guardado (' + min + ' min). Elígelo al pulsar START.'; pintar();
+      }).catch(function (e) { estadoGuion('No se pudo guardar: ' + ((e && e.message) || e)); });
+    }
+    siguiente(0);
+  }
+  function probarGuion(id) {
+    var x = guionPorId(id); if (!x || !x.ruta) return;
+    if (guion.probando === id) { guion.el.pause(); guion.probando = ''; pintar(); return; }
+    urlGuion(x).then(function (u) { guion.el.src = u; guion.el.play(); guion.probando = id; pintar(); }).catch(function () { estadoGuion('No se pudo abrir el audio.'); });
+  }
+  function editarGuion(id) { var x = guionPorId(id); if (!x) return; st.guionForm = { id: x.id, titulo: x.titulo, texto: x.texto || '', etiquetado: x.etiquetado || '' }; st.guionEstado = 'Editando «' + x.titulo + '». Al generar se reemplaza su audio.'; pintar(); }
+  function quitarGuion(id) {
+    var x = guionPorId(id); if (!x) return;
+    if (!window.confirm('¿Borrar el guion «' + x.titulo + '» y su audio?')) return;
+    guiones = guiones.filter(function (g) { return g.id !== id; });
+    if (x.ruta && nube.sb && nube.usuario) nube.sb.storage.from('musica').remove([x.ruta]);
+    if (st.guion === id) elegirGuion('');
+    guardarGuiones(); pintar();
+  }
+
   // ---------- mando (tableta): la pantalla grande manda su estado y obedece las órdenes ----------
   // La tableta abre mando.html con la misma cuenta. Se hablan por un canal de Supabase Realtime
   // (broadcast, sin tablas): esta pantalla es la que manda de verdad (temporizador, música, historial).
@@ -1626,6 +1784,7 @@
     if (rep.visible && rep.actual) { var cc = cancionPorItem(rep.actual); nombreCancion = cc ? cc.nombre : (esArchivo(rep.actual) ? nombreArchivo(rep.actual) : 'YouTube'); }
     return {
       t: Date.now(), id: mando.id, equipo: nombreEquipo(), visible: document.visibilityState === 'visible', toque: mando.toque, pantalla: st.pantalla, dia: d.nombre, grupo: g, pidiendoMood: !!st.pidiendoMood, mood: st.mood, quien: st.quien, personasTodas: PERSONAS,
+      guiones: guiones.filter(function (x) { return x.ruta; }).map(function (x) { return { id: x.id, t: x.titulo }; }), guion: st.guion || '', guionTit: st.guion && guionPorId(st.guion) ? guionPorId(st.guion).titulo : '',
       moods: moods.map(function (m) { return { n: m, c: biblioteca.filter(function (x) { return x.moods.indexOf(m) >= 0; }).length }; }),
       ultimoMood: ultimoMood,
       bloque: { titulo: b ? b.titulo : '', i: st.bloque, n: bs.length }, hueco: st.hueco, nHuecos: l.length,
@@ -1651,6 +1810,7 @@
     return false;
   }
   function pausarMusica() {
+    if (guion.el && guion.id && !guion.terminado) { if (guion.el.paused) guion.el.play().catch(function () {}); else guion.el.pause(); ajustarVolumen(); }
     if (!rep.visible) { arrancarMusica(true); return; }
     try {
       if (rep.modo === 'audio') { if (audioEl.paused) audioEl.play(); else audioEl.pause(); }
@@ -1683,6 +1843,7 @@
         ultimoMood = st.mood || ''; escribirLS(LS_ULTIMO, ultimoMood); subirNube();
         empezar(); break;
       case 'quien': elegirQuien(o.v); if (st.pidiendoMood) pintar(); break;
+      case 'guion': elegirGuion(o.id || ''); if (st.pidiendoMood) pintar(); break;
       case 'token-voz':   // un mando emparejado por QR (sin sesión) pide el permiso de voz a través de esta pantalla
         if (nube.sb && nube.usuario && mando.canal) nube.sb.functions.invoke('voz', { body: {} }).then(function (r) {
           var tok = r && r.data && r.data.token;
