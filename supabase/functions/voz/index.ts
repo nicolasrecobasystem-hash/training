@@ -58,7 +58,7 @@ Deno.serve(async (req) => {
     const r = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'x-api-key': claveIA, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
-      body: JSON.stringify({ model: 'claude-sonnet-5-5', max_tokens: 16000, system: sistema, messages: [{ role: 'user', content: texto }] }),
+      body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 16000, system: sistema, messages: [{ role: 'user', content: texto }] }),
     });
     const d = await r.json().catch(() => ({}));
     if (!r.ok) return json({ error: 'La IA respondió ' + r.status, detalle: d }, 502);
