@@ -407,7 +407,7 @@
       nube.sb.auth.onAuthStateChange(function (ev, sesion) {
         var u = sesion && sesion.user;
         setTimeout(function () {   // fuera del aviso de Supabase, como recomienda su documentación
-          if (u && (!nube.usuario || nube.usuario.id !== u.id)) { nube.usuario = u; if (st.pantalla === 'config') pintar(); bajarNube(); conectarMando(); }
+          if (u && (!nube.usuario || nube.usuario.id !== u.id)) { nube.usuario = u; if (st.pantalla === 'config') pintar(); bajarNube(); conectarMando(); avisarAgente(); }
           else if (!u) { nube.usuario = null; if (nube.estado !== 'enviado') estadoNube('fuera'); }
         }, 0);
       });
@@ -1756,6 +1756,25 @@
   }
   ['pointerdown', 'keydown'].forEach(function (ev) { document.addEventListener(ev, function () { mando.toque = Date.now(); avisarMando(); }, true); });
   document.addEventListener('visibilitychange', function () { enviarEstado(); });
+  // Al abrir la app, avisa a tu agente (Grok Bot) de que vas a entrenar. Una vez por pestaña:
+  // recargar no repite el aviso. La clave del webhook vive en Supabase (función "voz", accion "aviso").
+  function avisarAgente() {
+    try { if (sessionStorage.getItem('miSemana.avisado')) return; sessionStorage.setItem('miSemana.avisado', '1'); } catch (e) {}
+    var d = DIAS[new Date().getDay()], ahora = new Date();
+    var datos = {
+      evento: 'va_a_entrenar',
+      mensaje: (PERSONAS[0] || 'Diego') + ' abrió Mi semana: va a empezar a entrenar.',
+      persona: PERSONAS[0] || 'Diego',
+      dia: d ? d.nombre : '', rutina: d ? claveDe(d) : '', grupo: d ? d.grupo : '',
+      ejercicios: d ? totalDe(claveDe(d)) : 0,
+      hora_miami: horaEn('America/New_York'), hora_madrid: horaEn('Europe/Madrid'),
+      fecha: claveFecha(ahora), momento: ahora.toISOString(), equipo: nombreEquipo()
+    };
+    tokenSesion().then(function (tok) {
+      return fetch(NUBE_URL + '/functions/v1/voz', { method: 'POST', headers: { Authorization: 'Bearer ' + tok, apikey: NUBE_CLAVE, 'Content-Type': 'application/json' }, body: JSON.stringify({ accion: 'aviso', datos: datos }) });
+    }).then(function (r) { return r.json(); }).then(function (x) { try { console.log('[agente] aviso', x); } catch (e) {} })
+      .catch(function () { try { sessionStorage.removeItem('miSemana.avisado'); } catch (e) {} });
+  }
   function conectarMando() {
     if (!nube.sb || !nube.usuario || mando.canal) return;
     mando.canal = nube.sb.channel('mando-' + nube.usuario.id, { config: { broadcast: { self: false } } });

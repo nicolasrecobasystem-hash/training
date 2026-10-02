@@ -66,6 +66,20 @@ Deno.serve(async (req) => {
     return json({ texto: salida });
   }
 
+  // Avisar a tu agente (Grok Bot en Cursor Automations) por webhook. La clave va en el secreto CURSOR_WEBHOOK_KEY.
+  if (cuerpo.accion === 'aviso') {
+    const claveHook = Deno.env.get('CURSOR_WEBHOOK_KEY');
+    if (!claveHook) return json({ error: 'Falta el secreto CURSOR_WEBHOOK_KEY en Supabase' }, 500);
+    const datos = cuerpo.datos && typeof cuerpo.datos === 'object' ? cuerpo.datos : {};
+    const r = await fetch('https://api2.cursor.sh/automations/webhook/286c4eee-8d0a-5487-a3bd-9c478ccae5f4', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + claveHook, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fuente: 'mi-semana', ...datos }),
+    });
+    const txt = await r.text().catch(() => '');
+    return json({ ok: r.ok, status: r.status, respuesta: txt.slice(0, 300) }, r.ok ? 200 : 502);
+  }
+
   // Permiso temporal para escuchar (contar repeticiones)
   const r = await fetch('https://api.elevenlabs.io/v1/single-use-token/realtime_scribe', { method: 'POST', headers: { 'xi-api-key': clave } });
   const d = await r.json().catch(() => ({}));
