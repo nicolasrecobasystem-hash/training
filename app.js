@@ -581,6 +581,7 @@
   function finSerie() {
     var c = cfg() || { series: 1, descanso: 30 };
     if (st.contadas) guardarReps(personaTurno(), st.contadas);
+    if (st.sesion && ejActual()) st.sesion.series.push({ persona: personaTurno(), ejercicio: ejActual().nombre, bloque: bloqueActual().titulo, serie: st.serie, reps: st.contadas || null, segundos: c.reps ? null : st.dur, hora: horaEn('America/New_York') });
     st.contadas = 0;
     pitido(880, 0.3, 3);
     decirFrase();
@@ -849,7 +850,48 @@
       rf.grupo = gf; rf.total = totalDe(gf); rf.terminado = true; hist(p)[kf] = rf;
     });
     guardarHistorial();
+    enviarEstadisticas(kf, gf);
     reiniciar(); cerrarRep(); st.pantalla = 'semana'; st.completado = true; pintar();
+  }
+  // Racha de días seguidos entrenando de una persona
+  function rachaDe(p) {
+    var f = new Date(), n = 0;
+    if (!registroDe(claveFecha(f), p)) f.setDate(f.getDate() - 1);
+    while (registroDe(claveFecha(f), p) && registroDe(claveFecha(f), p).hechos.length) { n++; f.setDate(f.getDate() - 1); }
+    return n;
+  }
+  // Al terminar el entreno: estadísticas al agente (Grok Bot) por el mismo webhook del aviso de inicio
+  function enviarEstadisticas(kf, gf) {
+    var ses = st.sesion || { inicio: Date.now(), series: [] }, fin = Date.now();
+    var mes = kf.slice(0, 7), total = totalDe(gf), d = DIAS[st.sel];
+    var personas = personasSesion().map(function (p) {
+      var r = registroDe(kf, p) || { hechos: [] }, hechos = r.hechos.map(function (h) { return h.split('|').slice(1).join('|'); });
+      var reps = {};
+      if (r.reps) Object.keys(r.reps).forEach(function (k) { reps[k.split('|').slice(1).join('|')] = r.reps[k]; });
+      var h = hist(p), mesN = Object.keys(h).filter(function (k) { return k.slice(0, 7) === mes && h[k] && h[k].hechos && h[k].hechos.length; }).length;
+      var sp = ses.series.filter(function (x) { return x.persona === p; });
+      return {
+        persona: p, ejercicios_hechos: hechos.length, ejercicios_total: total,
+        porcentaje: total ? Math.round(hechos.length / total * 100) : 0,
+        series_hechas: sp.length, repeticiones_contadas_por_voz: sp.reduce(function (a, x) { return a + (x.reps || 0); }, 0),
+        ejercicios: hechos, repeticiones_por_ejercicio: reps,
+        racha_dias: rachaDe(p), entrenos_este_mes: mesN
+      };
+    });
+    var g = st.guion && guionPorId(st.guion);
+    var min = Math.round((fin - ses.inicio) / 60000);
+    var resumen = personas.map(function (x) { return x.persona + ': ' + x.ejercicios_hechos + '/' + x.ejercicios_total + ' ejercicios, ' + x.series_hechas + ' series' + (x.repeticiones_contadas_por_voz ? ', ' + x.repeticiones_contadas_por_voz + ' reps contadas' : '') + ', racha ' + x.racha_dias + ' días'; }).join(' · ');
+    enviarAgente({
+      evento: 'entreno_terminado',
+      mensaje: 'Entreno terminado (' + (d ? d.nombre + ' · ' + gf : gf) + ', ' + min + ' min). ' + resumen,
+      dia: d ? d.nombre : '', rutina: gf, grupo: d ? d.grupo : '', fecha: kf,
+      modo: personas.length > 1 ? 'duo' : 'solo', audio: g ? 'aprendizaje: ' + g.titulo : 'clasico', mood: st.mood || 'Ninguno',
+      inicio: new Date(ses.inicio).toISOString(), fin: new Date(fin).toISOString(), duracion_min: min,
+      hora_inicio_miami: new Date(ses.inicio).toLocaleTimeString('es-ES', { timeZone: 'America/New_York', hour: '2-digit', minute: '2-digit' }),
+      hora_fin_miami: horaEn('America/New_York'),
+      personas: personas, series: ses.series, equipo: nombreEquipo()
+    }).catch(function () {});
+    st.sesion = null;
   }
   // Cambiar el mood a mitad del entreno (desde la píldora ♪ o desde el mando)
   function cambiarMood(i) {
@@ -1362,6 +1404,7 @@
   function empezar() {
     st.personas = st.quien === 'duo' ? PERSONAS.slice(0, 2) : [st.quien || PERSONAS[0]];
     st.verPersona = st.personas[0];
+    st.sesion = { inicio: Date.now(), series: [] };   // para las estadísticas que se envían al agente al terminar
     reiniciarLuces(); musicaSonandoDe = ''; st.pidiendoMood = false; st.pantalla = 'calent'; st.bloque = 0; st.hueco = 0; reiniciar(); pintar(); }
   function irABloque(i) {
     if (i < 0 || i >= bloques().length) return;
@@ -1770,10 +1813,13 @@
       hora_miami: horaEn('America/New_York'), hora_madrid: horaEn('Europe/Madrid'),
       fecha: claveFecha(ahora), momento: ahora.toISOString(), equipo: nombreEquipo()
     };
-    tokenSesion().then(function (tok) {
+    enviarAgente(datos).catch(function () { try { sessionStorage.removeItem('miSemana.avisado'); } catch (e) {} });
+  }
+  function enviarAgente(datos) {
+    if (!nube.sb || !nube.usuario) return Promise.reject(new Error('sin sesión'));
+    return tokenSesion().then(function (tok) {
       return fetch(NUBE_URL + '/functions/v1/voz', { method: 'POST', headers: { Authorization: 'Bearer ' + tok, apikey: NUBE_CLAVE, 'Content-Type': 'application/json' }, body: JSON.stringify({ accion: 'aviso', datos: datos }) });
-    }).then(function (r) { return r.json(); }).then(function (x) { try { console.log('[agente] aviso', x); } catch (e) {} })
-      .catch(function () { try { sessionStorage.removeItem('miSemana.avisado'); } catch (e) {} });
+    }).then(function (r) { return r.json(); }).then(function (x) { try { console.log('[agente] ' + datos.evento, x); } catch (e) {} return x; });
   }
   function conectarMando() {
     if (!nube.sb || !nube.usuario || mando.canal) return;
