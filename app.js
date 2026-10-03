@@ -1126,7 +1126,8 @@
     return '<div class="pantalla config">' +
       '<div class="barra-sup"><button type="button" class="btn-sec" data-acc="volver">← Semana</button>' +
       '<div class="cab-paso"><span class="antetitulo">TU MÚSICA</span><h2 class="titulo-m">CONFIGURACIÓN</h2></div>' +
-      '<div class="barra-der"><button type="button" class="btn-sec" data-acc="cfg-exportar">Descargar copia</button>' +
+      '<div class="barra-der"><a class="btn-sec" href="reloj.html" title="Modos, agenda y avisos a los agentes">⏱ Reloj del día</a>' +
+      '<button type="button" class="btn-sec" data-acc="cfg-exportar">Descargar copia</button>' +
       '<button type="button" class="btn-sec" data-acc="cfg-importar">Cargar copia</button>' +
       '<input type="file" id="cfg-archivo" accept=".json,application/json" hidden></div></div>' +
       barraMoods + pestanas +

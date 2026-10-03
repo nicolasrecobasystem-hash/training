@@ -497,3 +497,4 @@ button.ent-caja{cursor:pointer}
 .velo .modal{max-height:calc(100% - 16px);overflow-y:auto}
 .quien{margin:2px 0 14px}
 .quien-op{padding:10px 14px}
+a.btn-sec{display:inline-flex;align-items:center;text-decoration:none}
