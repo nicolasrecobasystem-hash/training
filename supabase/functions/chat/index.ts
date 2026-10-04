@@ -17,11 +17,6 @@ const CORS = {
 function json(o: unknown, status = 200) {
   return new Response(JSON.stringify(o), { status, headers: { ...CORS, 'Content-Type': 'application/json' } });
 }
-function sistema() {
-  const hoy = new Date().toLocaleString('es-ES', { timeZone: 'Europe/Madrid', dateStyle: 'full', timeStyle: 'short' });
-  return 'Eres un asistente útil, claro y directo. Responde en español salvo que te escriban en otro idioma. ' +
-    'Usa Markdown cuando ayude (listas, negritas, bloques de código). Fecha y hora en Madrid: ' + hoy + '.';
-}
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
@@ -59,7 +54,8 @@ Deno.serve(async (req) => {
   const { error: e2 } = await sb.from('chat_mensajes').insert({ conversacion_id: conv, rol: 'user', contenido: texto });
   if (e2) return json({ error: e2.message }, 500);
 
-  const mensajes = [{ role: 'system', content: sistema() }]
+  // Sin instrucción de sistema: DeepSeek tal cual, solo con el historial de la conversación
+  const mensajes = ([] as { role: string; content: string }[])
     .concat((previos || []).reverse().filter((m: any) => m.contenido).map((m: any) => ({ role: m.rol, content: m.contenido })))
     .concat([{ role: 'user', content: texto }]);
 
