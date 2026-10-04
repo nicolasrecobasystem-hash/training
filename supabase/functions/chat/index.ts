@@ -1,6 +1,6 @@
 // Función "chat" de Supabase: chat general con DeepSeek para chat.html.
 // Misma comprobación que voz, govee y reloj: sesión válida y solo el correo permitido.
-// La clave va en el secreto DEEPSEEK_API_KEY (nunca sale de aquí). Modelo: DEEPSEEK_MODELO o deepseek-flash.
+// La clave va en el secreto «deep» (o DEEPSEEK_API_KEY; nunca sale de aquí). Modelo: DEEPSEEK_MODELO o deepseek-flash.
 // Guarda la pregunta y la respuesta en chat_mensajes con la sesión de Diego (RLS).
 // Respuesta en streaming: una línea JSON por trozo → {t:'conv',id} {t:'razon',x} {t:'texto',x} {t:'fin'} | {t:'error',x}
 import { createClient } from 'jsr:@supabase/supabase-js@2';
@@ -29,8 +29,8 @@ Deno.serve(async (req) => {
   const url = Deno.env.get('SUPABASE_URL')!, anon = Deno.env.get('SUPABASE_ANON_KEY')!;
   const { data: u } = await createClient(url, anon).auth.getUser(token);
   if (!u?.user || (u.user.email || '').toLowerCase() !== CORREO_PERMITIDO) return json({ error: 'No autorizado' }, 401);
-  const clave = Deno.env.get('DEEPSEEK_API_KEY');
-  if (!clave) return json({ error: 'Falta el secreto DEEPSEEK_API_KEY en Supabase' }, 500);
+  const clave = Deno.env.get('deep') || Deno.env.get('DEEPSEEK_API_KEY');
+  if (!clave) return json({ error: 'Falta el secreto «deep» con la clave de DeepSeek en Supabase' }, 500);
   const modelo = Deno.env.get('DEEPSEEK_MODELO') || 'deepseek-flash';
   const sb = createClient(url, anon, { global: { headers: { Authorization: 'Bearer ' + token } } });
 
@@ -74,7 +74,7 @@ Deno.serve(async (req) => {
   if (!r.ok || !r.body) {
     const det = (await r.text().catch(() => '')).slice(0, 300);
     console.error('DeepSeek', r.status, det);
-    return json({ error: 'DeepSeek respondió ' + r.status + (r.status === 401 ? ' (revisa DEEPSEEK_API_KEY)' : r.status === 402 ? ' (sin saldo)' : ''), conversacion_id: conv }, 502);
+    return json({ error: 'DeepSeek respondió ' + r.status + (r.status === 401 ? ' (revisa la clave del secreto «deep»)' : r.status === 402 ? ' (sin saldo)' : ''), conversacion_id: conv }, 502);
   }
 
   const enc = new TextEncoder();
