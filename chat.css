@@ -1,0 +1,86 @@
+/* Chat con DeepSeek. Mismos colores y letras que la app, el mando y el reloj. */
+:root{
+  --fondo:#16181B; --panel:#1F2227; --linea:#2E3238; --linea2:#4A5059;
+  --texto:#F4F1EA; --suave:#B9BCC2; --tenue:#9EA3AA;
+  --acento:#F2913D; --azul:#7FB2E5; --verde:#7BC48F; --rojo:#E5634D;
+  --display:Anton, Impact, "Arial Narrow", sans-serif;
+  --mono:"IBM Plex Mono", Consolas, monospace;
+  --sans:"IBM Plex Sans", "Segoe UI", Helvetica, sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--fondo);color:var(--texto);font-family:var(--sans)}
+button,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+button:active{transform:scale(.98)}
+
+#chat{height:100dvh;display:flex;flex-direction:column;max-width:1240px;margin:0 auto;padding:max(12px,env(safe-area-inset-top)) 16px 0}
+.c-top{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;padding-bottom:12px;border-bottom:1px solid var(--linea);flex:none}
+.c-ante{font-family:var(--mono);font-size:12px;letter-spacing:.12em;color:var(--acento);text-transform:uppercase}
+.c-tit{font-family:var(--display);font-weight:400;font-size:clamp(28px,5vw,42px);margin:2px 0 0;letter-spacing:.01em}
+.c-top-der{display:flex;gap:8px;align-items:center}
+.c-sec{background:transparent;border:1px solid var(--linea2);border-radius:12px;padding:9px 14px;min-height:42px;text-decoration:none;color:var(--texto);display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.c-pri{background:var(--acento);color:#16181B;border:0;border-radius:12px;padding:10px 18px;font-weight:600;min-height:44px}
+.c-pri:disabled{opacity:.45;cursor:default}
+.c-solo-movil{display:none}
+
+.c-cuerpo{flex:1;min-height:0;display:grid;grid-template-columns:260px minmax(0,1fr);gap:16px;padding-top:12px}
+.c-lista{display:flex;flex-direction:column;gap:6px;overflow:auto;min-height:0;padding-bottom:16px}
+.c-conv{display:flex;align-items:center;gap:6px;border:1px solid transparent;border-radius:12px;padding:4px 4px 4px 12px;min-height:44px}
+.c-conv:hover{background:var(--panel)}
+.c-conv.on{background:var(--panel);border-color:var(--linea2)}
+.c-conv button.c-abrir{flex:1;min-width:0;background:none;border:0;text-align:left;padding:6px 0;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.c-conv small{display:block;color:var(--tenue);font-size:11px;font-family:var(--mono)}
+.c-borrar{background:none;border:0;color:var(--tenue);width:34px;height:34px;border-radius:8px;flex:none}
+.c-borrar:hover{color:#ff9a8a;background:rgba(229,99,77,.12)}
+.c-vacio{color:var(--tenue);font-size:14px;padding:6px 2px}
+
+.c-main{display:flex;flex-direction:column;min-height:0;min-width:0}
+.c-msgs{flex:1;overflow:auto;min-height:0;display:flex;flex-direction:column;gap:14px;padding:6px 2px 16px}
+.c-bienv{margin:auto;text-align:center;color:var(--suave);max-width:420px}
+.c-bienv b{font-family:var(--display);font-weight:400;font-size:34px;color:var(--texto);display:block;margin-bottom:6px;letter-spacing:.01em}
+.c-m{max-width:min(760px,100%);line-height:1.55;font-size:15px;overflow-wrap:anywhere}
+.c-m.user{align-self:flex-end;background:var(--panel);border:1px solid var(--linea2);border-radius:16px 16px 4px 16px;padding:10px 14px;white-space:pre-wrap}
+.c-m.assistant{align-self:flex-start;width:100%}
+.c-m.assistant > *:first-child{margin-top:0}
+.c-m p{margin:0 0 10px}
+.c-m h1,.c-m h2,.c-m h3,.c-m h4{font-size:16px;margin:14px 0 6px;color:var(--acento)}
+.c-m ul,.c-m ol{margin:0 0 10px;padding-left:22px}
+.c-m li{margin:2px 0}
+.c-m blockquote{margin:0 0 10px;border-left:3px solid var(--linea2);padding-left:12px;color:var(--suave)}
+.c-m code{font-family:var(--mono);font-size:13px;background:var(--panel);border:1px solid var(--linea);border-radius:6px;padding:1px 5px}
+.c-m a{color:var(--azul)}
+.c-m hr{border:0;border-top:1px solid var(--linea);margin:12px 0}
+.c-codigo{position:relative;margin:0 0 10px}
+.c-codigo pre{margin:0;background:#101214;border:1px solid var(--linea);border-radius:12px;padding:12px;overflow:auto}
+.c-codigo pre code{background:none;border:0;padding:0;font-size:12.5px}
+.c-copiar{position:absolute;top:6px;right:6px;background:var(--panel);border:1px solid var(--linea2);border-radius:8px;font-size:12px;padding:3px 8px;color:var(--suave)}
+.c-tabla{overflow:auto;margin:0 0 10px}
+.c-tabla table{border-collapse:collapse;font-size:14px}
+.c-tabla th,.c-tabla td{border:1px solid var(--linea);padding:5px 9px;text-align:left}
+.c-razon{margin:0 0 10px;border:1px solid var(--linea);border-radius:12px;padding:8px 12px;color:var(--tenue);font-size:13px}
+.c-razon summary{cursor:pointer;font-family:var(--mono);font-size:12px;letter-spacing:.06em}
+.c-razon div{white-space:pre-wrap;margin-top:6px;max-height:260px;overflow:auto}
+.c-meta{font-family:var(--mono);font-size:11px;color:var(--tenue);margin-top:-4px}
+.c-error{color:#ff9a8a;font-size:14px}
+.c-cursor::after{content:'▍';color:var(--acento);animation:c-parp 1s steps(2) infinite}
+@keyframes c-parp{50%{opacity:0}}
+
+.c-pie{flex:none;padding:10px 0 max(12px,env(safe-area-inset-bottom));border-top:1px solid var(--linea)}
+.c-caja{display:flex;gap:8px;align-items:flex-end}
+.c-caja textarea{flex:1;min-width:0;resize:none;background:var(--panel);border:1px solid var(--linea2);border-radius:14px;padding:11px 13px;min-height:46px;max-height:200px;line-height:1.4;font-size:16px}
+.c-caja textarea:focus{outline:2px solid var(--acento);outline-offset:-1px}
+.c-opc{display:flex;justify-content:space-between;gap:10px;margin-top:6px;font-size:12px;color:var(--tenue);flex-wrap:wrap}
+.c-opc label{display:flex;align-items:center;gap:6px;cursor:pointer}
+
+.c-centro{max-width:420px;margin:12vh auto 0;display:flex;flex-direction:column;gap:12px;width:100%}
+.c-form{display:flex;flex-direction:column;gap:10px}
+.c-form input{background:var(--panel);border:1px solid var(--linea);border-radius:10px;padding:10px 12px;min-height:44px}
+
+@media (max-width:760px){
+  .c-cuerpo{grid-template-columns:minmax(0,1fr)}
+  .c-lista{display:none}
+  .c-cuerpo.ver-lista .c-lista{display:flex}
+  .c-cuerpo.ver-lista .c-main{display:none}
+  .c-solo-movil{display:inline-flex}
+  .c-top-der .c-nueva-txt{display:none}
+}
