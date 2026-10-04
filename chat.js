@@ -257,7 +257,7 @@
     if (catalogo && !forzar) return Promise.resolve();
     try {
       var g = JSON.parse(localStorage.getItem('miSemana.chat.catalogo') || 'null');
-      if (!forzar && g && Date.now() - g.cuando < 6 * 3600e3) { catalogo = g.modelos; catInfo = g.info || {}; return Promise.resolve(); }
+      if (!forzar && g && g.info && g.info.openrouter && Date.now() - g.cuando < 6 * 3600e3) { catalogo = g.modelos; catInfo = g.info || {}; return Promise.resolve(); }
     } catch (e) { /* */ }
     catError = '';
     return llamar({ accion: 'modelos' }).then(function (d) {
