@@ -74,7 +74,7 @@ Deno.serve(async (req) => {
     const r = await fetch('https://api2.cursor.sh/automations/webhook/286c4eee-8d0a-5487-a3bd-9c478ccae5f4', {
       method: 'POST',
       headers: { Authorization: 'Bearer ' + claveHook, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ fuente: 'mi-semana', ...datos }),
+      body: JSON.stringify({ fuente: 'mi-semana', canal: 'entreno', ...datos }),
     });
     const txt = await r.text().catch(() => '');
     return json({ ok: r.ok, status: r.status, respuesta: txt.slice(0, 300) }, r.ok ? 200 : 502);

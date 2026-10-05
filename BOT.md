@@ -3,11 +3,24 @@
 El bot **elige y pone la música en el Mac** y guarda su propio perfil (gustos, vetos, semillas).
 La app es el **reloj** (modo y fase del momento) y la **bitácora**: apunta qué sonó, las notas 1–5, los «cambia», y lo enseña en el panel del reloj.
 
+## Patrón: un webhook → Levi despierta al resto
+
+```
+Levi / DJ ──POST /functions/v1/bot (x-bot-token: iniciar, parar, saltar_descanso…)──▶ Reloj (Supabase)
+Reloj ──webhook (un solo destino activo: Levi)──▶ Levi ──grupo AM──▶ DJ (música) · Controlador (luces)
+```
+
+- **Un solo destino activo** en el panel del Reloj → *Destinos de webhook*: el de Levi. Los demás, pausados (lo pendiente de un destino pausado se descarta, no reintenta ni abre alertas).
+- Da igual quién arranque (panel, agenda, Levi o DJ por la API): el Reloj emite **los mismos eventos** al destino activo.
+- Cada payload lleva **`canal`**: `"reloj"` para modos y fases (`modo_iniciado`, `fase_iniciada`, `aviso_previo`, `descanso_saltado`, `modo_detenido`, `alerta`, `prueba`) y `"entreno"` para los avisos de la app de entreno (`va_a_entrenar`, `entreno_terminado`). Así una misma routine puede recibir los dos y separarlos por `canal`.
+- Deduplicar por `id_evento` (también va en la cabecera `Idempotency-Key`): los reintentos repiten el mismo id.
+- Si Levi tarda o falla (HTTP ≠ 2xx), el Reloj reintenta hasta 6 veces (30 s, 1, 2, 4, 8 min) y luego abre la alerta `entrega_fallida`.
+
 ## Lo que la app ya le manda al bot (salida, ya funciona)
 
 Webhook a cada destino activo en cada cambio: `modo_iniciado`, `fase_iniciada`, `aviso_previo`, `modo_detenido`… con
 `modo` (concentracion | descanso | entreno | manana), `fase` (pomodoro | descanso_corto | descanso_largo | descanso | entreno | manana),
-`ciclo`, `hora_madrid`, `siguiente_cambio`. Al saltar un descanso llega además `descanso_saltado` (con `caso`: `descanso_cancelado` o `descanso_cortado`). Con eso el bot sabe cuándo cambiar de energía o parar la música.
+`ciclo`, `hora_madrid`, `siguiente_cambio`, `canal` (`reloj`). Al saltar un descanso llega además `descanso_saltado` (con `caso`: `descanso_cancelado` o `descanso_cortado`). Con eso el bot sabe cuándo cambiar de energía o parar la música.
 
 ## Lo que el bot le manda a la app (entrada, nuevo)
 
