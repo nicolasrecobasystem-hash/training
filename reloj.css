@@ -94,3 +94,15 @@ code,pre{font-family:var(--mono);font-size:12px}
   .r-estado{grid-template-columns:1fr}
   .r-rejilla{grid-template-columns:1fr}
 }
+
+/* música del bot */
+.r-sonando{border:1px solid var(--linea2);border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:4px;background:linear-gradient(135deg,rgba(155,123,224,.18),transparent 70%)}
+.r-son-tit{font-size:20px;font-weight:600}
+.r-son-tit a{color:var(--texto)}
+.r-nota{color:var(--acento);letter-spacing:1px}
+.r-nota i{font-style:normal;color:var(--linea2)}
+.r-fams{display:flex;flex-wrap:wrap;gap:6px}
+.r-fam{border:1px solid var(--linea2);border-radius:999px;padding:3px 10px;font-size:12px}
+.r-fam i{font-style:normal;color:var(--tenue)}
+.r-nuevo #r-bot-nombre{flex:1 1 200px}
+.r-nota code,.r-panel code{word-break:break-all}

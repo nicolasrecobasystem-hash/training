@@ -47,6 +47,8 @@ Deno.serve(async (req) => {
           }
         }
         if (importado) estado = await rpc('reloj_estado');
+        // Bots y música (lo que apuntan los bots por la función «bot»)
+        try { estado.musica = await rpc('reloj_musica_estado'); } catch { estado.musica = null; }
         return json(estado);
       }
       case 'iniciar': return json(await rpc('reloj_iniciar', { p_modo: c.modo, p_minutos: c.minutos ?? null }));
@@ -62,6 +64,9 @@ Deno.serve(async (req) => {
       case 'alerta_cerrar': await rpc('reloj_cerrar_alerta', { p_id: c.id }); return json({ ok: true });
       // Token del Mac: se devuelve UNA vez para guardarlo en el Llavero; en la base solo queda su hash
       case 'dispositivo_crear': return json({ token: await rpc('reloj_crear_dispositivo', { p_nombre: c.nombre || 'Mac de Diego' }) });
+      // Token de un bot: también se devuelve UNA sola vez
+      case 'bot_crear': return json({ token: await rpc('reloj_crear_bot', { p_nombre: c.nombre || '' }) });
+      case 'bot_borrar': await rpc('reloj_borrar_bot', { p_id: c.id }); return json({ ok: true });
       default: return json({ error: 'Acción desconocida' }, 400);
     }
   } catch (e) {

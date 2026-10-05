@@ -760,6 +760,7 @@
     return '<div class="pantalla semana">' +
       '<div class="fila-sup"><div><div class="antetitulo">ELIGE UN DÍA</div><h1 class="titulo">MI SEMANA</h1></div>' +
       '<div class="fila-der"><div class="fecha-hoy">' + esc(fechaHoy) + '</div><div class="leyenda"><i></i>HOY</div>' +
+      '<a class="btn-sec" href="reloj.html" title="Modos, agenda, música y avisos a los agentes">⏱ Reloj</a>' +
       '<button type="button" class="btn-sec" data-acc="qr">📱 Mando</button>' +
       '<button type="button" class="btn-sec" data-acc="calendario">📅 Calendario</button>' +
       '<button type="button" class="btn-sec" data-acc="config">⚙ Configuración</button></div></div>' +

@@ -7,7 +7,7 @@
   var URL_NUBE = 'https://idjlewvzuzqywthrwibv.supabase.co';
   var CLAVE = 'sb_publishable_rgLetEILYTeBPvEqWcAyrA_82D41Npt';   // clave pública (publishable)
   var raiz = document.getElementById('reloj');
-  var sb = null, usuario = null, est = null, error = '', aviso = '', tokenNuevo = '', desfase = 0, cargando = false;
+  var sb = null, usuario = null, est = null, error = '', aviso = '', tokenNuevo = '', botNuevo = null, desfase = 0, cargando = false;
   var MODOS = [['concentracion', 'Concentración'], ['descanso', 'Descanso'], ['entreno', 'Entreno'], ['manana', 'Mañana']];
   var FASES = { pomodoro: 'Pomodoro', descanso_corto: 'Descanso corto', descanso_largo: 'Descanso largo', descanso: 'Descanso', entreno: 'Entreno', manana: 'Mañana' };
   var DIAS = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
@@ -85,6 +85,46 @@
       (s ? '<div class="r-paro"><button type="button" class="r-sec" data-a="parar">■ Parar (avisa ' + esc(est.config.aviso_previo_min) + ' min antes)</button>' +
            '<button type="button" class="r-sec peligro" data-a="parar-ya">■ Parar ya</button></div>' : '') +
       '</div></section>';
+  }
+  // ---------- música que pone el bot (lo apunta por la función «bot») ----------
+  function estrellas(n) { return n ? '<span class="r-nota">' + '★★★★★'.slice(0, n) + '<i>' + '★★★★★'.slice(n) + '</i></span>' : '<span class="r-gris">sin nota</span>'; }
+  function htmlMusica() {
+    var mu = est.musica; if (!mu) return '';
+    var h = mu.historial || [], ult = h[0], viva = ult && !ult.cambiada && (ahora() - new Date(ult.creado).getTime()) < 3 * 3600e3;
+    var ahoraHtml = viva ? '<div class="r-sonando"><div class="r-ante">SONANDO · ' + esc(ult.bot || 'bot') + ' · ' + cuando(ult.creado) + '</div>' +
+        '<div class="r-son-tit">' + (ult.url ? '<a href="' + esc(ult.url) + '" target="_blank" rel="noopener">' + esc(ult.titulo) + '</a>' : esc(ult.titulo)) + '</div>' +
+        '<div class="r-gris">' + esc([ult.artista, ult.familia, ult.energia && 'energía ' + ult.energia, ult.voz === false ? 'sin voz' : ult.voz ? 'con voz' : '', ult.nuevo ? 'descubrimiento' : ''].filter(Boolean).join(' · ')) + '</div>' +
+        '<div>' + estrellas(ult.nota) + '</div></div>'
+      : '<div class="r-vacio">Ahora no suena nada apuntado por un bot.</div>';
+    var filas = h.slice(viva ? 1 : 0, 10).map(function (m) {
+      return '<div class="r-fila"><span class="r-gris">' + hm(m.creado) + '</span><b>' + esc(m.titulo) + '</b>' +
+        '<span class="r-gris">' + esc([m.familia, m.energia, m.modo && nombreModo(m.modo)].filter(Boolean).join(' · ')) + '</span>' +
+        '<span class="r-acciones">' + (m.cambiada ? '<span class="r-chip medio">cambiada</span>' : '') + estrellas(m.nota) + '</span></div>';
+    }).join('');
+    var fam = (mu.familias || []).map(function (f) {
+      return '<span class="r-fam"><b>' + esc(f.familia) + '</b> ' + (f.media != null ? f.media + '★' : '—') + ' <i>' + f.piezas + (f.cambiadas ? ' · ' + f.cambiadas + ' cambiadas' : '') + '</i></span>';
+    }).join('');
+    return '<section class="r-panel ancho"><h2>Música <span>· la elige y la pone tu bot</span></h2>' + ahoraHtml + filas +
+      (fam ? '<div class="r-ante" style="margin-top:8px">FAMILIAS · ÚLTIMOS 30 DÍAS</div><div class="r-fams">' + fam + '</div>' : '') + '</section>';
+  }
+  function htmlBots() {
+    var mu = est.musica; if (!mu) return '';
+    var filas = (mu.bots || []).map(function (b) {
+      return '<div class="r-fila"><i class="r-punto ' + (b.ultimo_uso && ahora() - new Date(b.ultimo_uso).getTime() < 3600e3 ? 'ok' : '') + '"></i><b>' + esc(b.nombre) + '</b>' +
+        '<span class="r-gris">' + (b.ultimo_uso ? 'último uso ' + cuando(b.ultimo_uso) : 'aún no ha escrito') + '</span>' +
+        '<span class="r-acciones"><button type="button" class="r-mini" data-a="bot-renovar" data-n="' + esc(b.nombre) + '">Renovar token</button>' +
+        '<button type="button" class="r-mini peligro" data-a="bot-borrar" data-id="' + b.id + '">✕</button></span></div>';
+    }).join('') || '<div class="r-vacio">Ningún bot conectado todavía.</div>';
+    var tok = botNuevo ? '<div class="r-token"><div class="r-ante">TOKEN DE ' + esc(botNuevo.nombre).toUpperCase() + ' · SOLO SE MUESTRA AHORA</div>' +
+      '<p>Dáselo a tu bot como secreto (cabecera <code>x-bot-token</code>). Prueba:</p><pre>' + esc(curlBot(botNuevo.token)) + '</pre>' +
+      '<button type="button" class="r-sec" data-a="copiar-bot">Copiar token</button> <button type="button" class="r-sec" data-a="ocultar-bot">Ya lo guardé</button></div>' : '';
+    return '<section class="r-panel"><h2>Bots <span>· escriben en la app</span></h2>' + filas + tok +
+      '<div class="r-nuevo"><input id="r-bot-nombre" placeholder="Nombre del bot (p. ej. Grok Bot)" maxlength="60">' +
+      '<button type="button" class="r-pri" data-a="bot-crear">Crear token</button></div>' +
+      '<p class="r-nota">Dirección: <code>' + esc(URL_NUBE) + '/functions/v1/bot</code></p></section>';
+  }
+  function curlBot(t) {
+    return 'curl -X POST ' + URL_NUBE + '/functions/v1/bot \\\n  -H "x-bot-token: ' + t + '" -H "Content-Type: application/json" \\\n  -d \'{"accion":"contexto"}\'';
   }
   function htmlMac() {
     var ls = est.latidos || [];
@@ -167,7 +207,7 @@
     raiz.querySelectorAll('input[id],select[id]').forEach(function (x) { valores[x.id] = x.type === 'checkbox' ? x.checked : x.value; });
     if (!est) { raiz.innerHTML = htmlCabecera() + '<div class="r-vacio">' + (error ? 'No se pudo cargar: ' + esc(error) : 'Cargando…') + '</div>'; return; }
     raiz.innerHTML = htmlCabecera() + '<div class="r-aviso" id="r-aviso"></div>' + (error ? '<div class="r-error">' + esc(error) + '</div>' : '') +
-      htmlEstado() + '<div class="r-rejilla">' + htmlAlertas() + htmlMac() + htmlEntregas() + htmlAgenda() + htmlDestinos() + htmlConfig() + htmlRegistro() + '</div>';
+      htmlEstado() + '<div class="r-rejilla">' + htmlAlertas() + htmlMusica() + htmlMac() + htmlBots() + htmlEntregas() + htmlAgenda() + htmlDestinos() + htmlConfig() + htmlRegistro() + '</div>';
     Object.keys(valores).forEach(function (id) { var x = document.getElementById(id); if (x && x.type !== 'checkbox' && valores[id] !== '') x.value = valores[id]; });
     if (foco && document.getElementById(foco)) document.getElementById(foco).focus();
     pintarAviso(); reloj();
@@ -222,6 +262,16 @@
     }
     if (a === 'copiar-token') { try { navigator.clipboard.writeText('security add-generic-password -U -a latido -s mi-semana-latido -w ' + tokenNuevo); aviso = 'Copiado ✓'; } catch (e) { aviso = 'Cópialo a mano'; } return pintarAviso(); }
     if (a === 'ocultar-token') { tokenNuevo = ''; return pintar(); }
+    if (a === 'bot-crear' || a === 'bot-renovar') {
+      var nom = a === 'bot-crear' ? ($('#r-bot-nombre') || {}).value : b.getAttribute('data-n');
+      nom = (nom || '').trim();
+      if (!nom) { aviso = 'Escribe el nombre del bot'; return pintarAviso(); }
+      if (a === 'bot-renovar' && !confirm('El token actual de ' + nom + ' dejará de valer. ¿Crear uno nuevo?')) return;
+      return accion({ accion: 'bot_crear', nombre: nom }, 'Token creado').then(function (d) { if (d && d.token) { botNuevo = { nombre: nom, token: d.token }; var i = $('#r-bot-nombre'); if (i) i.value = ''; pintar(); } });
+    }
+    if (a === 'bot-borrar') { if (!confirm('¿Borrar este bot? Su token dejará de valer.')) return; return accion({ accion: 'bot_borrar', id: b.getAttribute('data-id') }, 'Bot borrado'); }
+    if (a === 'copiar-bot') { try { navigator.clipboard.writeText(botNuevo.token); aviso = 'Copiado ✓'; } catch (e) { aviso = 'Cópialo a mano'; } return pintarAviso(); }
+    if (a === 'ocultar-bot') { botNuevo = null; return pintar(); }
   });
   raiz.addEventListener('keydown', function (ev) { if (ev.key === 'Enter' && /r-clave|r-correo/.test(ev.target.id)) entrar(); });
   function leer(k) { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } }
