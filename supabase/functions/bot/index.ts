@@ -1,7 +1,7 @@
 // Función "bot" de Supabase: la puerta de entrada para que los bots (Grok Bot, Make…) hablen con la app.
 // Sin sesión: cada bot se identifica con SU token (cabecera x-bot-token o Authorization: Bearer).
 // Los tokens se crean en el panel del reloj; en la base solo queda su hash. La lógica está en reloj_bot (SQL).
-// POST { "accion": "contexto" | "sonando" | "valoracion" | "cambio" | "mensaje" | "saltar_descanso", ...datos }
+// POST { "accion": "contexto" | "sonando" | "valoracion" | "cambio" | "mensaje" | "saltar_descanso" | "iniciar" | "parar", ...datos }
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 
 const CORS = {
@@ -12,7 +12,7 @@ const CORS = {
 function json(o: unknown, status = 200) {
   return new Response(JSON.stringify(o), { status, headers: { ...CORS, 'Content-Type': 'application/json' } });
 }
-const ACCIONES = ['contexto', 'sonando', 'valoracion', 'cambio', 'mensaje', 'saltar_descanso'];
+const ACCIONES = ['contexto', 'sonando', 'valoracion', 'cambio', 'mensaje', 'saltar_descanso', 'iniciar', 'parar'];
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });

@@ -27,6 +27,8 @@ El token se crea en el panel del reloj → tarjeta **Bots** → «Crear token».
 | `cambio` | Diego dice «cambia» | `id` (opcional; si no va, lo último) |
 | `mensaje` | cualquier aviso para el registro del panel | `texto` |
 | `saltar_descanso` | Diego no quiere descanso: si estás en un pomodoro, el descanso que viene se cancela y al acabar empieza el siguiente pomodoro; si ya estás en el descanso, se corta y el pomodoro empieza ya | — |
+| `iniciar` | arrancar un modo (si había otro, se para antes con su aviso) | `modo`: `concentracion` / `descanso` / `entreno` / `manana`; `minutos` (opcional, 1–720; sin él, concentración sigue hasta que se pare y los demás usan su duración del panel) |
+| `parar` | terminar el modo activo | `inmediato` (opcional): `false` = avisa y para dentro de los minutos de aviso previo; `true` = para ya |
 
 Respuestas: `{"ok":true,...}`. Errores: 401 token malo, 400 datos mal, 429 más de 60 escrituras por minuto.
 
@@ -45,6 +47,11 @@ curl -s -X POST $U -H "x-bot-token: $T" -H "Content-Type: application/json" \
 
 # Diego: «un 4»
 curl -s -X POST $U -H "x-bot-token: $T" -H "Content-Type: application/json" -d '{"accion":"valoracion","nota":4}'
+
+# Arrancar concentración / entreno de 45 min / parar
+curl -s -X POST $U -H "x-bot-token: $T" -H "Content-Type: application/json" -d '{"accion":"iniciar","modo":"concentracion"}'
+curl -s -X POST $U -H "x-bot-token: $T" -H "Content-Type: application/json" -d '{"accion":"iniciar","modo":"entreno","minutos":45}'
+curl -s -X POST $U -H "x-bot-token: $T" -H "Content-Type: application/json" -d '{"accion":"parar","inmediato":true}'
 
 # Diego: «no quiero descanso»
 curl -s -X POST $U -H "x-bot-token: $T" -H "Content-Type: application/json" -d '{"accion":"saltar_descanso"}'
