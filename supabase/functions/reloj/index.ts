@@ -53,6 +53,7 @@ Deno.serve(async (req) => {
       }
       case 'iniciar': return json(await rpc('reloj_iniciar', { p_modo: c.modo, p_minutos: c.minutos ?? null }));
       case 'parar': return json(await rpc('reloj_parar', { p_inmediato: !!c.inmediato }));
+      case 'saltar_descanso': return json(await rpc('reloj_saltar_descanso_panel'));
       case 'config': return json(await rpc('reloj_guardar_config', { p: c.config || {} }));
       case 'agenda_guardar': return json({ id: await rpc('reloj_guardar_agenda', { p: c.bloque || {} }) });
       case 'agenda_borrar': await rpc('reloj_borrar_agenda', { p_id: c.id }); return json({ ok: true });

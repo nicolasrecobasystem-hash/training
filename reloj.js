@@ -82,6 +82,8 @@
       (prox ? '<div class="r-prox">' + prox + '</div>' : '') + '</div>' +
       '<div class="r-est-der"><div class="r-modos">' + botones + '</div>' +
       '<label class="r-min">Minutos (opcional) <input id="r-minutos" type="number" min="1" step="1" placeholder="—"></label>' +
+      (s && s.modo === 'concentracion' && f ? '<div class="r-paro"><button type="button" class="r-sec" data-a="saltar-descanso">⏭ ' +
+          (/descanso/.test(f.tipo) ? 'Saltar este descanso' : 'Sin descanso tras este pomodoro') + '</button></div>' : '') +
       (s ? '<div class="r-paro"><button type="button" class="r-sec" data-a="parar">■ Parar (avisa ' + esc(est.config.aviso_previo_min) + ' min antes)</button>' +
            '<button type="button" class="r-sec peligro" data-a="parar-ya">■ Parar ya</button></div>' : '') +
       '</div></section>';
@@ -262,6 +264,7 @@
     }
     if (a === 'copiar-token') { try { navigator.clipboard.writeText('security add-generic-password -U -a latido -s mi-semana-latido -w ' + tokenNuevo); aviso = 'Copiado ✓'; } catch (e) { aviso = 'Cópialo a mano'; } return pintarAviso(); }
     if (a === 'ocultar-token') { tokenNuevo = ''; return pintar(); }
+    if (a === 'saltar-descanso') return accion({ accion: 'saltar_descanso' }).then(function (d) { if (d) { aviso = d.ok ? d.mensaje : 'No se pudo: ' + d.error; pintarAviso(); } });
     if (a === 'bot-crear' || a === 'bot-renovar') {
       var nom = a === 'bot-crear' ? ($('#r-bot-nombre') || {}).value : b.getAttribute('data-n');
       nom = (nom || '').trim();

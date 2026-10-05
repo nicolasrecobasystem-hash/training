@@ -7,7 +7,7 @@ La app es el **reloj** (modo y fase del momento) y la **bitácora**: apunta qué
 
 Webhook a cada destino activo en cada cambio: `modo_iniciado`, `fase_iniciada`, `aviso_previo`, `modo_detenido`… con
 `modo` (concentracion | descanso | entreno | manana), `fase` (pomodoro | descanso_corto | descanso_largo | descanso | entreno | manana),
-`ciclo`, `hora_madrid`, `siguiente_cambio`. Con eso el bot sabe cuándo cambiar de energía o parar la música.
+`ciclo`, `hora_madrid`, `siguiente_cambio`. Al saltar un descanso llega además `descanso_saltado` (con `caso`: `descanso_cancelado` o `descanso_cortado`). Con eso el bot sabe cuándo cambiar de energía o parar la música.
 
 ## Lo que el bot le manda a la app (entrada, nuevo)
 
@@ -26,6 +26,7 @@ El token se crea en el panel del reloj → tarjeta **Bots** → «Crear token».
 | `valoracion` | Diego dice una nota | `nota` (1–5), `id` (opcional; si no va, se aplica a lo último que sonó) |
 | `cambio` | Diego dice «cambia» | `id` (opcional; si no va, lo último) |
 | `mensaje` | cualquier aviso para el registro del panel | `texto` |
+| `saltar_descanso` | Diego no quiere descanso: si estás en un pomodoro, el descanso que viene se cancela y al acabar empieza el siguiente pomodoro; si ya estás en el descanso, se corta y el pomodoro empieza ya | — |
 
 Respuestas: `{"ok":true,...}`. Errores: 401 token malo, 400 datos mal, 429 más de 60 escrituras por minuto.
 
@@ -44,6 +45,9 @@ curl -s -X POST $U -H "x-bot-token: $T" -H "Content-Type: application/json" \
 
 # Diego: «un 4»
 curl -s -X POST $U -H "x-bot-token: $T" -H "Content-Type: application/json" -d '{"accion":"valoracion","nota":4}'
+
+# Diego: «no quiero descanso»
+curl -s -X POST $U -H "x-bot-token: $T" -H "Content-Type: application/json" -d '{"accion":"saltar_descanso"}'
 
 # Diego: «cambia»
 curl -s -X POST $U -H "x-bot-token: $T" -H "Content-Type: application/json" -d '{"accion":"cambio"}'
