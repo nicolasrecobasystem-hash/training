@@ -119,3 +119,9 @@ button:active{transform:scale(.98)}
   .c-solo-movil{display:inline-flex}
   .c-top-der .c-nueva-txt{display:none}
 }
+
+/* voz manos libres */
+.c-voz{background:transparent;border:1px solid var(--linea2);border-radius:999px;padding:4px 12px;font-size:12px;color:var(--texto);white-space:nowrap}
+.c-voz.on{border-color:var(--verde);color:var(--verde);background:rgba(123,196,143,.08)}
+.c-voz.mal{border-color:rgba(229,99,77,.6);color:#ff9a8a}
+.c-opc{align-items:center}

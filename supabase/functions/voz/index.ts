@@ -27,16 +27,16 @@ Deno.serve(async (req) => {
   try { cuerpo = await req.json(); } catch { /* vacío */ }
 
   // Decir un texto en voz alta (texto a voz). Devuelve el audio MP3.
-  // Frases cortas: modelo multilingüe v2. Guiones (modelo 'eleven_v4'): trozos de hasta 4.000 caracteres,
+  // Frases cortas: modelo multilingüe v2. Respuestas del chat por voz: flash v2.5 (la más rápida). Guiones (modelo 'eleven_v4'): trozos de hasta 4.000 caracteres,
   // con etiquetas de emoción [así] y un ajuste más expresivo.
   if (cuerpo.accion === 'decir') {
-    const MODELOS = ['eleven_multilingual_v2', 'eleven_v4', 'eleven_v4_turbo', 'eleven_v3'];
+    const MODELOS = ['eleven_multilingual_v2', 'eleven_v4', 'eleven_v4_turbo', 'eleven_v3', 'eleven_flash_v2_5'];
     const modelo = MODELOS.includes(cuerpo.modelo) ? cuerpo.modelo : 'eleven_multilingual_v2';
-    const texto = String(cuerpo.texto || '').slice(0, modelo === 'eleven_multilingual_v2' ? 400 : 4000);
+    const texto = String(cuerpo.texto || '').slice(0, modelo === 'eleven_multilingual_v2' ? 400 : modelo === 'eleven_flash_v2_5' ? 1000 : 4000);
     const vozId = /^[A-Za-z0-9]{10,40}$/.test(cuerpo.voz || '') ? cuerpo.voz : 'k8cFOyAg7B9qwBlDDNTC';
     if (!texto) return json({ error: 'Falta el texto' }, 400);
     const pedido: any = { text: texto, model_id: modelo };
-    if (modelo !== 'eleven_multilingual_v2') pedido.voice_settings = { stability: 0.4, similarity_boost: 0.8 };
+    if (modelo !== 'eleven_multilingual_v2' && modelo !== 'eleven_flash_v2_5') pedido.voice_settings = { stability: 0.4, similarity_boost: 0.8 };
     const t = await fetch('https://api.elevenlabs.io/v1/text-to-speech/' + vozId + '?output_format=mp3_44100_128', {
       method: 'POST', headers: { 'xi-api-key': clave, 'Content-Type': 'application/json', Accept: 'audio/mpeg' },
       body: JSON.stringify(pedido),

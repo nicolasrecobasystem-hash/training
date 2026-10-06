@@ -124,8 +124,8 @@
   }
 
   // ---------- enviar (respuesta a trozos) ----------
-  function enviar() {
-    var caja = $('#c-texto'), texto = caja.value.trim();
+  function enviar(dictado) {
+    var caja = $('#c-texto'), texto = (typeof dictado === 'string' ? dictado : caja.value).trim();
     if (!texto || enviando) return;
     caja.value = ''; ajustar();
     error = '';
@@ -159,7 +159,7 @@
             var o; try { o = JSON.parse(l); } catch (e) { continue; }
             if (o.t === 'conv') { if (actual !== o.id) { actual = o.id; guardarLocal('miSemana.chat', o.id); cargarConvs(); } resp.modelo = o.modelo; }
             else if (o.t === 'razon') resp.razonamiento += o.x;
-            else if (o.t === 'texto') resp.contenido += o.x;
+            else if (o.t === 'texto') { resp.contenido += o.x; if (mv.on) mvDecir(o.x); }
             else if (o.t === 'error') error = o.x;
           }
           pintarVivo(resp);
@@ -171,12 +171,151 @@
       if (e.name !== 'AbortError') error = e.message;
     }).then(function () {
       resp.vivo = false; enviando = null;
+      if (mv.on) mvFinRespuesta();
       if (!resp.contenido && !resp.razonamiento) msgs.pop();
       pintarPie(); pintarMsgs(true); cargarConvs();
       if (matchMedia('(pointer:fine)').matches) $('#c-texto').focus();
     });
   }
   function parar() { if (enviando) enviando.abort(); }
+
+  // ---------- voz manos libres (ElevenLabs: Scribe para oír, texto a voz para contestar) ----------
+  // Mientras habla la respuesta, el micro no manda audio (así no se oye a sí mismo). Al acabar, vuelve a escuchar.
+  var VOZ_APP = 'k8cFOyAg7B9qwBlDDNTC';
+  var mv = { on: false, estado: '', error: '', ws: null, abriendo: false, ctx: null, stream: null, proc: null,
+             buf: '', cola: [], sonando: null, gen: 0, finRespuesta: true };
+  function mvVoz() { var v = leer('miSemana.chat.voz'); return /^[A-Za-z0-9]{10,40}$/.test(v) ? v : VOZ_APP; }
+  function mvEscucha() { return mv.on && !enviando && !mv.sonando && !mv.cola.length && mv.finRespuesta; }
+  function llamarVoz(cuerpo) {
+    return sb.auth.getSession().then(function (r) {
+      var tok = r && r.data && r.data.session && r.data.session.access_token;
+      return fetch(URL_NUBE + '/functions/v1/voz', { method: 'POST', headers: { Authorization: 'Bearer ' + tok, apikey: CLAVE, 'Content-Type': 'application/json' }, body: JSON.stringify(cuerpo) });
+    });
+  }
+  function mvPintar() {
+    var b = $('#c-voz'); if (!b) return;
+    var t = !mv.on ? '🎙 Manos libres' : mv.estado === 'error' ? '⚠ ' + (mv.error || 'Error de voz') :
+      mv.sonando || mv.cola.length ? '🔊 Hablando · cortar' : enviando ? '… Pensando' :
+      mv.ws && mv.ws.readyState === 1 ? '● Escuchando' : '… Conectando';
+    b.textContent = t;
+    b.className = 'c-voz' + (mv.on ? ' on' : '') + (mv.estado === 'error' ? ' mal' : '');
+    b.setAttribute('data-a', mv.on && (mv.sonando || mv.cola.length) ? 'voz-cortar' : 'voz');
+    var caja = $('#c-texto'); if (caja) caja.placeholder = mv.on ? 'Habla… (o escribe)' : 'Escribe un mensaje…';
+  }
+  function mvAlternar() {
+    if (mv.on) return mvApagar();
+    mv.on = true; mv.error = ''; mv.estado = ''; mv.finRespuesta = true;
+    try { var AC = window.AudioContext || window.webkitAudioContext; mv.ctx = new AC(); mv.ctx.resume(); }   // se crea con el toque: así el móvil deja sonar
+    catch (e) { return mvFallo('Este navegador no deja usar el audio'); }
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return mvFallo('Este navegador no deja usar el micro');
+    navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } }).then(function (st) {
+      if (!mv.on) { st.getTracks().forEach(function (t) { t.stop(); }); return; }
+      mv.stream = st;
+      var src = mv.ctx.createMediaStreamSource(st), proc = mv.ctx.createScriptProcessor(4096, 1, 1), mudo = mv.ctx.createGain();
+      mudo.gain.value = 0; src.connect(proc); proc.connect(mudo); mudo.connect(mv.ctx.destination);
+      var paso = mv.ctx.sampleRate / 16000;
+      proc.onaudioprocess = function (ev) {
+        if (!mv.ws || mv.ws.readyState !== 1 || !mvEscucha()) return;
+        var x = ev.inputBuffer.getChannelData(0), n = Math.floor(x.length / paso), out = new Int16Array(n);
+        for (var i = 0; i < n; i++) {
+          var a = Math.floor(i * paso), b2 = Math.min(x.length, Math.floor((i + 1) * paso)), sum = 0;
+          for (var j = a; j < b2; j++) sum += x[j];
+          var v = Math.max(-1, Math.min(1, sum / Math.max(1, b2 - a)));
+          out[i] = v < 0 ? v * 0x8000 : v * 0x7FFF;
+        }
+        var by = new Uint8Array(out.buffer), bin = '';
+        for (var k = 0; k < by.length; k += 0x8000) bin += String.fromCharCode.apply(null, by.subarray(k, k + 0x8000));
+        try { mv.ws.send(JSON.stringify({ message_type: 'input_audio_chunk', audio_base_64: btoa(bin), commit: false })); } catch (e) { /* */ }
+      };
+      mv.proc = proc; mvAbrirWS();
+    }).catch(function () { mvFallo('Permite el micrófono para esta página'); });
+    mvPintar();
+  }
+  function mvApagar() {
+    mv.on = false; mv.gen++; mv.cola = []; mv.buf = '';
+    if (mv.sonando) { try { mv.sonando.stop(); } catch (e) { /* */ } mv.sonando = null; }
+    mvCerrarWS();
+    if (mv.proc) { try { mv.proc.disconnect(); } catch (e) { /* */ } mv.proc = null; }
+    if (mv.stream) { mv.stream.getTracks().forEach(function (t) { t.stop(); }); mv.stream = null; }
+    if (mv.ctx) { try { mv.ctx.close(); } catch (e) { /* */ } mv.ctx = null; }
+    mv.estado = ''; mvPintar();
+  }
+  function mvFallo(msg) { mv.estado = 'error'; mv.error = msg; mvPintar(); }
+  function mvCerrarWS() { var w = mv.ws; mv.ws = null; if (w) { try { w.close(); } catch (e) { /* */ } } }
+  function mvAbrirWS() {
+    if (!mv.on || mv.ws || mv.abriendo) return;
+    mv.abriendo = true; mvPintar();
+    llamarVoz({}).then(function (r) { return r.json(); }).then(function (d) {
+      mv.abriendo = false;
+      if (!mv.on) return;
+      if (!d || !d.token) return mvFallo((d && d.error) || 'ElevenLabs no dio permiso');
+      var ws = new WebSocket('wss://api.elevenlabs.io/v1/speech-to-text/realtime?model_id=scribe_v2_realtime&audio_format=pcm_16000&language_code=es&commit_strategy=vad&token=' + encodeURIComponent(d.token));
+      mv.ws = ws;
+      ws.onopen = function () { mv.estado = ''; mvPintar(); };
+      ws.onmessage = function (m) {
+        var x; try { x = JSON.parse(m.data); } catch (e) { return; }
+        var tipo = x.message_type || '';
+        if (tipo === 'partial_transcript' && mvEscucha()) { var c = $('#c-texto'); if (c) { c.value = x.text || ''; ajustar(); } }
+        else if (tipo === 'committed_transcript' && mvEscucha()) {
+          var txt = (x.text || '').trim();
+          if (txt.replace(/[^\p{L}\p{N}]/gu, '').length >= 2) enviar(txt); else { var c2 = $('#c-texto'); if (c2) c2.value = ''; }
+        }
+        else if (tipo === 'insufficient_audio_activity' || tipo === 'session_time_limit_exceeded') mvCerrarWS();
+        else if (tipo && /error/i.test(tipo)) mvFallo('ElevenLabs: ' + (x.error || x.message || tipo));
+      };
+      ws.onclose = function () { if (mv.ws === ws) { mv.ws = null; if (mvEscucha() && mv.estado !== 'error') setTimeout(mvAbrirWS, 300); mvPintar(); } };
+      ws.onerror = function () { if (mv.ws === ws) mvFallo('Se cortó la conexión con ElevenLabs'); };
+    }).catch(function () { mv.abriendo = false; mvFallo('No se pudo pedir permiso a ElevenLabs'); });
+  }
+  // Lo que se lee en voz alta: sin markdown, y los bloques de código no se leen
+  function mvLimpio(t) {
+    return t.replace(/```[\s\S]*?```/g, ' (te dejo el código en pantalla) ')
+      .replace(/`([^`]*)`/g, '$1').replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1').replace(/https?:\/\/\S+/g, 'el enlace')
+      .replace(/^\s*#{1,6}\s*/gm, '').replace(/^\s*[-*•]\s+/gm, '').replace(/^\s*\|.*\|\s*$/gm, '')
+      .replace(/[*_~>#|]/g, '').replace(/\s+/g, ' ').trim();
+  }
+  function mvDecir(trozo) {
+    mv.finRespuesta = false; mv.buf += trozo;
+    for (;;) {
+      var vallas = (mv.buf.match(/```/g) || []).length;
+      var util = vallas % 2 ? mv.buf.slice(0, mv.buf.lastIndexOf('```')) : mv.buf;   // no cortar dentro de un bloque de código sin cerrar
+      var re = /[.!?…:;](?=\s)|\n\n/g, m, corte = -1;
+      while ((m = re.exec(util))) { if (m.index + 1 >= 60 || util.slice(0, m.index + 1).indexOf('\n\n') >= 0) { corte = m.index + m[0].length; break; } }
+      if (corte < 0 && util.length > 320) corte = util.lastIndexOf(' ', 300) > 0 ? util.lastIndexOf(' ', 300) : 300;
+      if (corte < 0) break;
+      mvEncolar(mv.buf.slice(0, corte)); mv.buf = mv.buf.slice(corte);
+    }
+  }
+  function mvFinRespuesta() { if (mv.buf.trim()) mvEncolar(mv.buf); mv.buf = ''; mv.finRespuesta = true; mvSiguiente(); }
+  function mvEncolar(t) {
+    t = mvLimpio(t); if (!t) return;
+    var g = mv.gen;
+    var item = { audio: llamarVoz({ accion: 'decir', texto: t.slice(0, 900), voz: mvVoz(), modelo: 'eleven_flash_v2_5' })
+      .then(function (r) { if (!r.ok) throw new Error('voz ' + r.status); return r.arrayBuffer(); })
+      .then(function (ab) { return g === mv.gen && mv.ctx ? new Promise(function (ok, ko) { mv.ctx.decodeAudioData(ab, ok, ko); }) : null; }) };
+    mv.cola.push(item); mvSiguiente(); mvPintar();
+  }
+  function mvSiguiente() {
+    if (!mv.on || mv.sonando) return;
+    var item = mv.cola[0];
+    if (!item) { mvPintar(); if (mvEscucha()) { var c = $('#c-texto'); if (c) c.value = ''; mvAbrirWS(); } return; }
+    var g = mv.gen;
+    mv.sonando = { stop: function () { /* aún cargando */ } };
+    item.audio.then(function (buf) {
+      if (g !== mv.gen) return;
+      mv.cola.shift();
+      if (!buf || !mv.ctx) { mv.sonando = null; return mvSiguiente(); }
+      var src = mv.ctx.createBufferSource(); src.buffer = buf; src.connect(mv.ctx.destination);
+      src.onended = function () { if (g !== mv.gen) return; mv.sonando = null; mvSiguiente(); };
+      mv.sonando = src; src.start(); mvPintar();
+    }).catch(function () { if (g !== mv.gen) return; mv.cola.shift(); mv.sonando = null; mvSiguiente(); });
+  }
+  function mvCortar() {   // calla ya y vuelve a escuchar (la respuesta sigue escribiéndose en pantalla)
+    mv.gen++; mv.cola = []; mv.buf = '';
+    if (mv.sonando) { try { mv.sonando.stop(); } catch (e) { /* */ } mv.sonando = null; }
+    if (enviando) parar();
+    mv.finRespuesta = true; mvPintar(); mvSiguiente();
+  }
 
   // ---------- pintar ----------
   function htmlLogin() {
@@ -195,7 +334,9 @@
       '<main class="c-main"><div class="c-msgs" id="c-msgs"></div>' +
       '<div class="c-pie"><div class="c-caja"><textarea id="c-texto" rows="1" placeholder="Escribe un mensaje…" enterkeyhint="send"></textarea>' +
       '<button type="button" class="c-pri" id="c-boton" data-a="enviar">Enviar</button></div>' +
-      '<div class="c-opc"><button type="button" class="c-modelo" id="c-modelo" data-a="modelos"></button>' +
+      '<div class="c-opc"><button type="button" class="c-voz" id="c-voz" data-a="voz">🎙 Manos libres</button>' +
+      '<button type="button" class="c-link" data-a="voz-id" title="Voz de ElevenLabs">voz</button>' +
+      '<button type="button" class="c-modelo" id="c-modelo" data-a="modelos"></button>' +
       '<label><input type="checkbox" id="c-pensar"> Pensar a fondo</label><span class="c-ayuda">Enter envía · Mayús+Enter salto de línea</span></div></div></main></div>' +
       '<div class="c-modal" id="c-modal" hidden></div>';
     $('#c-pensar').checked = leer('miSemana.chat.pensar') === '1';
@@ -250,6 +391,7 @@
     b.setAttribute('data-a', enviando ? 'parar' : 'enviar');
     $('#c-modelo').textContent = '🧠 ' + nombreModelo(sel) + ' ▾';
     $('#c-modelo').disabled = !!enviando;
+    mvPintar();
   }
 
   // ---------- selector de modelo ----------
@@ -327,6 +469,15 @@
     if (a === 'borrar') return borrar(b.getAttribute('data-id'));
     if (a === 'lista') return $('.c-cuerpo').classList.toggle('ver-lista');
     if (a === 'modelos') return abrirModelos();
+    if (a === 'voz') return mvAlternar();
+    if (a === 'voz-cortar') return mvCortar();
+    if (a === 'voz-id') {
+      var v = prompt('ID de la voz de ElevenLabs (vacío = la voz de la app):', leer('miSemana.chat.voz'));
+      if (v === null) return;
+      v = v.trim();
+      if (v && !/^[A-Za-z0-9]{10,40}$/.test(v)) { alert('Ese ID no parece válido'); return; }
+      guardarLocal('miSemana.chat.voz', v); return;
+    }
     if (a === 'cerrar-modelos') return cerrarModelos();
     if (a === 'filtro') { filtro.tipo = b.getAttribute('data-v'); abrirModelos(); return; }
     if (a === 'orden') { filtro.orden = b.getAttribute('data-v'); abrirModelos(); return; }
