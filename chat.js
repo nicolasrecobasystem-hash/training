@@ -181,7 +181,7 @@
 
   // ---------- voz manos libres (ElevenLabs: Scribe para oír, texto a voz para contestar) ----------
   // Mientras habla la respuesta, el micro no manda audio (así no se oye a sí mismo). Al acabar, vuelve a escuchar.
-  var VOZ_APP = 'k8cFOyAg7B9qwBlDDNTC';
+  var VOZ_APP = 'ffcj1qQ5F944b6nkK5fW';   // voz del chat (la del entreno es otra)
   var mv = { on: false, estado: '', error: '', ws: null, abriendo: false, ctx: null, stream: null, proc: null,
              buf: '', cola: [], sonando: null, gen: 0, finRespuesta: true };
   function mvVoz() { var v = leer('miSemana.chat.voz'); return /^[A-Za-z0-9]{10,40}$/.test(v) ? v : VOZ_APP; }
@@ -472,7 +472,7 @@
     if (a === 'voz') return mvAlternar();
     if (a === 'voz-cortar') return mvCortar();
     if (a === 'voz-id') {
-      var v = prompt('ID de la voz de ElevenLabs (vacío = la voz de la app):', leer('miSemana.chat.voz'));
+      var v = prompt('ID de la voz de ElevenLabs (vacío = la voz del chat):', leer('miSemana.chat.voz'));
       if (v === null) return;
       v = v.trim();
       if (v && !/^[A-Za-z0-9]{10,40}$/.test(v)) { alert('Ese ID no parece válido'); return; }
