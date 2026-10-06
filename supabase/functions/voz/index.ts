@@ -37,6 +37,9 @@ Deno.serve(async (req) => {
     if (!texto) return json({ error: 'Falta el texto' }, 400);
     const pedido: any = { text: texto, model_id: modelo };
     if (modelo !== 'eleven_multilingual_v2' && modelo !== 'eleven_flash_v2_5') pedido.voice_settings = { stability: 0.4, similarity_boost: 0.8 };
+    // Velocidad opcional (ElevenLabs acepta 0.7–1.2; 1 = normal). El chat la usa para hablar más despacio.
+    const vel = Number(cuerpo.velocidad);
+    if (isFinite(vel) && vel >= 0.7 && vel <= 1.2 && vel !== 1) pedido.voice_settings = { ...(pedido.voice_settings || {}), speed: vel };
     const t = await fetch('https://api.elevenlabs.io/v1/text-to-speech/' + vozId + '?output_format=mp3_44100_128', {
       method: 'POST', headers: { 'xi-api-key': clave, 'Content-Type': 'application/json', Accept: 'audio/mpeg' },
       body: JSON.stringify(pedido),

@@ -125,3 +125,14 @@ button:active{transform:scale(.98)}
 .c-voz.on{border-color:var(--verde);color:var(--verde);background:rgba(123,196,143,.08)}
 .c-voz.mal{border-color:rgba(229,99,77,.6);color:#ff9a8a}
 .c-opc{align-items:center}
+
+/* personajes */
+.c-opcion-fila{display:flex;align-items:center;gap:4px}
+.c-opcion-fila .c-opcion{flex:1;min-width:0}
+.c-form-pers{display:flex;flex-direction:column;gap:12px;overflow:auto;min-height:0}
+.c-form-pers label{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--suave)}
+.c-form-pers label small{color:var(--tenue);font-size:11px}
+.c-form-pers input:not([type=checkbox]),.c-form-pers textarea{background:var(--fondo);border:1px solid var(--linea2);border-radius:10px;padding:10px 12px;font-size:15px;color:var(--texto);min-height:44px}
+.c-form-pers textarea{resize:vertical;line-height:1.45;font-family:var(--sans)}
+.c-form-pers .c-check{flex-direction:row;align-items:center;gap:8px}
+.c-fila-botones{display:flex;justify-content:space-between;gap:10px}

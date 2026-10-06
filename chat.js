@@ -11,6 +11,8 @@
   var convs = [], actual = null, msgs = [], enviando = null, montado = false;
   // Modelo elegido: {proveedor:'deepseek'} o {proveedor:'openrouter', modelo:'openai/…'}. Cada conversación recuerda el suyo.
   var sel = leerModelo(), catalogo = null, catInfo = {}, catError = '', filtro = { q: '', tipo: 'todos', orden: 'nuevos' };
+  // Personajes: prompt de configuración persistente (chat_personajes). persSel = el de la conversación abierta (null = sin personaje)
+  var pers = [], persCargados = false, persSel = leer('miSemana.chat.personaje') || null, editando = null;
 
   function esc(t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
   function $(s) { return raiz.querySelector(s); }
@@ -96,7 +98,7 @@
 
   // ---------- datos ----------
   function cargarConvs() {
-    return sb.from('chat_conversaciones').select('id, titulo, actualizado, proveedor, modelo').order('actualizado', { ascending: false }).limit(200)
+    return sb.from('chat_conversaciones').select('id, titulo, actualizado, proveedor, modelo, personaje_id').order('actualizado', { ascending: false }).limit(200)
       .then(function (r) { if (r.error) throw r.error; convs = r.data || []; pintarLista(); })
       .catch(function (e) { error = e.message; pintarMsgs(); });
   }
@@ -105,7 +107,10 @@
     actual = id; msgs = []; error = '';
     guardarLocal('miSemana.chat', id || '');
     var cv = id && convs.filter(function (x) { return x.id === id; })[0];
-    if (cv && cv.proveedor) { sel = cv.proveedor === 'openrouter' && cv.modelo ? { proveedor: 'openrouter', modelo: cv.modelo } : { proveedor: 'deepseek' }; pintarPie(); }
+    if (cv && cv.proveedor) { sel = cv.proveedor === 'openrouter' && cv.modelo ? { proveedor: 'openrouter', modelo: cv.modelo } : { proveedor: 'deepseek' }; }
+    persSel = cv ? (cv.personaje_id || null) : (leer('miSemana.chat.personaje') || null);
+    if (persCargados && persSel && !persPor(persSel)) persSel = null;
+    pintarPie();
     $('.c-cuerpo').classList.remove('ver-lista');
     pintarLista(); pintarMsgs();
     if (!id) return $('#c-texto').focus();
@@ -140,7 +145,7 @@
       return fetch(URL_NUBE + '/functions/v1/chat', {
         method: 'POST', signal: ctrl.signal,
         headers: { Authorization: 'Bearer ' + tok, apikey: CLAVE, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mensaje: texto, conversacion_id: actual, pensar: pensar, proveedor: sel.proveedor, modelo: sel.modelo }),
+        body: JSON.stringify({ mensaje: texto, conversacion_id: actual, pensar: pensar, proveedor: sel.proveedor, modelo: sel.modelo, personaje_id: persSel }),
       });
     }).then(function (r) {
       if (!r.ok) return r.json().catch(function () { return {}; }).then(function (d) {
@@ -179,12 +184,84 @@
   }
   function parar() { if (enviando) enviando.abort(); }
 
+  // ---------- personajes ----------
+  function persPor(id) { if (!id) return null; for (var i = 0; i < pers.length; i++) if (pers[i].id === id) return pers[i]; return null; }
+  function cargarPersonajes() {
+    return sb.from('chat_personajes').select('id, nombre, prompt, voz, proveedor, modelo').order('nombre').then(function (r) {
+      if (r.error) throw r.error;
+      pers = r.data || []; persCargados = true;
+      if (persSel && !persPor(persSel)) persSel = null;
+      pintarPie(); pintarLista(); if (!msgs.length) pintarMsgs();
+    }).catch(function (e) { error = 'Personajes: ' + e.message; pintarMsgs(); });
+  }
+  function elegirPersonaje(id) {
+    persSel = id; guardarLocal('miSemana.chat.personaje', id || '');
+    var pa = persPor(id);
+    if (pa && pa.proveedor) sel = pa.proveedor === 'openrouter' && pa.modelo ? { proveedor: 'openrouter', modelo: pa.modelo } : { proveedor: 'deepseek' };
+    cerrarModelos(); pintarPie(); if (!msgs.length) pintarMsgs();
+  }
+  function abrirPersonajes() {
+    var mo = $('#c-modal'); mo.hidden = false;
+    var h = '<div class="c-caja-modal" role="dialog" aria-label="Personajes"><div class="c-modal-cab"><b>' + (editando ? (editando.id ? 'Editar personaje' : 'Nuevo personaje') : 'Personajes') + '</b>' +
+      '<button type="button" class="c-sec" data-a="cerrar-modelos">✕</button></div>';
+    if (editando) {
+      h += '<div class="c-form-pers">' +
+        '<label>Nombre<input id="p-nombre" maxlength="60" value="' + esc(editando.nombre) + '" placeholder="Ej.: Entrenador, Abogado de familia, Profe de inglés"></label>' +
+        '<label>Prompt de configuración <small>(lo recibe el modelo antes de cada conversación)</small>' +
+        '<textarea id="p-prompt" rows="12" maxlength="20000" placeholder="Eres… Hablas de forma… Tu objetivo es… Nunca…">' + esc(editando.prompt) + '</textarea></label>' +
+        '<label>Voz de ElevenLabs <small>(ID de voz con la que habla este personaje en manos libres)</small><input id="p-voz" maxlength="40" value="' + esc(editando.voz) + '" placeholder="ID de voz"></label>' +
+        '<label class="c-check"><input type="checkbox" id="p-modelo"' + (editando.fijarModelo ? ' checked' : '') + '> Usar siempre el modelo actual: <b>' + esc(nombreModelo(sel)) + '</b></label>' +
+        '<div class="c-error" id="p-error"></div>' +
+        '<div class="c-fila-botones"><button type="button" class="c-sec" data-a="pers-volver">← Volver</button>' +
+        '<button type="button" class="c-pri" data-a="pers-guardar">Guardar</button></div></div>';
+    } else {
+      h += '<div class="c-modelos">' +
+        '<button type="button" class="c-opcion' + (!persSel ? ' on' : '') + '" data-a="pers-elegir" data-id=""><span><b>Sin personaje</b><small>El modelo tal cual, sin prompt</small></span></button>' +
+        pers.map(function (p) {
+          return '<div class="c-opcion-fila"><button type="button" class="c-opcion' + (persSel === p.id ? ' on' : '') + '" data-a="pers-elegir" data-id="' + p.id + '">' +
+            '<span><b>🎭 ' + esc(p.nombre) + '</b><small>' + esc((p.prompt || '(sin prompt)').replace(/\s+/g, ' ').slice(0, 110)) + '</small></span>' +
+            '<em>' + esc([p.proveedor ? nombreModelo(p.proveedor === 'openrouter' ? { proveedor: 'openrouter', modelo: p.modelo } : { proveedor: 'deepseek' }) : '', p.voz ? '🔊' : ''].filter(Boolean).join(' · ')) + '</em></button>' +
+            '<button type="button" class="c-borrar" data-a="pers-editar" data-id="' + p.id + '" title="Editar">✎</button>' +
+            '<button type="button" class="c-borrar" data-a="pers-borrar" data-id="' + p.id + '" title="Borrar">✕</button></div>';
+        }).join('') +
+        '</div><button type="button" class="c-pri" data-a="pers-nuevo">＋ Nuevo personaje</button>';
+    }
+    mo.innerHTML = h + '</div>';
+    if (editando && matchMedia('(pointer:fine)').matches) $('#p-nombre').focus();
+  }
+  function guardarPersonaje() {
+    var nombre = $('#p-nombre').value.trim(), prompt = $('#p-prompt').value, voz = $('#p-voz').value.trim(), fijar = $('#p-modelo').checked;
+    var err = function (t) { $('#p-error').textContent = t; };
+    if (!nombre) return err('Ponle un nombre');
+    if (voz && !/^[A-Za-z0-9]{10,40}$/.test(voz)) return err('El ID de voz no parece válido');
+    var fila = { nombre: nombre, prompt: prompt, voz: voz || null, proveedor: fijar ? sel.proveedor : null,
+                 modelo: fijar && sel.proveedor === 'openrouter' ? sel.modelo : null, actualizado: new Date().toISOString() };
+    var q = editando.id ? sb.from('chat_personajes').update(fila).eq('id', editando.id).select('id').single()
+                        : sb.from('chat_personajes').insert(fila).select('id').single();
+    q.then(function (r) {
+      if (r.error) return err(r.error.message);
+      var id = r.data.id; editando = null;
+      cargarPersonajes().then(function () { elegirPersonaje(id); });
+    });
+  }
+  function borrarPersonaje(id) {
+    var pa = persPor(id); if (!pa || !confirm('¿Borrar el personaje «' + pa.nombre + '»? Las conversaciones se quedan, sin personaje.')) return;
+    sb.from('chat_personajes').delete().eq('id', id).then(function (r) {
+      if (r.error) { error = r.error.message; return pintarMsgs(); }
+      if (persSel === id) { persSel = null; guardarLocal('miSemana.chat.personaje', ''); }
+      cargarPersonajes().then(function () { abrirPersonajes(); cargarConvs(); });
+    });
+  }
+
   // ---------- voz manos libres (ElevenLabs: Scribe para oír, texto a voz para contestar) ----------
   // Mientras habla la respuesta, el micro no manda audio (así no se oye a sí mismo). Al acabar, vuelve a escuchar.
   var VOZ_APP = 'ffcj1qQ5F944b6nkK5fW';   // voz del chat (la del entreno es otra)
   var mv = { on: false, estado: '', error: '', ws: null, abriendo: false, ctx: null, stream: null, proc: null,
              buf: '', cola: [], sonando: null, gen: 0, finRespuesta: true };
-  function mvVoz() { var v = leer('miSemana.chat.voz'); return /^[A-Za-z0-9]{10,40}$/.test(v) ? v : VOZ_APP; }
+  function mvVoz() {
+    var pa = persPor(persSel); if (pa && pa.voz) return pa.voz;
+    var v = leer('miSemana.chat.voz'); return /^[A-Za-z0-9]{10,40}$/.test(v) ? v : VOZ_APP;
+  }
   function mvEscucha() { return mv.on && !enviando && !mv.sonando && !mv.cola.length && mv.finRespuesta; }
   function llamarVoz(cuerpo) {
     return sb.auth.getSession().then(function (r) {
@@ -290,7 +367,7 @@
   function mvEncolar(t) {
     t = mvLimpio(t); if (!t) return;
     var g = mv.gen;
-    var item = { audio: llamarVoz({ accion: 'decir', texto: t.slice(0, 900), voz: mvVoz(), modelo: 'eleven_flash_v2_5' })
+    var item = { audio: llamarVoz({ accion: 'decir', texto: t.slice(0, 900), voz: mvVoz(), modelo: 'eleven_flash_v2_5', velocidad: 0.85 })
       .then(function (r) { if (!r.ok) throw new Error('voz ' + r.status); return r.arrayBuffer(); })
       .then(function (ab) { return g === mv.gen && mv.ctx ? new Promise(function (ok, ko) { mv.ctx.decodeAudioData(ab, ok, ko); }) : null; }) };
     mv.cola.push(item); mvSiguiente(); mvPintar();
@@ -336,6 +413,7 @@
       '<button type="button" class="c-pri" id="c-boton" data-a="enviar">Enviar</button></div>' +
       '<div class="c-opc"><button type="button" class="c-voz" id="c-voz" data-a="voz">🎙 Manos libres</button>' +
       '<button type="button" class="c-link" data-a="voz-id" title="Voz de ElevenLabs">voz</button>' +
+      '<button type="button" class="c-modelo" id="c-pers" data-a="personajes"></button>' +
       '<button type="button" class="c-modelo" id="c-modelo" data-a="modelos"></button>' +
       '<label><input type="checkbox" id="c-pensar"> Pensar a fondo</label><span class="c-ayuda">Enter envía · Mayús+Enter salto de línea</span></div></div></main></div>' +
       '<div class="c-modal" id="c-modal" hidden></div>';
@@ -350,7 +428,7 @@
     if (!montado) return;
     $('#c-lista').innerHTML = convs.length ? convs.map(function (c) {
       return '<div class="c-conv' + (c.id === actual ? ' on' : '') + '"><button type="button" class="c-abrir" data-a="abrir" data-id="' + c.id + '">' +
-        esc(c.titulo) + '<small>' + fecha(c.actualizado) + '</small></button>' +
+        esc(c.titulo) + '<small>' + fecha(c.actualizado) + (persPor(c.personaje_id) ? ' · 🎭 ' + esc(persPor(c.personaje_id).nombre) : '') + '</small></button>' +
         '<button type="button" class="c-borrar" data-a="borrar" data-id="' + c.id + '" title="Borrar" aria-label="Borrar conversación">✕</button></div>';
     }).join('') : '<div class="c-vacio">Aún no hay conversaciones.</div>';
   }
@@ -367,7 +445,8 @@
     if (!montado) return;
     var caja = $('#c-msgs');
     caja.innerHTML = (msgs.length ? msgs.map(htmlMsg).join('') :
-      (actual ? '<div class="c-vacio">Cargando…</div>' : '<div class="c-bienv"><b>¿En qué te ayudo?</b>Hablas con <span class="c-acento">' + esc(nombreModelo(sel)) + '</span>. Cámbialo abajo, en el botón del modelo.</div>')) +
+      (actual ? '<div class="c-vacio">Cargando…</div>' : '<div class="c-bienv"><b>' + esc(persPor(persSel) ? persPor(persSel).nombre : '¿En qué te ayudo?') + '</b>' +
+        (persPor(persSel) ? 'Personaje con ' : 'Hablas con ') + '<span class="c-acento">' + esc(nombreModelo(sel)) + '</span>. Cambia el personaje o el modelo abajo.</div>')) +
       (error ? '<div class="c-error">' + esc(error) + '</div>' : '');
     if (bajar) caja.scrollTop = caja.scrollHeight;
   }
@@ -391,6 +470,9 @@
     b.setAttribute('data-a', enviando ? 'parar' : 'enviar');
     $('#c-modelo').textContent = '🧠 ' + nombreModelo(sel) + ' ▾';
     $('#c-modelo').disabled = !!enviando;
+    var pa = persPor(persSel);
+    $('#c-pers').textContent = '🎭 ' + (pa ? pa.nombre : 'Sin personaje') + ' ▾';
+    $('#c-pers').disabled = !!enviando;
     mvPintar();
   }
 
@@ -469,6 +551,13 @@
     if (a === 'borrar') return borrar(b.getAttribute('data-id'));
     if (a === 'lista') return $('.c-cuerpo').classList.toggle('ver-lista');
     if (a === 'modelos') return abrirModelos();
+    if (a === 'personajes') { editando = null; return abrirPersonajes(); }
+    if (a === 'pers-elegir') return elegirPersonaje(b.getAttribute('data-id') || null);
+    if (a === 'pers-nuevo') { editando = { id: null, nombre: '', prompt: '', voz: VOZ_APP, fijarModelo: false }; return abrirPersonajes(); }
+    if (a === 'pers-editar') { var pe = persPor(b.getAttribute('data-id')); editando = { id: pe.id, nombre: pe.nombre, prompt: pe.prompt, voz: pe.voz || '', fijarModelo: !!pe.proveedor }; return abrirPersonajes(); }
+    if (a === 'pers-volver') { editando = null; return abrirPersonajes(); }
+    if (a === 'pers-guardar') return guardarPersonaje();
+    if (a === 'pers-borrar') return borrarPersonaje(b.getAttribute('data-id'));
     if (a === 'voz') return mvAlternar();
     if (a === 'voz-cortar') return mvCortar();
     if (a === 'voz-id') {
@@ -512,7 +601,7 @@
     var u = s && s.user;
     setTimeout(function () {
       var antes = usuario && usuario.id; usuario = u || null; pintar();
-      if (usuario && usuario.id !== antes) { cargarCatalogo().then(function () { pintarPie(); if (msgs.length) pintarMsgs(); }); cargarConvs().then(function () { var g = leer('miSemana.chat'); abrir(convs.some(function (c) { return c.id === g; }) ? g : null); }); }
+      if (usuario && usuario.id !== antes) { cargarCatalogo().then(function () { pintarPie(); if (msgs.length) pintarMsgs(); }); cargarPersonajes(); cargarConvs().then(function () { var g = leer('miSemana.chat'); abrir(convs.some(function (c) { return c.id === g; }) ? g : null); }); }
     }, 0);
   });
   pintar();

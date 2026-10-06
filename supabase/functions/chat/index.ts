@@ -1,7 +1,8 @@
 // Función "chat" de Supabase: chat general para chat.html, con DeepSeek directo o cualquier modelo de OpenRouter.
 // Misma comprobación que voz, govee y reloj: sesión válida y solo el correo permitido.
 // Claves (nunca salen de aquí): DeepSeek en el secreto «deep» (o DEEPSEEK_API_KEY), OpenRouter en «openrouter» (o OPENROUTER_API_KEY).
-// Modelo de DeepSeek directo: DEEPSEEK_MODELO o deepseek-flash. Sin instrucción de sistema: el modelo tal cual.
+// Modelo de DeepSeek directo: DEEPSEEK_MODELO o deepseek-flash. Sin personaje no hay instrucción de sistema: el modelo tal cual.
+// Con personaje (chat_personajes), su prompt va como instrucción de sistema; se lee aquí, nunca lo manda el navegador.
 // Guarda la pregunta y la respuesta en chat_mensajes con la sesión de Diego (RLS).
 // accion 'modelos' → catálogo de OpenRouter. Por defecto envía un mensaje y responde a trozos:
 //   una línea JSON por trozo → {t:'conv',id,modelo} {t:'razon',x} {t:'texto',x} {t:'fin',uso} | {t:'error',x}
@@ -73,7 +74,14 @@ Deno.serve(async (req) => {
 
   // Conversación: la que viene (se le apunta el modelo actual) o una nueva con el principio de la pregunta como título
   let conv = typeof c.conversacion_id === 'string' ? c.conversacion_id : '';
-  const guardaModelo = { proveedor, modelo: proveedor === 'openrouter' ? modelo : null };
+  // Personaje (opcional): se comprueba que existe y se guarda en la conversación
+  let personaje: { id: string; prompt: string } | null = null;
+  if (typeof c.personaje_id === 'string' && c.personaje_id) {
+    const { data, error } = await sb.from('chat_personajes').select('id, prompt').eq('id', c.personaje_id).maybeSingle();
+    if (error || !data) return json({ error: 'Personaje no encontrado' }, 404);
+    personaje = data;
+  }
+  const guardaModelo = { proveedor, modelo: proveedor === 'openrouter' ? modelo : null, personaje_id: personaje?.id ?? null };
   if (conv) {
     const { data, error } = await sb.from('chat_conversaciones').update(guardaModelo).eq('id', conv).select('id').maybeSingle();
     if (error || !data) return json({ error: 'Conversación no encontrada' }, 404);
@@ -90,8 +98,8 @@ Deno.serve(async (req) => {
   const { error: e2 } = await sb.from('chat_mensajes').insert({ conversacion_id: conv, rol: 'user', contenido: texto });
   if (e2) return json({ error: e2.message }, 500);
 
-  // Sin instrucción de sistema: el modelo tal cual, solo con el historial de la conversación
-  const mensajes = ([] as { role: string; content: string }[])
+  // Sin personaje: el modelo tal cual, solo con el historial. Con personaje: su prompt como instrucción de sistema.
+  const mensajes = (personaje && personaje.prompt.trim() ? [{ role: 'system', content: personaje.prompt.trim() }] : [] as { role: string; content: string }[])
     .concat((previos || []).reverse().filter((m: any) => m.contenido).map((m: any) => ({ role: m.rol, content: m.contenido })))
     .concat([{ role: 'user', content: texto }]);
 
