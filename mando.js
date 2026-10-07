@@ -164,7 +164,7 @@
       if (t.reps && t.fase === 'trabajo' && t.contadas) txt = t.contadas + '<small>/ ' + esc(String(t.reps)) + '</small>';
       if (t.fase === 'hecho') txt = '✓';
       $('.m-tiempo').innerHTML = txt;
-      $('.m-oido').textContent = voz.on && t.reps && t.fase === 'trabajo' ? (voz.oido ? '“' + voz.oido + '”' : (voz.estado === 'escuchando' ? 'Te escucho: cuenta en voz alta…' : '')) : '';
+      $('.m-oido').textContent = voz.on && t.reps && t.fase === 'trabajo' ? (voz.oido ? '🎙 ' + voz.oido : (voz.estado === 'escuchando' ? 'Te escucho: cuenta en voz alta…' : '')) : '';
       var hechas = t.fase === 'hecho' ? t.series : (t.fase === 'descanso' ? t.serie : t.serie - 1);
       $('.m-puntos').innerHTML = Array.apply(null, Array(t.series)).map(function (_, i) { return '<i class="' + (i < hechas ? 'on' : '') + '"></i>'; }).join('');
       $('.m-frase').textContent = t.frase ? '«' + t.frase + '»' : '';
@@ -214,9 +214,20 @@
     once: 11, doce: 12, trece: 13, catorce: 14, quince: 15, dieciseis: 16, diecisiete: 17, dieciocho: 18, diecinueve: 19, veinte: 20,
     veintiuno: 21, veintiun: 21, veintidos: 22, veintitres: 23, veinticuatro: 24, veinticinco: 25, veintiseis: 26, veintisiete: 27,
     veintiocho: 28, veintinueve: 29, treinta: 30 };
+  // Palabras que pueden ir pegadas a un número al contar en voz alta («y cinco», «va seis», «otra, siete»)
+  var RELLENO = { y: 1, e: 1, va: 1, vamos: 1, venga: 1, otra: 1, otro: 1, mas: 1, eso: 1, bien: 1, ya: 1, ahi: 1, uh: 1, eh: 1, ah: 1, oh: 1, mm: 1, hm: 1, uf: 1, buf: 1, ok: 1, vale: 1 };
+  function valorDe(w) { return /^\d+$/.test(w) ? +w : NUM[w]; }
+  // Solo cuenta los números «aislados»: los que van solos o rodeados de otros números o de muletillas.
+  // Así la letra de una canción («dos corazones», «one more time») no suma repeticiones.
   function numerosDe(txt) {
-    var limpio = txt.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/(\d)[.,](\d)/g, '$1 $2');
-    return (limpio.match(/[a-zñ]+|\d+/g) || []).map(function (w) { return /^\d+$/.test(w) ? +w : NUM[w]; }).filter(function (n) { return n > 0 && n <= 60; });
+    var limpio = txt.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/(\d)[.,](\d)/g, '$1 $2');
+    var w = limpio.match(/[a-zñ]+|\d+/g) || [], out = [];
+    var ok = function (i) { return i < 0 || i >= w.length || valorDe(w[i]) > 0 || RELLENO[w[i]]; };
+    for (var i = 0; i < w.length; i++) {
+      var n = valorDe(w[i]);
+      if (n > 0 && n <= 60 && ok(i - 1) && ok(i + 1)) out.push(n);
+    }
+    return out;
   }
   function vozAlternar() {
     // Activa pero sin micro (recién abierta la página) o con error: tocar = reintentar
@@ -238,7 +249,11 @@
       if (!voz.on) { s.getTracks().forEach(function (t) { t.stop(); }); return; }
       voz.stream = s;
       var src = voz.ctx.createMediaStreamSource(s), proc = voz.ctx.createScriptProcessor(4096, 1, 1), mudo = voz.ctx.createGain();
-      mudo.gain.value = 0; src.connect(proc); proc.connect(mudo); mudo.connect(voz.ctx.destination);
+      // Filtro de banda de voz (250–3.800 Hz): quita graves y agudos de la música antes de mandarla a ElevenLabs
+      var pasaAltos = voz.ctx.createBiquadFilter(), pasaBajos = voz.ctx.createBiquadFilter();
+      pasaAltos.type = 'highpass'; pasaAltos.frequency.value = 250; pasaAltos.Q.value = 0.7;
+      pasaBajos.type = 'lowpass'; pasaBajos.frequency.value = 3800; pasaBajos.Q.value = 0.7;
+      mudo.gain.value = 0; src.connect(pasaAltos); pasaAltos.connect(pasaBajos); pasaBajos.connect(proc); proc.connect(mudo); mudo.connect(voz.ctx.destination);
       var paso = voz.ctx.sampleRate / 16000;
       proc.onaudioprocess = function (ev) {
         if (!voz.ws || voz.ws.readyState !== 1) return;
@@ -271,7 +286,7 @@
       if (!tok) return fallo((r && r.data && r.data.error) || 'No se pudo pedir permiso a ElevenLabs');
       if (!voz.on) return;
       var url = 'wss://api.elevenlabs.io/v1/speech-to-text/realtime?model_id=scribe_v2_realtime&audio_format=pcm_16000&language_code=es' +
-        '&commit_strategy=vad&token=' + encodeURIComponent(tok);
+        '&commit_strategy=vad&filter_background_audio=true&vad_threshold=0.35' + PISTAS + '&token=' + encodeURIComponent(tok);
       var ws = new WebSocket(url); voz.ws = ws;
       ws.onopen = function () { voz.estado = 'escuchando'; voz.error = ''; pintar(); };
       ws.onmessage = function (m) {
@@ -295,13 +310,20 @@
       mandar('token-voz', { de: miId });
     });
   }
+  // Palabras que Scribe debe esperar (le ayuda a oír bien los números con música de fondo)
+  var PISTAS = ['uno', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', 'ocho', 'nueve', 'diez', 'once', 'doce', 'trece', 'catorce', 'quince',
+    'dieciséis', 'diecisiete', 'dieciocho', 'diecinueve', 'veinte', 'veinticinco', 'treinta', 'listo'].map(function (w) { return '&keyterms=' + encodeURIComponent(w); }).join('');
   function cerrarWS() { var w = voz.ws; voz.ws = null; if (w) { try { w.close(); } catch (e) {} } if (voz.estado !== 'error') voz.estado = 'lista'; }
   // Lo que oye: números en orden ("uno, dos, tres" o "1 2 3") y "listo" para terminar la serie
   function oir(txt, final) {
     if (!txt) return;
-    voz.oido = txt.length > 40 ? '…' + txt.slice(-40) : txt;
+    // Solo hacia delante: el siguiente número (o saltarse uno, pero solo con la frase ya cerrada)
     numerosDe(txt).forEach(function (n) {
-      if (n > voz.cuenta && n <= voz.cuenta + 2) { voz.cuenta = n; mandar('reps', { n: n }); }   // solo hacia delante, sin saltos raros
+      if (n === voz.cuenta + 1 || (final && n === voz.cuenta + 2)) {
+        voz.cuenta = n; mandar('reps', { n: n });
+        voz.oidos = (voz.oidos || []).concat(n).slice(-5);
+        voz.oido = voz.oidos.join(' · ');
+      }
     });
     if (final && /\b(listo|lista|serie hecha|termine|terminado|se acabo)\b/.test(txt.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, ''))) mandar('principal');
     pintar();
@@ -311,7 +333,7 @@
     var t = e && e.temp;
     var quiere = voz.on && e && e.pantalla === 'calent' && t && t.reps && (t.fase === 'prep' || t.fase === 'trabajo');
     var clave = e && e.ej && t ? e.ej.nombre + '|' + t.serie + '|' + (t.turno || 0) : '';
-    if (clave !== voz.clave) { voz.clave = clave; voz.cuenta = 0; voz.oido = ''; }
+    if (clave !== voz.clave) { voz.clave = clave; voz.cuenta = 0; voz.oido = ''; voz.oidos = []; }
     if (t && t.contadas > voz.cuenta && t.fase === 'trabajo') voz.cuenta = t.contadas;
     if (quiere) {
       if (voz.cierre) { clearTimeout(voz.cierre); voz.cierre = null; }
