@@ -577,18 +577,28 @@
       pintarTemporizador();
     }
   }
+  // Ejercicios «por brazo / por lado / por pierna»: primero todas las series con un lado y luego con el otro.
+  // Internamente st.serie va de 1 a series×2; en pantalla se ve «Serie 2/3 · Brazo derecho».
+  function porLados(c) { return !!(c && c.lado && /brazo|lado|pierna/i.test(c.lado)); }
+  function seriesTot(c) { return c ? c.series * (porLados(c) ? 2 : 1) : 1; }
+  function serieVista(c) { return porLados(c) ? ((Math.min(st.serie, seriesTot(c)) - 1) % c.series) + 1 : Math.min(st.serie, c.series); }
+  function ladoVista(c) {
+    if (!porLados(c)) return c && c.lado ? c.lado : '';
+    var der = Math.min(st.serie, seriesTot(c)) > c.series, t = c.lado.toLowerCase();
+    return /pierna/.test(t) ? (der ? 'Pierna derecha' : 'Pierna izquierda') : /brazo/.test(t) ? (der ? 'Brazo derecho' : 'Brazo izquierdo') : (der ? 'Lado derecho' : 'Lado izquierdo');
+  }
   // Fin de una serie (por tiempo o al pulsar "Serie hecha"): descanso o completado
   function finSerie() {
     var c = cfg() || { series: 1, descanso: 30 };
     if (st.contadas) guardarReps(personaTurno(), st.contadas);
-    if (st.sesion && ejActual()) st.sesion.series.push({ persona: personaTurno(), ejercicio: ejActual().nombre, bloque: bloqueActual().titulo, serie: st.serie, reps: st.contadas || null, segundos: c.reps ? null : st.dur, hora: horaEn('America/New_York') });
+    if (st.sesion && ejActual()) st.sesion.series.push({ persona: personaTurno(), ejercicio: ejActual().nombre, bloque: bloqueActual().titulo, serie: serieVista(c), lado: porLados(c) ? ladoVista(c) : undefined, reps: st.contadas || null, segundos: c.reps ? null : st.dur, hora: horaEn('America/New_York') });
     st.contadas = 0;
     pitido(880, 0.3, 3);
     decirFrase();
     // Dúo: al acabar uno, empieza el otro (el que acaba descansa mientras tanto)
     if (st.personas.length > 1 && st.turno < st.personas.length - 1) { st.turno += 1; fase('prep', c.preparacion || 5); return; }
     st.turno = 0;
-    if (st.serie < c.series) fase('descanso', descansoActual());   // descanso juntos
+    if (st.serie < seriesTot(c)) fase('descanso', descansoActual());   // descanso juntos (también al cambiar de lado)
     else {
       st.fase = 'hecho'; st.corriendo = false; st.quedan = 0;
       var yaEstaba = estaHecho(ejActual(), claveDe(DIAS[st.sel]));
@@ -1336,7 +1346,7 @@
   function etiquetaPrincipal(c) {
     if (st.fase === 'descanso' && st.corriendo) return 'Saltar descanso';
     if (st.fase === 'hecho') return hayEjSiguiente() ? 'Siguiente →' : 'Terminar ✓';
-    return (c.reps && st.fase === 'trabajo') ? 'Serie hecha ✓' : st.corriendo ? 'Pausar' : (st.pausado ? 'Continuar' : (st.serie > 1 ? 'Iniciar serie ' + st.serie : 'Iniciar'));
+    return (c.reps && st.fase === 'trabajo') ? 'Serie hecha ✓' : st.corriendo ? 'Pausar' : (st.pausado ? 'Continuar' : (st.serie > 1 ? (porLados(c) && st.serie === c.series + 1 ? 'Empezar ' + ladoVista(c).toLowerCase() : 'Iniciar serie ' + serieVista(c)) : 'Iniciar'));
   }
   function textoTiempo(c) {
     var mostrado = st.fase === 'espera' ? st.dur : st.quedan;
@@ -1367,9 +1377,10 @@
       el('e-fase').textContent = (st.fase === 'descanso' && esDuo() ? 'DESCANSO JUNTOS' : textos[st.fase]) + (st.pausado ? ' · PAUSA' : '');
       el('e-turnos').innerHTML = htmlTurnos();
       el('e-tiempo').innerHTML = textoTiempo(c);
-      el('e-sub').textContent = 'Serie ' + Math.min(st.serie, c.series) + ' / ' + c.series + (c.lado ? ' · ' + c.lado : '') + (c.reps && st.fase === 'descanso' ? ' · hecha' : '');
-      var hechas = st.fase === 'hecho' ? c.series : (st.fase === 'descanso' ? st.serie : st.serie - 1);
-      el('e-puntos').innerHTML = Array.apply(null, Array(c.series)).map(function (_, i) { return '<i class="' + (i < hechas ? 'on' : '') + '"></i>'; }).join('');
+      var cambio = porLados(c) && st.fase === 'descanso' && st.serie === c.series;   // descanso antes de pasar al otro lado
+      el('e-sub').textContent = 'Serie ' + serieVista(c) + ' / ' + c.series + (ladoVista(c) ? ' · ' + ladoVista(c) : '') + (c.reps && st.fase === 'descanso' ? ' · hecha' : '') + (cambio ? ' · ahora el otro lado' : '');
+      var hechas = st.fase === 'hecho' ? seriesTot(c) : (st.fase === 'descanso' ? st.serie : st.serie - 1);
+      el('e-puntos').innerHTML = Array.apply(null, Array(seriesTot(c))).map(function (_, i) { return '<i class="' + (i < hechas ? 'on' : '') + (porLados(c) && i === c.series ? ' corte' : '') + '"></i>'; }).join('');
       var pct = (st.fase === 'espera' || (c.reps && st.fase === 'trabajo')) ? 100 : (st.fase === 'hecho' ? 100 : Math.round(st.quedan / Math.max(1, st.total) * 100));
       el('e-barra').style.width = pct + '%';
       el('e-pri').textContent = etiquetaPrincipal(c);
@@ -1386,7 +1397,7 @@
               : '<div class="t-dur"><span>DESCANSO ' + descansoActual() + ' s</span></div>')
           : '<div class="t-dur"><span>DURACIÓN</span>' + c.opciones.map(function (s) {
               return '<button type="button" class="pastilla' + (s === st.dur ? ' on' : '') + '" data-acc="dur" data-s="' + s + '" aria-pressed="' + (s === st.dur) + '">' + s + ' s</button>'; }).join('') + '</div>';
-        zona.innerHTML = '<div class="apr-temp"><div class="apr-temp-izq"><div class="t-fase mono">LISTO · ' + c.series + (c.series === 1 ? ' SERIE' : ' SERIES') + (c.lado ? ' ' + esc(String(c.lado).toUpperCase()) : '') + (esDuo() ? ' · DÚO: ' + esc(st.personas.join(' → ').toUpperCase()) : '') + '</div>' +
+        zona.innerHTML = '<div class="apr-temp"><div class="apr-temp-izq"><div class="t-fase mono">LISTO · ' + c.series + (c.series === 1 ? ' SERIE' : ' SERIES') + (c.lado ? ' ' + esc(String(c.lado).toUpperCase()) : '') + (porLados(c) ? ' · PRIMERO EL IZQUIERDO' : '') + (esDuo() ? ' · DÚO: ' + esc(st.personas.join(' → ').toUpperCase()) : '') + '</div>' +
           htmlFases(c) + '</div>' + pastillas + htmlMusInline() + '<button type="button" class="btn-iniciar" data-acc="principal">' + etiquetaPrincipal(c) + '</button></div>';
       }
     }
@@ -1859,8 +1870,8 @@
       ej: ex ? { nombre: ex.nombre, dosis: ex.dosis || '', dibujo: ex.dibujo || '', indicacion: ex.indicacion || '', ritmo: ex.ritmo || '', hecho: estaHecho(ex, g), ancla: textoAncla(ex), intensidad: intensidadEj(ex) } : null,
       modo: st.pantalla === 'calent' ? modoCal() : '', color: colorModo(), bloqueTit: b ? b.titulo : '',
       siguiente: sig, ultimo: st.pantalla === 'calent' && !sig,
-      temp: c ? { fase: st.fase, quedan: st.fase === 'espera' ? st.dur : st.quedan, total: st.total, serie: st.serie, series: c.series, reps: c.reps || 0,
-        corriendo: st.corriendo, pausado: st.pausado, contadas: st.contadas || 0, frase: fraseVisible(), turno: st.turno, persona: esDuo() ? personaTurno() : '', personas: st.personas, lado: c.lado || '', descanso: descansoActual(), etiqueta: etiquetaPrincipal(c) } : null,
+      temp: c ? { fase: st.fase, quedan: st.fase === 'espera' ? st.dur : st.quedan, total: st.total, serie: serieVista(c), serieTotal: st.serie, series: c.series, reps: c.reps || 0,
+        corriendo: st.corriendo, pausado: st.pausado, contadas: st.contadas || 0, frase: fraseVisible(), turno: st.turno, persona: esDuo() ? personaTurno() : '', personas: st.personas, lado: ladoVista(c), descanso: descansoActual(), etiqueta: etiquetaPrincipal(c) } : null,
       musica: { sonando: !!rep.visible, pausada: musicaPausada(), nombre: nombreCancion, hay: !!(ex && enlacesMusica(ex, g, st.mood).length) }
     };
   }

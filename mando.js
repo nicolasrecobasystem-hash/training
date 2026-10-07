@@ -129,7 +129,7 @@
       '<div class="m-velo" hidden></div>';
   }
   function textoFase(t) {
-    return { espera: t.serie > 1 ? 'SIGUIENTE SERIE' : 'LISTO', prep: 'PREPÁRATE', trabajo: t.reps ? 'HAZ LAS REPS' : '¡AGUANTA!', descanso: 'DESCANSO', hecho: '¡COMPLETADO!' }[t.fase] || '';
+    return { espera: (t.serieTotal || t.serie) > 1 ? 'SIGUIENTE SERIE' : 'LISTO', prep: 'PREPÁRATE', trabajo: t.reps ? 'HAZ LAS REPS' : '¡AGUANTA!', descanso: 'DESCANSO', hecho: '¡COMPLETADO!' }[t.fase] || '';
   }
   function htmlMoodsMando(e) {
     var bs = (e.moods || []).map(function (m, i) {
@@ -332,7 +332,7 @@
   function vozSincronizar(e) {
     var t = e && e.temp;
     var quiere = voz.on && e && e.pantalla === 'calent' && t && t.reps && (t.fase === 'prep' || t.fase === 'trabajo');
-    var clave = e && e.ej && t ? e.ej.nombre + '|' + t.serie + '|' + (t.turno || 0) : '';
+    var clave = e && e.ej && t ? e.ej.nombre + '|' + t.serie + '|' + (t.turno || 0) + '|' + (t.lado || '') : '';
     if (clave !== voz.clave) { voz.clave = clave; voz.cuenta = 0; voz.oido = ''; voz.oidos = []; }
     if (t && t.contadas > voz.cuenta && t.fase === 'trabajo') voz.cuenta = t.contadas;
     if (quiere) {
