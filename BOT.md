@@ -12,7 +12,7 @@ Reloj ──webhook (un solo destino activo: Levi)──▶ Levi ──grupo AM�
 
 - **Un solo destino activo** en el panel del Reloj → *Destinos de webhook*: el de Levi. Los demás, pausados (lo pendiente de un destino pausado se descarta, no reintenta ni abre alertas).
 - Da igual quién arranque (panel, agenda, Levi o DJ por la API): el Reloj emite **los mismos eventos** al destino activo.
-- Cada payload lleva **`canal`**: `"reloj"` para modos y fases (`modo_iniciado`, `fase_iniciada`, `aviso_previo`, `descanso_saltado`, `modo_detenido`, `alerta`, `prueba`) y `"entreno"` para los avisos de la app de entreno (`va_a_entrenar`, `entreno_terminado`). Así una misma routine puede recibir los dos y separarlos por `canal`.
+- Cada payload lleva **`canal`**: `"calendario"` para los avisos de agenda (ver abajo), `"reloj"` para modos y fases (`modo_iniciado`, `fase_iniciada`, `aviso_previo`, `descanso_saltado`, `modo_detenido`, `alerta`, `prueba`) y `"entreno"` para los avisos de la app de entreno (`va_a_entrenar`, `entreno_terminado`). Así una misma routine puede recibir los dos y separarlos por `canal`.
 - Deduplicar por `id_evento` (también va en la cabecera `Idempotency-Key`): los reintentos repiten el mismo id.
 - Si Levi tarda o falla (HTTP ≠ 2xx), el Reloj reintenta hasta 6 veces (30 s, 1, 2, 4, 8 min) y luego abre la alerta `entrega_fallida`.
 
@@ -21,6 +21,19 @@ Reloj ──webhook (un solo destino activo: Levi)──▶ Levi ──grupo AM�
 Webhook a cada destino activo en cada cambio: `modo_iniciado`, `fase_iniciada`, `aviso_previo`, `modo_detenido`… con
 `modo` (concentracion | descanso | entreno | manana), `fase` (pomodoro | descanso_corto | descanso_largo | descanso | entreno | manana),
 `ciclo`, `hora_madrid`, `siguiente_cambio`, `canal` (`reloj`). Al saltar un descanso llega además `descanso_saltado` (con `caso`: `descanso_cancelado` o `descanso_cortado`). Con eso el bot sabe cuándo cambiar de energía o parar la música.
+
+## Calendario → Levi (`canal: "calendario"`)
+
+Los calendarios se conectan desde la app (Calendario → ⚙). La base los lee cada 5 min y manda al destino activo:
+
+| evento | cuándo (hora de Madrid) | campos extra |
+|---|---|---|
+| `eventos_hoy` | 06:00 | `fecha`, `total`, `eventos[]`, `mensaje` («Hoy hay 2 eventos: …») |
+| `eventos_manana` | 21:00 | igual, con los de mañana |
+| `evento_en_1h` | 1 hora antes (si entró tarde, en cuanto se ve) | `minutos_faltan`, `evento_cal`, `mensaje` |
+| `evento_empieza` | a la hora de inicio | `evento_cal`, `mensaje` |
+
+Cada evento (`eventos[]` / `evento_cal`): `titulo`, `todo_el_dia`, `hora`, `hora_fin`, `inicio_madrid`, `fin_madrid`, `lugar`, `descripcion`, `calendario`. Los de todo el día solo van en los resúmenes.
 
 ## Lo que el bot le manda a la app (entrada, nuevo)
 
