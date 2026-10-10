@@ -407,7 +407,7 @@
       nube.sb.auth.onAuthStateChange(function (ev, sesion) {
         var u = sesion && sesion.user;
         setTimeout(function () {   // fuera del aviso de Supabase, como recomienda su documentación
-          if (u && (!nube.usuario || nube.usuario.id !== u.id)) { nube.usuario = u; if (st.pantalla === 'config') pintar(); bajarNube(); conectarMando(); avisarAgente(); }
+          if (u && (!nube.usuario || nube.usuario.id !== u.id)) { nube.usuario = u; if (st.pantalla === 'config') pintar(); bajarNube(); conectarMando(); }
           else if (!u) { nube.usuario = null; if (nube.estado !== 'enviado') estadoNube('fuera'); }
         }, 0);
       });
@@ -1419,7 +1419,9 @@
     st.personas = st.quien === 'duo' ? PERSONAS.slice(0, 2) : [st.quien || PERSONAS[0]];
     st.verPersona = st.personas[0];
     st.sesion = { inicio: Date.now(), series: [] };   // para las estadísticas que se envían al agente al terminar
-    reiniciarLuces(); musicaSonandoDe = ''; st.pidiendoMood = false; st.pantalla = 'calent'; st.bloque = 0; st.hueco = 0; reiniciar(); pintar(); }
+    reiniciarLuces(); musicaSonandoDe = ''; st.pidiendoMood = false; st.pantalla = 'calent'; st.bloque = 0; st.hueco = 0; reiniciar(); pintar();
+    avisarAgente();   // Levi se entera al darle a Start, no al abrir la app
+  }
   function irABloque(i) {
     if (i < 0 || i >= bloques().length) return;
     st.bloque = i; st.hueco = 0; st.verInfo = false; reiniciar(); pintar();
@@ -1813,27 +1815,26 @@
   }
   ['pointerdown', 'keydown'].forEach(function (ev) { document.addEventListener(ev, function () { mando.toque = Date.now(); avisarMando(); }, true); });
   document.addEventListener('visibilitychange', function () { enviarEstado(); });
-  // Al abrir la app, avisa a tu agente (Grok Bot) de que vas a entrenar. Una vez por pestaña:
-  // recargar no repite el aviso. La clave del webhook vive en Supabase (función "voz", accion "aviso").
+  // Al darle a Start (y elegir el mood), avisa a Levi de que empieza el entreno.
+  // La clave del webhook vive en Supabase (función "voz", accion "aviso"). Si falla, reintenta una vez a los 20 s.
   function avisarAgente() {
-    try { if (sessionStorage.getItem('miSemana.avisado')) return; sessionStorage.setItem('miSemana.avisado', '1'); } catch (e) {}
-    var d = DIAS[new Date().getDay()], ahora = new Date();
+    var d = DIAS[st.sel], ahora = new Date(), quien = st.personas.join(' y ') || PERSONAS[0] || 'Diego';
     var datos = {
       evento: 'va_a_entrenar',
-      mensaje: (PERSONAS[0] || 'Diego') + ' abrió Mi semana: va a empezar a entrenar.',
-      persona: PERSONAS[0] || 'Diego',
+      mensaje: quien + ' le dio a Start: empieza a entrenar' + (d ? ' (' + d.nombre + ' · ' + d.grupo + ')' : '') + '.',
+      persona: st.personas[0] || PERSONAS[0] || 'Diego', personas: st.personas.slice(), mood: st.mood || null,
       dia: d ? d.nombre : '', rutina: d ? claveDe(d) : '', grupo: d ? d.grupo : '',
       ejercicios: d ? totalDe(claveDe(d)) : 0,
       hora_miami: horaEn('America/New_York'), hora_madrid: horaEn('Europe/Madrid'),
       fecha: claveFecha(ahora), momento: ahora.toISOString(), equipo: nombreEquipo()
     };
-    enviarAgente(datos).catch(function () { try { sessionStorage.removeItem('miSemana.avisado'); } catch (e) {} });
+    enviarAgente(datos).catch(function () { setTimeout(function () { enviarAgente(datos).catch(function () {}); }, 20000); });
   }
   function enviarAgente(datos) {
     if (!nube.sb || !nube.usuario) return Promise.reject(new Error('sin sesión'));
     return tokenSesion().then(function (tok) {
       return fetch(NUBE_URL + '/functions/v1/voz', { method: 'POST', headers: { Authorization: 'Bearer ' + tok, apikey: NUBE_CLAVE, 'Content-Type': 'application/json' }, body: JSON.stringify({ accion: 'aviso', datos: datos }) });
-    }).then(function (r) { return r.json(); }).then(function (x) { try { console.log('[agente] ' + datos.evento, x); } catch (e) {} return x; });
+    }).then(function (r) { return r.json().catch(function () { return {}; }).then(function (x) { try { console.log('[agente] ' + datos.evento, r.status, x); } catch (e) {} if (!r.ok || x.ok === false) throw new Error('aviso ' + r.status); return x; }); });
   }
   function conectarMando() {
     if (!nube.sb || !nube.usuario || mando.canal) return;
