@@ -1025,6 +1025,117 @@
     while (registroDe(claveFecha(f)) && registroDe(claveFecha(f)).hechos.length) { n++; f.setDate(f.getDate() - 1); }
     return n;
   }
+  // ---------- eventos de Google Calendar (tabla cal_eventos; la función «calendario» los sincroniza cada 5 min) ----------
+  var calEv = { rango: '', porDia: {}, estado: null, fuentes: [], cargando: false, sincronizando: false, error: '', verFuentes: false, nombre: '', enlace: '', guardando: false, msg: '', ayuda: '' };
+  function diaMadrid(iso) { return new Date(iso).toLocaleDateString('en-CA', { timeZone: 'Europe/Madrid' }); }
+  function horaMadrid(iso) { return new Date(iso).toLocaleTimeString('es-ES', { timeZone: 'Europe/Madrid', hour: '2-digit', minute: '2-digit' }); }
+  function cargarEventosCal(ini, forzar) {
+    if (!nube.sb || !nube.usuario) return;
+    var desde = new Date(ini.getFullYear(), ini.getMonth(), ini.getDate() - 2), hasta = new Date(ini.getFullYear(), ini.getMonth(), ini.getDate() + 44);
+    var rango = claveFecha(desde) + '|' + claveFecha(hasta);
+    if (calEv.cargando || (!forzar && calEv.rango === rango)) return;
+    calEv.cargando = true;
+    Promise.all([
+      nube.sb.from('cal_eventos').select('uid,inicio,fin,todo_el_dia,titulo,lugar,calendario').gte('inicio', desde.toISOString()).lt('inicio', hasta.toISOString()).order('inicio').limit(2000),
+      nube.sb.from('cal_estado').select('ultima,ok,eventos,error').eq('id', 1).maybeSingle(),
+      nube.sb.from('cal_fuentes').select('id,nombre,tipo,pista,ultima,ok,eventos,error').order('creado')
+    ]).then(function (rs) {
+      calEv.fuentes = (rs[2] && rs[2].data) || [];
+      calEv.cargando = false; calEv.rango = rango;
+      if (rs[0].error) { calEv.error = 'No se pudieron leer los eventos'; calEv.porDia = {}; }
+      else {
+        calEv.error = ''; var pd = {};
+        (rs[0].data || []).forEach(function (e) {
+          var k = diaMadrid(e.inicio);
+          if (e.todo_el_dia && e.fin) {   // todo el día: se pinta en cada día que cubre (fin exclusivo)
+            var kf = diaMadrid(e.fin), p = k.split('-'), f = new Date(+p[0], +p[1] - 1, +p[2]), n = 0;
+            while (claveFecha(f) < kf && n++ < 60) { (pd[claveFecha(f)] = pd[claveFecha(f)] || []).push(e); f.setDate(f.getDate() + 1); }
+          } else (pd[k] = pd[k] || []).push(e);
+        });
+        Object.keys(pd).forEach(function (k) { pd[k].sort(function (x, y) { return (y.todo_el_dia - x.todo_el_dia) || (x.inicio < y.inicio ? -1 : 1); }); });
+        calEv.porDia = pd;
+      }
+      calEv.estado = rs[1].data || null;
+      var a = document.activeElement, escribiendo = a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA');
+      if (st.pantalla === 'calendario' && !escribiendo) pintar();
+    }, function () { calEv.cargando = false; });
+  }
+  function sincronizarCal() {
+    if (!nube.sb || !nube.usuario || calEv.sincronizando) return;
+    calEv.sincronizando = true; pintar();
+    tokenSesion().then(function (tok) {
+      return fetch(NUBE_URL + '/functions/v1/calendario', { method: 'POST', headers: { Authorization: 'Bearer ' + tok, apikey: NUBE_CLAVE, 'Content-Type': 'application/json' }, body: '{"accion":"sincronizar"}' });
+    }).then(function (r) { return r.json().catch(function () { return {}; }); }).then(function (x) {
+      calEv.sincronizando = false;
+      if (calEv.verFuentes) calEv.msg = x && x.calendarios ? x.calendarios.map(function (c) { return (c.ok ? '✓ ' : '⚠ ') + c.nombre + (c.ok ? ': ' + c.eventos + ' eventos' : ': ' + c.error); }).join(' · ') : (x && x.error ? '⚠ ' + x.error : '✓ Sincronizado');
+      cargarEventosCal(new Date(calEv.rango.split('|')[0] || Date.now()), true);
+    }, function () { calEv.sincronizando = false; calEv.error = 'No se pudo sincronizar'; pintar(); });
+  }
+  function htmlAgendaDia(k) {
+    var lista = calEv.porDia[k] || [];
+    var h = lista.map(function (e) {
+      var hora = e.todo_el_dia ? 'Todo el día' : horaMadrid(e.inicio) + (e.fin ? '–' + horaMadrid(e.fin) : '');
+      return '<div class="cal-evento"><span class="h mono">' + esc(hora) + '</span><span class="t">' + esc(e.titulo) + ((e.lugar || e.calendario) ? '<small>' + esc([e.lugar, e.calendario].filter(Boolean).join(' · ')) + '</small>' : '') + '</span></div>';
+    }).join('');
+    var es = calEv.estado, nota = !nube.usuario ? 'Inicia sesión para ver tu Google Calendar.' :
+      calEv.sincronizando ? 'Sincronizando con Google…' : calEv.error ? calEv.error :
+      es && es.ok === false ? '⚠ ' + (es.error || 'Error al sincronizar') : es && es.ultima ? 'Actualizado ' + new Date(es.ultima).toLocaleTimeString('es-ES', { timeZone: 'Europe/Madrid', hour: '2-digit', minute: '2-digit' }) + ' (Madrid)' : (calEv.fuentes.length ? 'Aún sin sincronizar' : 'Sin calendarios conectados');
+    return '<div class="cal-agenda"><div class="cal-agenda-cab"><span class="cfg-grupo">AGENDA · HORA DE MADRID</span>' +
+      (nube.usuario ? '<span class="cal-botones"><button type="button" class="cal-sync" data-acc="cal-sync"' + (calEv.sincronizando ? ' disabled' : '') + ' aria-label="Sincronizar ahora" title="Sincronizar ahora">↻</button>' +
+        '<button type="button" class="cal-sync" data-acc="cal-fuentes" aria-label="Calendarios conectados" title="Calendarios conectados">⚙</button></span>' : '') + '</div>' +
+      (h || (nube.usuario && !calEv.fuentes.length && calEv.rango ? '<button type="button" class="btn-sec cal-conectar" data-acc="cal-fuentes">＋ Conectar Google o Apple Calendar</button>' : '<div class="cfg-nota-mini">Sin eventos.</div>')) +
+      '<div class="cal-agenda-nota">' + esc(nota) + '</div></div>';
+  }
+
+  var AYUDA_CAL = {
+    google: ['En el ordenador, abre calendar.google.com.', 'Arriba a la derecha: ⚙ → Configuración.', 'En la izquierda, pulsa tu calendario (en «Configuración de mis calendarios»).', 'Baja hasta «Integrar el calendario».', 'Copia la «Dirección secreta en formato iCal» (termina en basic.ics) y pégala aquí.'],
+    apple: ['En el Mac, abre la app Calendario.', 'Clic derecho en el calendario (columna izquierda) → «Compartir calendario…».', 'Marca «Calendario público» y pulsa OK.', 'Clic derecho otra vez → «Copiar URL» (empieza por webcal://) y pégala aquí.', 'En el iPhone: Calendario → Calendarios → (i) junto al calendario → activa «Calendario público» → «Compartir enlace».']
+  };
+  function guardarBorradorCal() { if (document.getElementById('cal-enlace')) calEv.enlace = document.getElementById('cal-enlace').value; if (document.getElementById('cal-nombre')) calEv.nombre = document.getElementById('cal-nombre').value; }
+  function htmlFuentesCal() {
+    var lista = calEv.fuentes.map(function (f) {
+      var est = f.ok === false ? '<span class="mal">⚠ ' + esc(f.error || 'error') + '</span>' : f.ultima ? (f.eventos || 0) + ' eventos · ' + new Date(f.ultima).toLocaleTimeString('es-ES', { timeZone: 'Europe/Madrid', hour: '2-digit', minute: '2-digit' }) : 'pendiente de sincronizar';
+      return '<div class="cal-fuente"><span class="ico">' + (f.tipo === 'google' ? 'G' : f.tipo === 'apple' ? '' : '📅') + '</span>' +
+        '<span class="t"><b>' + esc(f.nombre) + '</b><small class="mono">' + esc(f.pista || '') + ' · ' + est + '</small></span>' +
+        '<button type="button" class="btn-sec" data-acc="cal-quitar" data-id="' + esc(f.id) + '">Quitar</button></div>';
+    }).join('') || '<div class="cfg-nota-mini">Aún no hay ninguno. Añade el primero abajo.</div>';
+    var ayuda = calEv.ayuda ? '<ol class="cal-pasos">' + AYUDA_CAL[calEv.ayuda].map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ol>' : '';
+    return '<div class="velo" data-acc="cal-cerrar"><div class="modal cal-fuentes" role="dialog" aria-modal="true" aria-labelledby="tit-calf">' +
+      '<div class="antetitulo">CALENDARIO · AVISOS A LEVI</div><h2 class="titulo-m" id="tit-calf">CALENDARIOS CONECTADOS</h2>' +
+      '<div class="cal-fuentes-lista">' + lista + '</div>' +
+      '<div class="cal-form"><div class="cfg-grupo">AÑADIR UN CALENDARIO</div>' +
+      '<label>Enlace del calendario<input id="cal-enlace" type="url" inputmode="url" autocomplete="off" spellcheck="false" placeholder="https://calendar.google.com/…/basic.ics  ó  webcal://…icloud.com/…" value="' + esc(calEv.enlace) + '"></label>' +
+      '<label>Nombre <small>(opcional: «Trabajo», «Familia»…)</small><input id="cal-nombre" type="text" maxlength="60" autocomplete="off" value="' + esc(calEv.nombre) + '"></label>' +
+      '<div class="cal-ayuda">¿Dónde lo encuentro? <button type="button" class="cal-chip' + (calEv.ayuda === 'google' ? ' on' : '') + '" data-acc="cal-ayuda" data-v="google">Google</button>' +
+      '<button type="button" class="cal-chip' + (calEv.ayuda === 'apple' ? ' on' : '') + '" data-acc="cal-ayuda" data-v="apple">Apple / iCloud</button></div>' + ayuda +
+      (calEv.msg ? '<div class="cal-msg">' + esc(calEv.msg) + '</div>' : '') +
+      '<p class="cfg-nota-mini">El enlace se guarda cifrado en tu Supabase y no se vuelve a mostrar. Los eventos se actualizan cada 5 minutos y Levi recibe los de hoy a las 6:00, los de mañana a las 21:00, un aviso 1 hora antes y otro al empezar (hora de Madrid).</p></div>' +
+      '<div class="modal-pie"><button type="button" class="btn-sec" data-acc="cal-cerrar">Cerrar</button>' +
+      '<button type="button" class="btn-pri" data-acc="cal-anadir"' + (calEv.guardando ? ' disabled' : '') + '>' + (calEv.guardando ? 'Guardando…' : 'Añadir y sincronizar') + '</button></div></div></div>';
+  }
+  function anadirFuenteCal() {
+    var enl = (document.getElementById('cal-enlace') && document.getElementById('cal-enlace').value || '').trim(), nom = (document.getElementById('cal-nombre') && document.getElementById('cal-nombre').value || '').trim();
+    calEv.enlace = enl; calEv.nombre = nom;
+    if (!/^(https|webcals?):\/\/\S+$/i.test(enl)) { calEv.msg = 'Pega el enlace completo: empieza por https:// (Google) o webcal:// (Apple).'; pintar(); return; }
+    if (/calendar\.google\.com/.test(enl) && !/\.ics(\?|$)/.test(enl)) { calEv.msg = 'Ese enlace de Google no es el iCal: copia la «Dirección secreta en formato iCal» (termina en basic.ics).'; pintar(); return; }
+    calEv.guardando = true; calEv.msg = ''; pintar();
+    nube.sb.rpc('cal_guardar_fuente', { p_nombre: nom, p_url: enl }).then(function (r) {
+      calEv.guardando = false;
+      if (r.error) { calEv.msg = r.error.message || 'No se pudo guardar'; pintar(); return; }
+      calEv.enlace = ''; calEv.nombre = ''; calEv.msg = '✓ Añadido. Sincronizando…'; calEv.ayuda = '';
+      sincronizarCal();
+    }, function () { calEv.guardando = false; calEv.msg = 'No se pudo guardar'; pintar(); });
+  }
+  function quitarFuenteCal(id) {
+    var f = calEv.fuentes.filter(function (x) { return x.id === id; })[0];
+    if (!f || !confirmarQuitar(f.nombre)) return;
+    nube.sb.rpc('cal_borrar_fuente', { p_id: id }).then(function (r) {
+      calEv.msg = r.error ? (r.error.message || 'No se pudo quitar') : '✓ «' + f.nombre + '» quitado.';
+      cargarEventosCal(new Date(calEv.rango.split('|')[0] || Date.now()), true);
+    });
+  }
+  function confirmarQuitar(nombre) { if (calEv.quitar === nombre) { calEv.quitar = ''; return true; } calEv.quitar = nombre; calEv.msg = 'Pulsa «Quitar» otra vez para quitar «' + nombre + '».'; pintar(); return false; }
+
   function htmlCalendario() {
     var m = calMes(), hoyK = claveFecha(new Date());
     var nomMes = m.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
@@ -1032,6 +1143,7 @@
     var ini = new Date(m.getFullYear(), m.getMonth(), 1 - m.getDay());   // la semana empieza en domingo
     var celdas = ['D', 'L', 'M', 'M', 'J', 'V', 'S'].map(function (l) { return '<div class="cal-cab">' + l + '</div>'; }).join('');
     var entrenosMes = 0;
+    cargarEventosCal(ini);
     for (var i = 0; i < 42; i++) {
       var f = new Date(ini.getFullYear(), ini.getMonth(), ini.getDate() + i), k = claveFecha(f);
       var fuera = f.getMonth() !== m.getMonth(), r = registroDe(k);
@@ -1043,7 +1155,8 @@
         (estado ? ' ' + estado : (pasado ? ' vacio-dia' : ''));
       celdas += '<button type="button" class="' + cls + '" data-acc="cal-dia" data-k="' + k + '" aria-pressed="' + (k === st.calSel) + '">' +
         '<span class="n">' + f.getDate() + '</span><span class="g">' + esc(String(g).split(' · ')[0]) + '</span>' +
-        (estado === 'ok' ? '<span class="marca">✓</span>' : estado === 'medio' ? '<span class="marca">' + n + '/' + tot + '</span>' : '') + '</button>';
+        (estado === 'ok' ? '<span class="marca">✓</span>' : estado === 'medio' ? '<span class="marca">' + n + '/' + tot + '</span>' : '') +
+        ((calEv.porDia[k] || []).length ? '<span class="ev" title="' + esc(calEv.porDia[k].map(function (e) { return e.titulo; }).join(' · ')) + '">● ' + calEv.porDia[k].length + '</span>' : '') + '</button>';
     }
     // Detalle del día elegido
     var sel = st.calSel || hoyK, ps = sel.split('-'), fs = new Date(+ps[0], +ps[1] - 1, +ps[2]);
@@ -1073,6 +1186,7 @@
       '</div></div>' +
       '<div class="cal-cuerpo"><div class="panel cal-grid">' + celdas + '</div>' +
       '<div class="panel cal-detalle"><div class="antetitulo">' + esc(fsTxt.toUpperCase()) + '</div>' +
+      htmlAgendaDia(sel) +
       '<div class="cal-grupo">' + esc(gs.toUpperCase()) + '</div><div class="cal-res">' + esc(resumen) + '</div>' +
       '<div class="cal-lista">' + lista + '</div>' +
       '<div class="cal-stats"><div><b>' + rachaActual() + '</b><span>días seguidos</span></div><div><b>' + entrenosMes + '</b><span>entrenos este mes</span></div></div>' +
@@ -1406,7 +1520,7 @@
   }
 
   function pintar() {
-    vista.innerHTML = st.pantalla === 'semana' ? htmlSemana() + (st.pidiendoMood ? htmlMood() : '') + (st.completado ? htmlCompletado() : '') + (st.verQR ? htmlQR() : '') : (st.pantalla === 'config' ? htmlConfig() + (st.subida ? htmlSubida() : '') : st.pantalla === 'calendario' ? htmlCalendario() : htmlCalentamiento());
+    vista.innerHTML = st.pantalla === 'semana' ? htmlSemana() + (st.pidiendoMood ? htmlMood() : '') + (st.completado ? htmlCompletado() : '') + (st.verQR ? htmlQR() : '') : (st.pantalla === 'config' ? htmlConfig() + (st.subida ? htmlSubida() : '') : st.pantalla === 'calendario' ? htmlCalendario() + (calEv.verFuentes ? htmlFuentesCal() : '') : htmlCalentamiento());
     if (st.pidiendoMood) { var f = vista.querySelector('.mood.ultimo') || vista.querySelector('.mood'); if (f) f.focus(); }
     app.classList.toggle('ent-activo', st.pantalla === 'calent' && st.modoPintado === 'entrenar');
     app.classList.toggle('cal-activo', st.pantalla === 'calent');
@@ -1479,6 +1593,12 @@
     else if (acc === 'cal-mes') { var cm = calMes(); st.calMes = new Date(cm.getFullYear(), cm.getMonth() + (+b.getAttribute('data-d')), 1); pintar(); }
     else if (acc === 'cal-hoy') { st.calMes = null; st.calSel = claveFecha(new Date()); pintar(); }
     else if (acc === 'cal-dia') { st.calSel = b.getAttribute('data-k'); pintar(); }
+    else if (acc === 'cal-sync') { sincronizarCal(); }
+    else if (acc === 'cal-fuentes') { calEv.verFuentes = true; calEv.msg = ''; calEv.quitar = ''; pintar(); var ce = document.getElementById('cal-enlace'); if (ce && !calEv.fuentes.length) ce.focus(); }
+    else if (acc === 'cal-cerrar') { if (b === ev.target || b.tagName === 'BUTTON') { calEv.verFuentes = false; pintar(); } }
+    else if (acc === 'cal-ayuda') { guardarBorradorCal(); var v = b.getAttribute('data-v'); calEv.ayuda = calEv.ayuda === v ? '' : v; pintar(); }
+    else if (acc === 'cal-anadir') { anadirFuenteCal(); }
+    else if (acc === 'cal-quitar') { guardarBorradorCal(); quitarFuenteCal(b.getAttribute('data-id')); }
     else if (acc === 'modo-audio') { elegirGuion(b.getAttribute('data-id') || ''); pintar(); }
     else if (acc === 'guion-etiquetar') etiquetarGuion();
     else if (acc === 'guion-generar') generarGuion();
@@ -1609,6 +1729,8 @@
     if (ev.key === 'Escape' && st.eligiendoMood) { st.eligiendoMood = false; pintar(); }
     if (ev.key === 'Escape' && st.completado) { st.completado = false; pintar(); }
     if (ev.key === 'Escape' && st.subida) { st.subida = null; pintar(); }
+    if (ev.key === 'Escape' && calEv.verFuentes) { calEv.verFuentes = false; pintar(); }
+    if (ev.key === 'Enter' && (ev.target.id === 'cal-enlace' || ev.target.id === 'cal-nombre')) { ev.preventDefault(); anadirFuenteCal(); }
     if (ev.key === 'Enter' && ev.target.id === 'mood-nuevo') { ev.preventDefault(); anadirMood(); }
     if (ev.key === 'Enter' && (ev.target.id === 'nube-correo' || ev.target.id === 'nube-clave')) { ev.preventDefault(); entrarConClave(); }
     if (ev.key === 'Enter' && ev.target.id === 'nube-clave-nueva') { ev.preventDefault(); guardarClave(); }
