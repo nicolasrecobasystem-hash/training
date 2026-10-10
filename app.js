@@ -1094,8 +1094,8 @@
   function guardarBorradorCal() { if (document.getElementById('cal-enlace')) calEv.enlace = document.getElementById('cal-enlace').value; if (document.getElementById('cal-nombre')) calEv.nombre = document.getElementById('cal-nombre').value; }
   function htmlFuentesCal() {
     var lista = calEv.fuentes.map(function (f) {
-      var est = f.ok === false ? '<span class="mal">⚠ ' + esc(f.error || 'error') + '</span>' : f.ultima ? (f.eventos || 0) + ' eventos · ' + new Date(f.ultima).toLocaleTimeString('es-ES', { timeZone: 'Europe/Madrid', hour: '2-digit', minute: '2-digit' }) : 'pendiente de sincronizar';
-      return '<div class="cal-fuente"><span class="ico">' + (f.tipo === 'google' ? 'G' : f.tipo === 'apple' ? '' : '📅') + '</span>' +
+      var est = f.ok === false ? '<span class="mal">⚠ ' + esc(f.error || 'error') + '</span>' : f.ultima ? (f.eventos || 0) + ' próximos (60 días) · ' + new Date(f.ultima).toLocaleTimeString('es-ES', { timeZone: 'Europe/Madrid', hour: '2-digit', minute: '2-digit' }) : 'pendiente de sincronizar';
+      return '<div class="cal-fuente"><span class="ico">' + (f.tipo === 'google' ? 'G' : f.tipo === 'apple' ? '' : f.tipo === 'archivo' ? (/cumple/i.test(f.nombre) ? '🎂' : '📄') : '📅') + '</span>' +
         '<span class="t"><b>' + esc(f.nombre) + '</b><small class="mono">' + esc(f.pista || '') + ' · ' + est + '</small></span>' +
         '<button type="button" class="btn-sec" data-acc="cal-quitar" data-id="' + esc(f.id) + '">Quitar</button></div>';
     }).join('') || '<div class="cfg-nota-mini">Aún no hay ninguno. Añade el primero abajo.</div>';
@@ -1105,6 +1105,7 @@
       '<div class="cal-fuentes-lista">' + lista + '</div>' +
       '<div class="cal-form"><div class="cfg-grupo">AÑADIR UN CALENDARIO</div>' +
       '<label>Enlace del calendario<input id="cal-enlace" type="url" inputmode="url" autocomplete="off" spellcheck="false" placeholder="https://calendar.google.com/…/basic.ics  ó  webcal://…icloud.com/…" value="' + esc(calEv.enlace) + '"></label>' +
+      '<div class="cal-archivo">¿No tiene enlace (p. ej. «Cumpleaños» de Apple)? <label class="btn-sec cal-subir">📄 Subir archivo .ics<input id="cal-archivo" type="file" accept=".ics,text/calendar" hidden></label></div>' +
       '<label>Nombre <small>(opcional: «Trabajo», «Familia»…)</small><input id="cal-nombre" type="text" maxlength="60" autocomplete="off" value="' + esc(calEv.nombre) + '"></label>' +
       '<div class="cal-ayuda">¿Dónde lo encuentro? <button type="button" class="cal-chip' + (calEv.ayuda === 'google' ? ' on' : '') + '" data-acc="cal-ayuda" data-v="google">Google</button>' +
       '<button type="button" class="cal-chip' + (calEv.ayuda === 'apple' ? ' on' : '') + '" data-acc="cal-ayuda" data-v="apple">Apple / iCloud</button></div>' + ayuda +
@@ -1125,6 +1126,23 @@
       calEv.enlace = ''; calEv.nombre = ''; calEv.msg = '✓ Añadido. Sincronizando…'; calEv.ayuda = '';
       sincronizarCal();
     }, function () { calEv.guardando = false; calEv.msg = 'No se pudo guardar'; pintar(); });
+  }
+  // Calendario sin enlace: se sube el archivo .ics (Calendario de Mac → Archivo → Exportar) y se guarda entero
+  function subirArchivoCal(file) {
+    if (!file) return;
+    if (file.size > 3000000) { calEv.msg = 'El archivo es demasiado grande (máx. 3 MB).'; pintar(); return; }
+    guardarBorradorCal();
+    calEv.guardando = true; calEv.msg = 'Leyendo ' + file.name + '…'; pintar();
+    file.text().then(function (txt) {
+      if (txt.indexOf('BEGIN:VCALENDAR') < 0) throw new Error('Ese archivo no es un calendario .ics');
+      var m = /X-WR-CALNAME:([^\r\n]+)/.exec(txt), cal = m ? m[1].trim() : '';
+      var nom = (calEv.nombre || '').trim() || (/^birthdays$/i.test(cal) ? 'Cumpleaños' : cal) || file.name.replace(/\.ics$/i, '');
+      return nube.sb.rpc('cal_guardar_archivo', { p_nombre: nom, p_ics: txt }).then(function (r) {
+        if (r.error) throw new Error(r.error.message || 'No se pudo guardar');
+        calEv.guardando = false; calEv.nombre = ''; calEv.msg = '✓ «' + nom + '» añadido. Sincronizando…';
+        sincronizarCal();
+      });
+    }).catch(function (e) { calEv.guardando = false; calEv.msg = '⚠ ' + (e && e.message || 'No se pudo subir'); pintar(); });
   }
   function quitarFuenteCal(id) {
     var f = calEv.fuentes.filter(function (x) { return x.id === id; })[0];
@@ -1672,6 +1690,7 @@
 
   // Configuración: guardar al escribir y cargar copia
   app.addEventListener('change', function (ev) {
+    if (ev.target.id === 'cal-archivo') { subirArchivoCal(ev.target.files && ev.target.files[0]); return; }
     if (ev.target.id === 'cfg-archivo' && ev.target.files && ev.target.files[0]) importarCfg(ev.target.files[0]);
     if (ev.target.id === 'subir-audio' && ev.target.files && ev.target.files.length) prepararSubida(ev.target.files);
     if (ev.target.id === 'filtro-mood') { st.filtroMood = ev.target.value; pintar(); }

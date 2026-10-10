@@ -530,3 +530,5 @@ a.btn-sec{display:inline-flex;align-items:center;text-decoration:none}
 .cal-pasos{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:4px;font-size:14px;color:var(--texto)}
 .cal-msg{font-size:14px;color:var(--acento)}
 .modal.cal-fuentes .modal-pie{gap:10px}
+.cal-archivo{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:14px;color:var(--suave)}
+.cal-subir{display:inline-flex !important;flex-direction:row !important;align-items:center;cursor:pointer;min-height:40px;font-size:14px;color:var(--texto) !important}

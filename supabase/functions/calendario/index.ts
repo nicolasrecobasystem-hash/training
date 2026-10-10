@@ -44,6 +44,7 @@ export function leerIcal(txt: string, desde: Date, hasta: Date): EventoCal[] {
   const cal = new ICAL.Component(ICAL.parse(txt));
   for (const tz of cal.getAllSubcomponents('vtimezone')) { try { ICAL.TimezoneService.register(tz); } catch { /* zona rara */ } }
   const nombreCal = (cal.getFirstPropertyValue('x-wr-calname') as string) || null;
+  const esCumples = /^(birthdays|cumpleaños|contacts|contactos)$/i.test(String(nombreCal || '').trim());
   const maestros: any[] = [], excepciones = new Map<string, any[]>();
   for (const ve of cal.getAllSubcomponents('vevent')) {
     const ev = new ICAL.Event(ve);
@@ -59,14 +60,29 @@ export function leerIcal(txt: string, desde: Date, hasta: Date): EventoCal[] {
     if ((b || a) <= desde || a >= hasta) return;
     out.push({
       uid: ev.uid, inicio: a.toISOString(), fin: b ? b.toISOString() : null, todo_el_dia: !!ini.isDate,
-      titulo: String(item.summary || '(sin título)').slice(0, 300), lugar: item.location ? String(item.location).slice(0, 300) : null,
+      titulo: ((esCumples ? '🎂 Cumpleaños de ' : '') + String(item.summary || '(sin título)')).slice(0, 300), lugar: item.location ? String(item.location).slice(0, 300) : null,
       descripcion: item.description ? String(item.description).slice(0, 2000) : null, calendario: nombreCal,
       enlace: (item.component.getFirstPropertyValue('url') as string) || null,
     });
   };
   for (const ev of maestros) {
     for (const ex of excepciones.get(ev.uid) || []) { try { ev.relateException(ex); } catch { /* excepción suelta */ } }
-    if (ev.isRecurring()) {
+    // Atajo para lo anual simple (cumpleaños, aniversarios): sin recorrer año a año desde 1604
+    const rr = ev.isRecurring() ? ev.component.getAllProperties('rrule') : [];
+    const r0: any = rr.length === 1 ? rr[0].getFirstValue() : null;
+    const simpleAnual = r0 && r0.freq === 'YEARLY' && (r0.interval || 1) === 1 && !r0.count && !r0.until &&
+      Object.keys(r0.parts || {}).length === 0 && !ev.component.hasProperty('exdate') && !ev.component.hasProperty('rdate') &&
+      !(excepciones.get(ev.uid) || []).length;
+    if (simpleAnual) {
+      const s0 = ev.startDate, dur = ev.endDate ? ev.endDate.subtractDate(s0) : null;
+      for (let y = desde.getUTCFullYear() - 1; y <= hasta.getUTCFullYear() + 1; y++) {
+        if (y < s0.year) continue;
+        if (s0.month === 2 && s0.day === 29 && !(y % 4 === 0 && (y % 100 !== 0 || y % 400 === 0))) continue;
+        const ini = s0.clone(); ini.year = y;
+        let fin = null; if (dur) { fin = ini.clone(); fin.addDuration(dur); }
+        meter(ev, ini, fin, ev);
+      }
+    } else if (ev.isRecurring()) {
       const it = ev.iterator();
       let n = 0, sig;
       while ((sig = it.next()) && n++ < 2000) {
@@ -81,7 +97,9 @@ export function leerIcal(txt: string, desde: Date, hasta: Date): EventoCal[] {
   for (const [uid, l] of excepciones) if (!conMaestro.has(uid)) for (const ex of l) meter(ex, ex.startDate, ex.endDate, ex);
   // Sin duplicados (uid + inicio)
   const vistos = new Set<string>();
-  return out.filter((e) => { const k = e.uid + '|' + e.inicio; if (vistos.has(k)) return false; vistos.add(k); return true; })
+  // Sin duplicados: mismo uid+inicio, y mismo título+inicio (contactos repetidos en el móvil)
+  const norm = (t: string) => t.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim();
+  return out.filter((e) => { const k = e.uid + '|' + e.inicio, k2 = norm(e.titulo) + '|' + e.inicio; if (vistos.has(k) || vistos.has(k2)) return false; vistos.add(k); vistos.add(k2); return true; })
     .sort((x, y) => x.inicio.localeCompare(y.inicio));
 }
 // ---------- fin de la lectura ----------
@@ -114,7 +132,7 @@ Deno.serve(async (req) => {
   // Google (https://…basic.ics) y Apple/iCloud (webcal://… se lee como https://)
   const { data: deApp, error: eF } = await sb.rpc('cal_fuentes_urls', { p_token: tok });
   if (eF) return json({ ok: false, error: 'No se pudieron leer los calendarios: ' + eF.message }, 500);
-  const fuentes: { id: string | null; nombre: string; url: string }[] = (deApp || []).map((f: any) => ({ id: f.id, nombre: f.nombre, url: f.url }));
+  const fuentes: { id: string | null; nombre: string; url: string; ics?: string | null }[] = (deApp || []).map((f: any) => ({ id: f.id, nombre: f.nombre, url: f.url || '', ics: f.ics }));
   (Deno.env.get('gcal') || Deno.env.get('GCAL_ICAL') || '').split(/[\s,]+/).filter(Boolean)
     .forEach((u, i) => fuentes.push({ id: null, nombre: 'Secreto gcal ' + (i + 1), url: u }));
   if (!fuentes.length) return guardarError('No hay calendarios conectados: añádelos con ⚙ en la agenda del calendario');
@@ -126,6 +144,10 @@ Deno.serve(async (req) => {
     const url = f.url.trim().replace(/^webcals?:\/\//i, 'https://');
     let error = '', lista: EventoCal[] = [];
     try {
+      if (f.ics) {   // calendario subido como archivo: se lee tal cual
+        lista = leerIcal(f.ics, desde, hasta).map((e) => ({ ...e, calendario: f.nombre }));
+        throw 'ok';
+      }
       if (!/^https:\/\//.test(url)) throw new Error('enlace no válido');
       const r = await fetch(url, { signal: AbortSignal.timeout(20000), headers: { 'User-Agent': 'Mi semana (calendario)' } });
       if (!r.ok) error = 'respondió ' + r.status + (r.status === 404 || r.status === 403 ? ' (¿enlace cambiado o calendario ya no público?)' : '');
@@ -135,8 +157,10 @@ Deno.serve(async (req) => {
         else lista = leerIcal(txt, desde, hasta).map((e) => ({ ...e, calendario: f.id ? f.nombre : (e.calendario || f.nombre) }));
       }
     } catch (e) {
+      if (e === 'ok') { /* archivo leído */ } else {
       console.error('calendario', f.nombre, String(e).slice(0, 160));   // nunca se registra el enlace
       error = String(e).includes('Timeout') || String(e).includes('timed out') ? 'tardó demasiado' : 'no se pudo leer';
+      }
     }
     if (error) {
       // Sus eventos anteriores se quedan como estaban (no se borra nada si falla)
