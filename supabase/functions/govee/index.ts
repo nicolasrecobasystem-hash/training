@@ -5,6 +5,30 @@ import { createClient } from 'jsr:@supabase/supabase-js@2';
 
 const CORREO_PERMITIDO = 'nicolasrecobasystem@gmail.com';
 const API = 'https://openapi.api.govee.com/router/api/v1';
+// ---------- escena de luces: un color distinto en cada luz (por su nombre en Govee) ----------
+async function aplicarEscena(clave: string, luces: { nombre_govee: string; color: string; etiqueta?: string }[]) {
+  const API_G = 'https://openapi.api.govee.com/router/api/v1';
+  const cab = { 'Govee-API-Key': clave, 'Content-Type': 'application/json' };
+  const r = await fetch(API_G + '/user/devices', { headers: cab });
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) return { ok: false, error: 'Govee respondió ' + r.status };
+  const norm = (t: string) => String(t || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim();
+  const devs = (d.data || []) as any[];
+  const orden = (sku: string, device: string, capability: unknown) =>
+    fetch(API_G + '/device/control', { method: 'POST', headers: cab, body: JSON.stringify({ requestId: crypto.randomUUID(), payload: { sku, device, capability } }) })
+      .then(async (x) => { const j = await x.json().catch(() => null); const code = j && typeof j.code === 'number' ? j.code : x.status; return x.ok && code === 200; });
+  const res = await Promise.all(luces.slice(0, 10).map(async (l) => {
+    const dev = devs.find((x) => norm(x.deviceName) === norm(l.nombre_govee));
+    if (!dev) return { luz: l.etiqueta || l.nombre_govee, ok: false, error: 'no encontrada en Govee' };
+    const rgb = parseInt(String(l.color || '').replace('#', ''), 16);
+    if (!(rgb >= 0)) return { luz: l.etiqueta || l.nombre_govee, ok: false, error: 'color no válido' };
+    const on = await orden(dev.sku, dev.device, { type: 'devices.capabilities.on_off', instance: 'powerSwitch', value: 1 });
+    const col = await orden(dev.sku, dev.device, { type: 'devices.capabilities.color_setting', instance: 'colorRgb', value: rgb });
+    return { luz: l.etiqueta || l.nombre_govee, color: l.color, ok: on && col };
+  }));
+  return { ok: res.every((x) => x.ok), luces: res };
+}
+
 const CORS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -69,6 +93,13 @@ Deno.serve(async (req) => {
       return { device: x.device, ok: pasos.every((p) => p.ok), estados: pasos.map((p) => p.status) };
     }));
     return json({ res });
+  }
+
+  // Escena: un color por luz, por nombre de Govee (musica.html → colores de una canción)
+  if (cuerpo.accion === 'escena') {
+    const luces = Array.isArray(cuerpo.luces) ? cuerpo.luces.filter((l: any) => l && l.nombre_govee && /^#?[0-9a-f]{6}$/i.test(l.color || '')) : [];
+    if (!luces.length) return json({ error: 'No hay colores que aplicar' }, 400);
+    return json(await aplicarEscena(clave, luces));
   }
 
   return json({ error: 'Acción desconocida' }, 400);

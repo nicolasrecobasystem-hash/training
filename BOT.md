@@ -98,6 +98,33 @@ curl -s -X POST $U -H "x-bot-token: $T" -H "Content-Type: application/json" -d '
                    "modo": "concentracion", "fase": "pomodoro", "nota": 4, "cambiada": false } ] }
 ```
 
+## Listas de canciones (musica.html)
+
+El agente lee y escribe listas en la misma función `bot` (mismo token). Diego las ve y edita en **musica.html**.
+Cada canción: `titulo`, `artista`, `url`, `bpm` (20–300), `ritmo` (texto: «house», «reggaetón»…), `nota` (1–5, la de Diego),
+`moods` (hasta 3 tags que elige el agente), `luces` (`{"escritorio","techo1","techo2","pizarra"}` en `#RRGGBB`) y `notas`.
+
+| accion | para qué | campos |
+|---|---|---|
+| `musica_listas` | todas las listas (id, nombre, nº de canciones) y las 4 zonas de luz | — |
+| `musica_lista` | una lista con sus canciones | `lista_id` o `lista` (nombre) |
+| `musica_crear_lista` | crear (si ya existe, devuelve su id) | `nombre`, `descripcion` |
+| `musica_editar_lista` / `musica_borrar_lista` | renombrar / borrar con sus canciones | `lista_id` o `lista`, `nombre`, `descripcion` |
+| `musica_agregar` | añadir canción (si la lista no existe, se crea) | `lista_id` o `lista` + campos de la canción (`titulo` obligatorio) |
+| `musica_editar` | cambiar solo los campos que mandes (`luces` se mezcla: manda solo las zonas que cambian; `null` borra una) | `cancion_id` + campos; `mover_a_lista_id`, `posicion` |
+| `musica_borrar` | borrar canción | `cancion_id` |
+| `musica_buscar` | buscar en todas las listas | `q`, `mood`, `nota_min`, `bpm_min`, `bpm_max`, `lista`/`lista_id`, `limite` |
+| `musica_luces` | poner ya en las luces los colores de esa canción | `cancion_id` |
+
+```bash
+curl -s -X POST $U -H "x-bot-token: $T" -H "Content-Type: application/json" -d '{"accion":"musica_agregar","lista":"Foco mañana",
+  "titulo":"Time","artista":"Hans Zimmer","url":"https://www.youtube.com/watch?v=...","bpm":62,"ritmo":"orquestal",
+  "moods":["épico","calma","foco"],"luces":{"escritorio":"#FF8800","techo1":"#1A2A6C","techo2":"#3355FF","pizarra":"#FFFFFF"}}'
+curl -s -X POST $U -H "x-bot-token: $T" -H "Content-Type: application/json" -d '{"accion":"musica_editar","cancion_id":"<id>","nota":5}'
+curl -s -X POST $U -H "x-bot-token: $T" -H "Content-Type: application/json" -d '{"accion":"musica_luces","cancion_id":"<id>"}'
+```
+Las luces **no cambian solas**: solo con `musica_luces` o con el botón 💡 de la página. Techo 2 = «Oficina Vigo 2» y Pizarra = «Oficina Vigo» en Govee.
+
 ## Procedimiento sugerido para el bot (capas 1–3)
 
 1. **Perfil vivo** (en el bot): familias/artistas que funcionan por modo, vetos (sin Marc Anthony, sin triste, sin fiesta), media de nota por familia.
