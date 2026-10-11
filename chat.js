@@ -104,6 +104,7 @@
   }
   function abrir(id) {
     if (enviando) return;
+    if (ag.on && id !== actual) agApagar();
     actual = id; msgs = []; error = '';
     guardarLocal('miSemana.chat', id || '');
     var cv = id && convs.filter(function (x) { return x.id === id; })[0];
@@ -132,6 +133,7 @@
   function enviar(dictado) {
     var caja = $('#c-texto'), texto = (typeof dictado === 'string' ? dictado : caja.value).trim();
     if (!texto || enviando) return;
+    if (ag.on) { if (!ag.conv) return; caja.value = ''; ajustar(); return agEscribir(texto); }
     caja.value = ''; ajustar();
     error = '';
     var pensar = $('#c-pensar').checked;
@@ -277,10 +279,11 @@
     b.textContent = t;
     b.className = 'c-voz' + (mv.on ? ' on' : '') + (mv.estado === 'error' ? ' mal' : '');
     b.setAttribute('data-a', mv.on && (mv.sonando || mv.cola.length) ? 'voz-cortar' : 'voz');
-    var caja = $('#c-texto'); if (caja) caja.placeholder = mv.on ? 'Habla… (o escribe)' : 'Escribe un mensaje…';
+    var caja = $('#c-texto'); if (caja && !ag.on) caja.placeholder = mv.on ? 'Habla… (o escribe)' : 'Escribe un mensaje…';
   }
   function mvAlternar() {
     if (mv.on) return mvApagar();
+    if (ag.on) agApagar();   // los dos modos no van a la vez
     mv.on = true; mv.error = ''; mv.estado = ''; mv.finRespuesta = true;
     try { var AC = window.AudioContext || window.webkitAudioContext; mv.ctx = new AC(); mv.ctx.resume(); }   // se crea con el toque: así el móvil deja sonar
     catch (e) { return mvFallo('Este navegador no deja usar el audio'); }
@@ -394,6 +397,99 @@
     mv.finRespuesta = true; mvPintar(); mvSiguiente();
   }
 
+  // ---------- agente de ElevenLabs (conversación por voz con el agente que configuraste en ElevenLabs) ----------
+  // Se conecta con un enlace firmado que da la función «voz» (la clave nunca llega aquí). Lo que se dice se guarda
+  // en esta conversación (chat_mensajes), así que el modo manos libres y el chat normal ven el mismo historial.
+  var AG_SDK = 'https://cdn.jsdelivr.net/npm/@elevenlabs/client@1.27.0/+esm';
+  var ag = { on: false, estado: '', error: '', conv: null, modo: '', gen: 0, cola: Promise.resolve(), escrito: '' };
+  function agPintar() {
+    var b = $('#c-agente'); if (!b) return;
+    b.textContent = !ag.on ? '🤖 Agente' : ag.estado === 'error' ? '⚠ ' + (ag.error || 'Error del agente') :
+      !ag.conv ? '… Conectando agente' : ag.modo === 'speaking' ? '🔊 Agente habla · colgar' : '● Agente escucha · colgar';
+    b.className = 'c-voz' + (ag.on ? ' on' : '') + (ag.estado === 'error' ? ' mal' : '');
+    var caja = $('#c-texto'); if (caja && ag.on) caja.placeholder = 'Habla con el agente… (o escribe)';
+  }
+  function agAlternar() {
+    if (ag.on) return agApagar();
+    if (enviando) return;
+    if (mv.on) mvApagar();   // los dos modos no van a la vez
+    ag.on = true; ag.estado = ''; ag.error = ''; ag.modo = ''; ag.escrito = '';
+    var g = ++ag.gen;
+    agPintar();
+    var fallo = function (t) { if (g !== ag.gen) return; ag.estado = 'error'; ag.error = t; agCerrar(); agPintar(); };
+    var permiso = navigator.mediaDevices && navigator.mediaDevices.getUserMedia ?
+      navigator.mediaDevices.getUserMedia({ audio: true }).then(function (st) { st.getTracks().forEach(function (t) { t.stop(); }); }) :
+      Promise.reject(new Error('mic'));
+    permiso.catch(function () { throw new Error('Permite el micrófono para esta página'); })
+      .then(function () { return Promise.all([import(AG_SDK), llamarVoz({ accion: 'agente_url' }).then(function (r) { return r.json(); })]); })
+      .then(function (x) {
+        if (g !== ag.gen) return;
+        var d = x[1];
+        if (!d || !d.signed_url) throw new Error((d && d.error) || 'ElevenLabs no dio el enlace del agente');
+        return x[0].Conversation.startSession({
+          signedUrl: d.signed_url,
+          connectionType: 'websocket',
+          onConnect: function () { if (g === ag.gen) agPintar(); },
+          onDisconnect: function () { if (g !== ag.gen) return; ag.conv = null; if (ag.estado !== 'error') { ag.on = false; ag.gen++; pintarPie(); } },
+          onModeChange: function (m) { if (g !== ag.gen) return; ag.modo = m && m.mode; agPintar(); },
+          onError: function (m) { fallo('Agente: ' + (typeof m === 'string' ? m : (m && m.message) || 'error')); },
+          onMessage: function (m) {
+            if (g !== ag.gen || !m || !String(m.message || '').trim()) return;
+            var rol = (m.role || m.source) === 'user' ? 'user' : 'assistant', texto = String(m.message).trim();
+            if (rol === 'user' && ag.escrito && texto === ag.escrito) { ag.escrito = ''; return; }   // lo escrito ya está guardado
+            agAnotar(rol, texto);
+          },
+        });
+      })
+      .then(function (c) {
+        if (!c) return;
+        if (g !== ag.gen) { try { c.endSession(); } catch (e) { /* */ } return; }
+        ag.conv = c; agPintar();
+        var ctx = agContexto(); if (ctx) { try { c.sendContextualUpdate(ctx); } catch (e) { /* */ } }
+      })
+      .catch(function (e) { fallo(e && e.message ? e.message : 'No se pudo conectar con el agente'); });
+  }
+  function agCerrar() { var c = ag.conv; ag.conv = null; if (c) { try { c.endSession(); } catch (e) { /* */ } } }
+  function agApagar() {
+    ag.gen++; ag.on = false; ag.estado = ''; ag.modo = ''; agCerrar();
+    var caja = $('#c-texto'); if (caja) caja.placeholder = 'Escribe un mensaje…';
+    pintarPie();
+  }
+  // Lo que ya se habló en esta conversación, para que el agente siga el hilo
+  function agContexto() {
+    var h = msgs.filter(function (m) { return m.contenido; }).slice(-20).map(function (m) {
+      return (m.rol === 'user' ? 'Diego: ' : 'Tú: ') + m.contenido.replace(/```[\s\S]*?```/g, '(código)').slice(0, 800);
+    }).join('\n');
+    if (!h) return '';
+    if (h.length > 8000) h = h.slice(-8000);
+    return 'Esta conversación viene del chat de Diego. Lo último que se habló (sigue el hilo, no lo repitas):\n' + h;
+  }
+  // Pinta el mensaje y lo guarda en la conversación (la crea si es nueva). Se guardan en orden.
+  function agAnotar(rol, texto) {
+    var m = { rol: rol, contenido: texto, modelo: rol === 'assistant' ? 'elevenlabs:agente' : null };
+    msgs.push(m); error = ''; pintarMsgs(true);
+    ag.cola = ag.cola.then(function () { return agConv(texto); }).then(function (id) {
+      return sb.from('chat_mensajes').insert({ conversacion_id: id, rol: rol, contenido: texto, modelo: m.modelo }).then(function (r) {
+        if (r.error) throw r.error;
+        return sb.from('chat_conversaciones').update({ actualizado: new Date().toISOString() }).eq('id', id);
+      });
+    }).then(function () { cargarConvs(); }).catch(function (e) { error = 'No se guardó un mensaje del agente: ' + (e.message || e); pintarMsgs(true); });
+  }
+  function agConv(texto) {
+    if (actual) return Promise.resolve(actual);
+    var fila = { titulo: ('🤖 ' + texto).slice(0, 60), proveedor: sel.proveedor, modelo: sel.proveedor === 'openrouter' ? sel.modelo : null, personaje_id: persSel || null };
+    return sb.from('chat_conversaciones').insert(fila).select('id').single().then(function (r) {
+      if (r.error) throw r.error;
+      actual = r.data.id; guardarLocal('miSemana.chat', actual); return actual;
+    });
+  }
+  function agEscribir(texto) {   // escribir mientras hablas con el agente: se lo manda al agente
+    if (!ag.conv) return;
+    ag.escrito = texto;
+    try { ag.conv.sendUserMessage(texto); } catch (e) { error = 'No se pudo mandar al agente'; pintarMsgs(true); return; }
+    agAnotar('user', texto);
+  }
+
   // ---------- pintar ----------
   function htmlLogin() {
     return '<div class="c-centro"><div class="c-ante">CHAT · MI SEMANA</div><h1 class="c-tit">Entra con tu cuenta</h1>' +
@@ -411,7 +507,8 @@
       '<main class="c-main"><div class="c-msgs" id="c-msgs"></div>' +
       '<div class="c-pie"><div class="c-caja"><textarea id="c-texto" rows="1" placeholder="Escribe un mensaje…" enterkeyhint="send"></textarea>' +
       '<button type="button" class="c-pri" id="c-boton" data-a="enviar">Enviar</button></div>' +
-      '<div class="c-opc"><button type="button" class="c-voz" id="c-voz" data-a="voz">🎙 Manos libres</button>' +
+      '<div class="c-opc"><button type="button" class="c-voz" id="c-agente" data-a="agente" title="Hablar con tu agente de ElevenLabs">🤖 Agente</button>' +
+      '<button type="button" class="c-voz" id="c-voz" data-a="voz">🎙 Manos libres</button>' +
       '<button type="button" class="c-link" data-a="voz-id" title="Voz de ElevenLabs">voz</button>' +
       '<button type="button" class="c-modelo" id="c-pers" data-a="personajes"></button>' +
       '<button type="button" class="c-modelo" id="c-modelo" data-a="modelos"></button>' +
@@ -438,7 +535,7 @@
     if (m.razonamiento) h += '<details class="c-razon"' + (m.vivo && !m.contenido ? ' open' : '') + '><summary>' + (m.vivo && !m.contenido ? 'Pensando…' : 'Razonamiento') + '</summary><div>' + esc(m.razonamiento) + '</div></details>';
     h += m.contenido ? md(m.contenido) : '';
     if (m.vivo && m.contenido) h += '<span class="c-cursor"></span>';
-    if (m.modelo && !m.vivo) h += '<div class="c-meta">' + esc(nombreModelo(deEtiqueta(m.modelo))) + '</div>';
+    if (m.modelo && !m.vivo) h += '<div class="c-meta">' + esc(/^elevenlabs:/.test(m.modelo) ? '🤖 Agente de ElevenLabs' : nombreModelo(deEtiqueta(m.modelo))) + '</div>';
     return h + '</div>';
   }
   function pintarMsgs(bajar) {
@@ -473,7 +570,8 @@
     var pa = persPor(persSel);
     $('#c-pers').textContent = '🎭 ' + (pa ? pa.nombre : 'Sin personaje') + ' ▾';
     $('#c-pers').disabled = !!enviando;
-    mvPintar();
+    mvPintar(); agPintar();
+    $('#c-agente').disabled = !!enviando && !ag.on;
   }
 
   // ---------- selector de modelo ----------
@@ -558,6 +656,7 @@
     if (a === 'pers-volver') { editando = null; return abrirPersonajes(); }
     if (a === 'pers-guardar') return guardarPersonaje();
     if (a === 'pers-borrar') return borrarPersonaje(b.getAttribute('data-id'));
+    if (a === 'agente') return agAlternar();
     if (a === 'voz') return mvAlternar();
     if (a === 'voz-cortar') return mvCortar();
     if (a === 'voz-id') {

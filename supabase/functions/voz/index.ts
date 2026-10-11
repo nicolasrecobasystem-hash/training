@@ -83,6 +83,15 @@ Deno.serve(async (req) => {
     return json({ ok: r.ok, status: r.status, respuesta: txt.slice(0, 300) }, r.ok ? 200 : 502);
   }
 
+  // Agente conversacional de ElevenLabs (modo «Agente» del chat). Enlace firmado de un solo uso: la clave nunca sale de aquí.
+  if (cuerpo.accion === 'agente_url') {
+    const AGENTE = 'agent_8901m483bg35e2gbxnf2xe85pe5v';
+    const r = await fetch('https://api.elevenlabs.io/v1/convai/conversation/get-signed-url?agent_id=' + AGENTE, { headers: { 'xi-api-key': clave } });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok || !d.signed_url) return json({ error: 'ElevenLabs respondió ' + r.status, detalle: d }, 502);
+    return json({ signed_url: d.signed_url });
+  }
+
   // Permiso temporal para escuchar (contar repeticiones)
   const r = await fetch('https://api.elevenlabs.io/v1/single-use-token/realtime_scribe', { method: 'POST', headers: { 'xi-api-key': clave } });
   const d = await r.json().catch(() => ({}));
