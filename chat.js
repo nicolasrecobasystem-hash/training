@@ -370,7 +370,10 @@
   function mvEncolar(t) {
     t = mvLimpio(t); if (!t) return;
     var g = mv.gen;
-    var item = { audio: llamarVoz({ accion: 'decir', texto: t.slice(0, 900), voz: mvVoz(), modelo: 'eleven_flash_v2_5', velocidad: 0.85 })
+    // Eleven v4 Turbo (rápido y expresivo); si falla, se repite con Flash v2.5 para no quedarse callado
+    var pedir = function (modelo) { return llamarVoz({ accion: 'decir', texto: t.slice(0, 900), voz: mvVoz(), modelo: modelo, velocidad: 0.85 }); };
+    var item = { audio: pedir('eleven_v4_turbo')
+      .then(function (r) { return r.ok ? r : pedir('eleven_flash_v2_5'); })
       .then(function (r) { if (!r.ok) throw new Error('voz ' + r.status); return r.arrayBuffer(); })
       .then(function (ab) { return g === mv.gen && mv.ctx ? new Promise(function (ok, ko) { mv.ctx.decodeAudioData(ab, ok, ko); }) : null; }) };
     mv.cola.push(item); mvSiguiente(); mvPintar();
