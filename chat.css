@@ -175,3 +175,5 @@ button:active{transform:scale(.98)}
 .c-ws-entradas{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;justify-content:flex-end}
 .c-ws-entradas img,.c-ws-entradas video{width:64px;height:64px;object-fit:cover;border-radius:8px;border:1px solid rgba(255,255,255,.15)}
 @media (max-width:760px){ .c-ws-form{grid-template-columns:1fr} }
+.c-ws-otros{background:transparent;border:1px solid var(--linea2);border-radius:999px;padding:4px 10px;font-size:13px;color:var(--suave);max-width:220px}
+.c-ws-otros.on{border-color:var(--acento);color:var(--acento)}

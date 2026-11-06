@@ -496,10 +496,26 @@
   // ---------- crear imágenes y vídeos con WaveSpeedAI (función «wavespeed»; la clave vive en Supabase) ----------
   // El resultado sale como mensaje en la conversación. WaveSpeed guarda los archivos unos 7 días: descárgalos si los quieres.
   var WS_TIPOS = [['todos', 'Todos'], ['text-to-image', 'Texto → imagen'], ['image-to-image', 'Editar imagen'], ['text-to-video', 'Texto → vídeo'],
-                  ['image-to-video', 'Imagen → vídeo'], ['video-to-video', 'Vídeo → vídeo'], ['text-to-audio', 'Audio']];
+                  ['image-to-video', 'Imagen → vídeo'], ['reference-to-video', 'Referencia → vídeo'], ['video-to-video', 'Vídeo → vídeo']];
+  var WS_OTROS = { 'digital-human': 'Avatar que habla', 'motion-control': 'Control de movimiento', 'video-extend': 'Alargar vídeo', 'upscale-image': 'Mejorar imagen',
+    'upscale-video': 'Mejorar vídeo', 'image-background-removal': 'Quitar fondo (imagen)', 'video-background-removal': 'Quitar fondo (vídeo)', 'image-object-removal': 'Borrar objetos (imagen)',
+    'video-object-removal': 'Borrar objetos (vídeo)', 'image-tools': 'Herramientas de imagen', 'video-tools': 'Herramientas de vídeo', 'image-effects': 'Efectos de imagen',
+    'video-effects': 'Efectos de vídeo', 'image-face-swap': 'Cambiar cara (imagen)', 'video-face-swap': 'Cambiar cara (vídeo)', 'text-to-speech': 'Texto → voz',
+    'ai-music': 'Música', 'sound-effects': 'Efectos de sonido', 'video-to-audio': 'Vídeo → audio', 'audio-to-video': 'Audio → vídeo', 'text-to-3d': 'Texto → 3D',
+    'image-to-3d': 'Imagen → 3D', 'video-dubbing': 'Doblaje', 'speech-to-speech': 'Voz → voz', 'voice-cloning': 'Clonar voz', 'image-to-text': 'Imagen → texto',
+    'video-to-text': 'Vídeo → texto', 'speech-to-text': 'Voz → texto', 'lyrics-generation': 'Letras', 'music-editing': 'Editar música', 'music-analysis': 'Analizar música',
+    'audio-tools': 'Herramientas de audio', 'audio-to-audio': 'Audio → audio', 'training': 'Entrenar modelo', 'llm': 'Modelos de texto', 'content-moderation': 'Moderación' };
   var ws = { cat: null, catError: '', cargando: false, filtro: { q: '', tipo: 'todos' }, modelo: null, media: {}, subiendo: 0, saldo: null,
              lanzando: false, error: '', pendiente: null, vigilando: {} };
-  function wsNombreTipo(t) { for (var i = 0; i < WS_TIPOS.length; i++) if (WS_TIPOS[i][0] === t) return WS_TIPOS[i][1]; return t || ''; }
+  function wsNombreTipo(t) { for (var i = 0; i < WS_TIPOS.length; i++) if (WS_TIPOS[i][0] === t) return WS_TIPOS[i][1]; return WS_OTROS[t] || (t || '').replace(/-/g, ' '); }
+  function wsHtmlOtros() {   // el resto de tipos del catálogo, en un desplegable con cuántos modelos tiene cada uno
+    var cuenta = {}, prin = WS_TIPOS.map(function (x) { return x[0]; });
+    (ws.cat || []).forEach(function (m) { if (prin.indexOf(m.tipo) < 0 && m.tipo) cuenta[m.tipo] = (cuenta[m.tipo] || 0) + 1; });
+    var ks = Object.keys(cuenta).sort(function (a, b) { return wsNombreTipo(a).localeCompare(wsNombreTipo(b)); });
+    if (!ks.length) return '';
+    return '<select id="ws-tipo-otro" class="c-ws-otros' + (prin.indexOf(ws.filtro.tipo) < 0 ? ' on' : '') + '"><option value="">Más tipos…</option>' +
+      ks.map(function (k) { return '<option value="' + esc(k) + '"' + (ws.filtro.tipo === k ? ' selected' : '') + '>' + esc(wsNombreTipo(k)) + ' (' + cuenta[k] + ')</option>'; }).join('') + '</select>';
+  }
   function wsLlamar(cuerpo) {
     return sb.auth.getSession().then(function (r) {
       var tok = r && r.data && r.data.session && r.data.session.access_token;
@@ -587,8 +603,8 @@
     if (verLista || !ws.modelo || !ws.modelo.campos) {
       if (verLista || !ws.modelo) ws.modelo = ws.modelo && ws.modelo.campos ? ws.modelo : null;
       mo.innerHTML = cab + '<input type="search" id="ws-buscar" placeholder="Buscar modelo: seedream, kling, wan, nano banana, veo…" value="' + esc(ws.filtro.q) + '" autocomplete="off">' +
-        '<div class="c-filtros">' + WS_TIPOS.map(function (f) { return '<button type="button" class="c-chip' + (ws.filtro.tipo === f[0] ? ' on' : '') + '" data-a="ws-tipo" data-v="' + f[0] + '">' + f[1] + '</button>'; }).join('') +
-        '</div><div class="c-modelos" id="ws-modelos"><div class="c-vacio">' + (ws.cargando || !ws.cat ? 'Cargando modelos de WaveSpeed…' : '') + '</div></div></div>';
+        '<div class="c-filtros" id="ws-filtros">' + WS_TIPOS.map(function (f) { return '<button type="button" class="c-chip' + (ws.filtro.tipo === f[0] ? ' on' : '') + '" data-a="ws-tipo" data-v="' + f[0] + '">' + f[1] + '</button>'; }).join('') +
+        '<span id="ws-otros">' + wsHtmlOtros() + '</span></div><div class="c-modelos" id="ws-modelos"><div class="c-vacio">' + (ws.cargando || !ws.cat ? 'Cargando modelos de WaveSpeed…' : '') + '</div></div></div>';
       if (matchMedia('(pointer:fine)').matches) $('#ws-buscar').focus();
       if (ws.cat || ws.catError) wsPintarLista();
       return;
@@ -611,6 +627,7 @@
   function wsPintarLista() {
     var caja = $('#ws-modelos'); if (!caja) return;
     if (ws.catError) { caja.innerHTML = '<div class="c-error">No se pudo cargar WaveSpeed: ' + esc(ws.catError) + '</div><button type="button" class="c-link" data-a="ws-recargar">reintentar</button>'; return; }
+    var ot = $('#ws-otros'); if (ot && !ot.firstChild) ot.innerHTML = wsHtmlOtros();
     var q = ws.filtro.q.trim().toLowerCase(), rec = wsRecientes();
     var lista = (ws.cat || []).filter(function (m) {
       if (ws.filtro.tipo !== 'todos' && m.tipo !== ws.filtro.tipo) return false;
@@ -944,7 +961,7 @@
     if (a === 'pers-borrar') return borrarPersonaje(b.getAttribute('data-id'));
     if (a === 'agente') return agAlternar();
     if (a === 'crear') return abrirCrear();
-    if (a === 'ws-tipo') { ws.filtro.tipo = b.getAttribute('data-v'); Array.prototype.forEach.call(raiz.querySelectorAll('[data-a=ws-tipo]'), function (x) { x.classList.toggle('on', x === b); }); return wsPintarLista(); }
+    if (a === 'ws-tipo') { ws.filtro.tipo = b.getAttribute('data-v'); Array.prototype.forEach.call(raiz.querySelectorAll('[data-a=ws-tipo]'), function (x) { x.classList.toggle('on', x === b); }); var so = $('#ws-tipo-otro'); if (so) { so.value = ''; so.classList.remove('on'); } return wsPintarLista(); }
     if (a === 'ws-elegir') { var pv = ws.pendienteVideo; ws.pendienteVideo = null; wsElegir(b.getAttribute('data-id'));
       if (pv && ws.modelo) { var kv = wsOrdenCampos(ws.modelo).filter(function (x) { return wsTipoMedia(x, ws.modelo.campos[x]) === 'video'; })[0]; if (kv) { ws.media[kv] = [pv]; wsPintarCrear(); } } return; }
     if (a === 'ws-cambiar') return wsPintarCrear(true);
@@ -985,6 +1002,7 @@
   });
   raiz.addEventListener('change', function (ev) {
     if (ev.target.type === 'file' && ev.target.closest('.c-ws')) return wsSubir(ev.target);
+    if (ev.target.id === 'ws-tipo-otro') { ws.filtro.tipo = ev.target.value || 'todos'; ev.target.classList.toggle('on', !!ev.target.value); Array.prototype.forEach.call(raiz.querySelectorAll('[data-a=ws-tipo]'), function (x) { x.classList.toggle('on', x.getAttribute('data-v') === ws.filtro.tipo); }); return wsPintarLista(); }
     if (ev.target.classList && ev.target.classList.contains('c-ws-url')) { var u = ev.target.value.trim(); if (/^https?:\/\/\S+$/.test(u)) { wsAnadirMedia(ev.target.getAttribute('data-k'), ev.target.getAttribute('data-multi') === '1', [u]); ev.target.value = ''; } return; }
     if (ev.target.id === 'c-pensar') guardarLocal('miSemana.chat.pensar', ev.target.checked ? '1' : '0'); });
   function entrar() {
