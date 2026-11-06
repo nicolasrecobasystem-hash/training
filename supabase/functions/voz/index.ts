@@ -1,6 +1,6 @@
 // Función "voz" de Supabase: (1) dice frases con tu voz de ElevenLabs y (2) da al mando un permiso temporal (15 min, de un solo uso) para usar
 // el reconocimiento de voz en tiempo real de ElevenLabs (Scribe). La clave NUNCA va en la web:
-// se guarda como secreto ELEVENLABS_API_KEY en Supabase. Solo responde a tu cuenta.
+// se guarda como secreto ELEVENLABS_API_KEY en Supabase (y la de la segunda cuenta, opcional, en ELEVENLABS_API_KEY_2). Solo responde a tu cuenta.
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 
 const CORREO_PERMITIDO = 'nicolasrecobasystem@gmail.com';
@@ -9,6 +9,7 @@ const CORS = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
+const CUENTA_DE_VOZ = new Map<string, number>();   // voz → cuenta (1 o 2) en la que funcionó
 function json(o: unknown, status = 200) {
   return new Response(JSON.stringify(o), { status, headers: { ...CORS, 'Content-Type': 'application/json' } });
 }
@@ -40,11 +41,23 @@ Deno.serve(async (req) => {
     // Velocidad opcional (ElevenLabs acepta 0.7–1.2; 1 = normal). El chat la usa para hablar más despacio.
     const vel = Number(cuerpo.velocidad);
     if (isFinite(vel) && vel >= 0.7 && vel <= 1.2 && vel !== 1) pedido.voice_settings = { ...(pedido.voice_settings || {}), speed: vel };
-    const t = await fetch('https://api.elevenlabs.io/v1/text-to-speech/' + vozId + '?output_format=mp3_44100_128', {
-      method: 'POST', headers: { 'xi-api-key': clave, 'Content-Type': 'application/json', Accept: 'audio/mpeg' },
-      body: JSON.stringify(pedido),
-    });
-    if (!t.ok) return json({ error: 'ElevenLabs respondió ' + t.status, detalle: await t.text().catch(() => '') }, 502);
+    // Dos cuentas de ElevenLabs: cada voz se busca primero en la cuenta en la que ya funcionó (se recuerda mientras la función
+    // esté caliente); si la cuenta dice que esa voz no existe, se prueba en la otra. Cuenta 2 = secreto ELEVENLABS_API_KEY_2 (opcional).
+    const clave2 = Deno.env.get('ELEVENLABS_API_KEY_2') || Deno.env.get('LEVENLABS_API_KEY_2');   // (el secreto se guardó con este nombre)
+    const claves = [clave, clave2].filter(Boolean) as string[];
+    const primero = clave2 && CUENTA_DE_VOZ.get(vozId) === 2 ? 1 : 0;
+    const orden = primero ? [claves[1], claves[0]] : claves;
+    let t: Response | null = null, detalle = '';
+    for (let i = 0; i < orden.length; i++) {
+      t = await fetch('https://api.elevenlabs.io/v1/text-to-speech/' + vozId + '?output_format=mp3_44100_128', {
+        method: 'POST', headers: { 'xi-api-key': orden[i], 'Content-Type': 'application/json', Accept: 'audio/mpeg' },
+        body: JSON.stringify(pedido),
+      });
+      if (t.ok) { CUENTA_DE_VOZ.set(vozId, orden[i] === clave ? 1 : 2); break; }
+      detalle = await t.text().catch(() => '');
+      if (!(t.status === 404 || /voice_not_found|voice.{0,20}not.{0,10}found/i.test(detalle))) break;   // otro error: no tiene sentido probar la otra cuenta
+    }
+    if (!t || !t.ok) return json({ error: 'ElevenLabs respondió ' + (t ? t.status : 0), detalle }, 502);
     return new Response(t.body, { headers: { ...CORS, 'Content-Type': 'audio/mpeg' } });
   }
 
