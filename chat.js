@@ -115,8 +115,8 @@
     $('.c-cuerpo').classList.remove('ver-lista');
     pintarLista(); pintarMsgs();
     if (!id) return $('#c-texto').focus();
-    sb.from('chat_mensajes').select('id, rol, contenido, razonamiento, modelo, creado').eq('conversacion_id', id).order('id').limit(500)
-      .then(function (r) { if (r.error) throw r.error; if (actual !== id) return; msgs = r.data || []; pintarMsgs(true); })
+    sb.from('chat_mensajes').select('id, rol, contenido, razonamiento, modelo, uso, creado').eq('conversacion_id', id).order('id').limit(500)
+      .then(function (r) { if (r.error) throw r.error; if (actual !== id) return; msgs = r.data || []; pintarMsgs(true); msgs.forEach(wsVigilar); })
       .catch(function (e) { error = e.message; pintarMsgs(); });
   }
   function borrar(id) {
@@ -493,6 +493,287 @@
     agAnotar('user', texto);
   }
 
+  // ---------- crear imágenes y vídeos con WaveSpeedAI (función «wavespeed»; la clave vive en Supabase) ----------
+  // El resultado sale como mensaje en la conversación. WaveSpeed guarda los archivos unos 7 días: descárgalos si los quieres.
+  var WS_TIPOS = [['todos', 'Todos'], ['text-to-image', 'Texto → imagen'], ['image-to-image', 'Editar imagen'], ['text-to-video', 'Texto → vídeo'],
+                  ['image-to-video', 'Imagen → vídeo'], ['video-to-video', 'Vídeo → vídeo'], ['text-to-audio', 'Audio']];
+  var ws = { cat: null, catError: '', cargando: false, filtro: { q: '', tipo: 'todos' }, modelo: null, media: {}, subiendo: 0, saldo: null,
+             lanzando: false, error: '', pendiente: null, vigilando: {} };
+  function wsNombreTipo(t) { for (var i = 0; i < WS_TIPOS.length; i++) if (WS_TIPOS[i][0] === t) return WS_TIPOS[i][1]; return t || ''; }
+  function wsLlamar(cuerpo) {
+    return sb.auth.getSession().then(function (r) {
+      var tok = r && r.data && r.data.session && r.data.session.access_token;
+      return fetch(URL_NUBE + '/functions/v1/wavespeed', { method: 'POST', headers: { Authorization: 'Bearer ' + tok, apikey: CLAVE, 'Content-Type': 'application/json' }, body: JSON.stringify(cuerpo) });
+    }).then(function (r) { return r.json().catch(function () { return {}; }).then(function (d) { if (!r.ok || d.error && !d.estado) throw new Error(d.error || ('HTTP ' + r.status)); return d; }); });
+  }
+  function wsSubirArchivo(f) {
+    return sb.auth.getSession().then(function (r) {
+      var tok = r && r.data && r.data.session && r.data.session.access_token;
+      return fetch(URL_NUBE + '/functions/v1/wavespeed?accion=subir', { method: 'POST', headers: { Authorization: 'Bearer ' + tok, apikey: CLAVE, 'Content-Type': f.type || 'application/octet-stream', 'x-nombre': f.name || 'archivo' }, body: f });
+    }).then(function (r) { return r.json().catch(function () { return {}; }).then(function (d) { if (!r.ok || !d.url) throw new Error(d.error || ('HTTP ' + r.status)); return d.url; }); });
+  }
+  function wsCargarCat(forzar) {
+    if (ws.cat && !forzar) return Promise.resolve();
+    ws.catError = ''; ws.cargando = true;
+    return wsLlamar({ accion: 'modelos', forzar: !!forzar }).then(function (d) { ws.cat = d.modelos || []; })
+      .catch(function (e) { ws.catError = e.message; }).then(function () { ws.cargando = false; });
+  }
+  function wsPor(id) { if (!ws.cat) return null; for (var i = 0; i < ws.cat.length; i++) if (ws.cat[i].id === id) return ws.cat[i]; return null; }
+  function wsRecientes() { try { return JSON.parse(localStorage.getItem('miSemana.chat.ws.recientes') || '[]'); } catch (e) { return []; } }
+  // ¿Este campo es un archivo de entrada? (image, images, last_image, video, audio, mask…)
+  function wsTipoMedia(k, c) {
+    if (c.op || !(c.t === 'string' || c.t === 'array')) return '';
+    if (/size|num|count|resolution|ratio|format|quality|strength|length|duration|fps|step|guidance|scale|type|mode|style/i.test(k)) return '';
+    if (/video/i.test(k)) return 'video';
+    if (/audio|voice|sound|music/i.test(k)) return 'audio';
+    if (/image|img|photo|mask|frame|face|reference/i.test(k)) return 'image';
+    return '';
+  }
+  function wsEsPrincipal(m, k, c) {
+    return k === 'prompt' || m.req.indexOf(k) >= 0 || !!wsTipoMedia(k, c) || /^(size|aspect_ratio|resolution|duration|image_size|num_images|negative_prompt)$/.test(k);
+  }
+  function wsOrdenCampos(m) {
+    var ks = (m.orden && m.orden.length ? m.orden.filter(function (k) { return m.campos[k]; }) : []).concat(Object.keys(m.campos));
+    ks = ks.filter(function (k, i) { return ks.indexOf(k) === i && !m.campos[k].oculto && k !== 'enable_sync_mode' && k !== 'enable_base64_output'; });
+    if (!m.orden || !m.orden.length) ks.sort(function (a, b) { var pa = a === 'prompt' ? 0 : wsTipoMedia(a, m.campos[a]) ? 1 : m.req.indexOf(a) >= 0 ? 2 : 3, pb = b === 'prompt' ? 0 : wsTipoMedia(b, m.campos[b]) ? 1 : m.req.indexOf(b) >= 0 ? 2 : 3; return pa - pb; });
+    return ks;
+  }
+  function wsEtiqueta(k, c, m) { return esc(c.ti || k.replace(/_/g, ' ')) + (m.req.indexOf(k) >= 0 ? ' <b class="c-ws-req">*</b>' : ''); }
+  function wsHtmlMedia(k) {
+    var lista = ws.media[k] || [];
+    return lista.map(function (u, i) {
+      var v = /\.(mp4|webm|mov)(\?|$)/i.test(u), a = /\.(mp3|wav|m4a|ogg)(\?|$)/i.test(u);
+      return '<span class="c-ws-mini">' + (v ? '<video src="' + esc(u) + '" muted playsinline></video>' : a ? '<i>🎵</i>' : '<img src="' + esc(u) + '" alt="">') +
+        '<button type="button" data-a="ws-quitar" data-k="' + esc(k) + '" data-i="' + i + '" title="Quitar">✕</button></span>';
+    }).join('');
+  }
+  function wsHtmlCampo(m, k) {
+    var c = m.campos[k], id = 'ws-f-' + k, med = wsTipoMedia(k, c), et = '<span>' + wsEtiqueta(k, c, m) + '</span>', ayuda = c.d ? '<small>' + esc(c.d) + '</small>' : '';
+    if (med) {
+      var multi = c.t === 'array', acepta = med === 'video' ? 'video/*' : med === 'audio' ? 'audio/*' : 'image/*';
+      return '<div class="c-ws-campo ancho" data-media="' + esc(k) + '">' + et +
+        '<div class="c-ws-medios" id="ws-m-' + esc(k) + '">' + wsHtmlMedia(k) + '</div>' +
+        '<div class="c-ws-subir"><label class="c-sec c-ws-archivo">📎 ' + (multi ? 'Añadir archivos' : 'Elegir archivo') +
+        '<input type="file" accept="' + acepta + '"' + (multi ? ' multiple' : '') + ' data-k="' + esc(k) + '" data-multi="' + (multi ? 1 : 0) + '" hidden></label>' +
+        '<input type="url" class="c-ws-url" placeholder="o pega un enlace https://…" data-k="' + esc(k) + '" data-multi="' + (multi ? 1 : 0) + '"></div>' + ayuda + '</div>';
+    }
+    if (k === 'prompt' || k === 'negative_prompt' || (c.t === 'string' && /prompt|text|lyrics/i.test(k) && !c.op)) {
+      var pre = k === 'prompt' ? ($('#c-texto') ? $('#c-texto').value : '') : (c.def != null ? String(c.def) : '');
+      return '<label class="c-ws-campo ancho">' + et + '<textarea id="' + id + '" rows="' + (k === 'prompt' ? 4 : 2) + '" data-k="' + esc(k) + '">' + esc(pre) + '</textarea>' + ayuda + '</label>';
+    }
+    if (c.op) return '<label class="c-ws-campo">' + et + '<select id="' + id + '" data-k="' + esc(k) + '">' + (m.req.indexOf(k) >= 0 || c.def != null ? '' : '<option value="">—</option>') +
+      c.op.map(function (o) { return '<option value="' + esc(JSON.stringify(o)) + '"' + (c.def === o ? ' selected' : '') + '>' + esc(o) + '</option>'; }).join('') + '</select>' + ayuda + '</label>';
+    if (c.t === 'boolean') return '<label class="c-ws-campo c-ws-check"><input type="checkbox" id="' + id + '" data-k="' + esc(k) + '"' + (c.def ? ' checked' : '') + '> ' + wsEtiqueta(k, c, m) + ayuda + '</label>';
+    if (c.t === 'integer' || c.t === 'number') return '<label class="c-ws-campo">' + et + '<input type="number" id="' + id + '" data-k="' + esc(k) + '" data-num="' + c.t + '"' +
+      (c.min != null ? ' min="' + c.min + '"' : '') + (c.max != null ? ' max="' + c.max + '"' : '') + ' step="' + (c.paso || (c.t === 'integer' ? 1 : 'any')) + '"' +
+      ' value="' + (c.def != null && k !== 'seed' ? esc(c.def) : '') + '" placeholder="' + (k === 'seed' ? 'aleatoria' : (c.min != null && c.max != null ? c.min + '–' + c.max : '')) + '">' + ayuda + '</label>';
+    if (c.t === 'string') return '<label class="c-ws-campo">' + et + '<input type="text" id="' + id + '" data-k="' + esc(k) + '" value="' + (c.def != null ? esc(c.def) : '') + '">' + ayuda + '</label>';
+    return '';   // objetos y listas raras: se deja el valor por defecto del modelo
+  }
+  function abrirCrear() {
+    var mo = $('#c-modal'); mo.hidden = false; ws.error = '';
+    if (!ws.modelo) { var ult = wsRecientes()[0]; ws.modelo = ult ? { id: ult } : null; }
+    wsPintarCrear();
+    if (ws.saldo == null) wsLlamar({ accion: 'saldo' }).then(function (d) { ws.saldo = d.saldo; var s = $('#ws-saldo'); if (s && d.saldo != null) s.textContent = 'Saldo $' + Number(d.saldo).toFixed(2); }).catch(function () { /* */ });
+    wsCargarCat().then(function () {
+      if (ws.modelo && !ws.modelo.campos) ws.modelo = wsPor(ws.modelo.id);
+      if (!$('#c-modal').hidden && $('.c-ws')) wsPintarCrear();
+    });
+  }
+  function wsPintarCrear(verLista) {
+    var mo = $('#c-modal');
+    var cab = '<div class="c-caja-modal c-ws" role="dialog" aria-label="Crear imagen o vídeo"><div class="c-modal-cab"><b>Crear</b><span class="c-ws-saldo" id="ws-saldo">' +
+      (ws.saldo != null ? 'Saldo $' + Number(ws.saldo).toFixed(2) : '') + '</span><button type="button" class="c-sec" data-a="cerrar-modelos">✕</button></div>';
+    if (verLista || !ws.modelo || !ws.modelo.campos) {
+      if (verLista || !ws.modelo) ws.modelo = ws.modelo && ws.modelo.campos ? ws.modelo : null;
+      mo.innerHTML = cab + '<input type="search" id="ws-buscar" placeholder="Buscar modelo: seedream, kling, wan, nano banana, veo…" value="' + esc(ws.filtro.q) + '" autocomplete="off">' +
+        '<div class="c-filtros">' + WS_TIPOS.map(function (f) { return '<button type="button" class="c-chip' + (ws.filtro.tipo === f[0] ? ' on' : '') + '" data-a="ws-tipo" data-v="' + f[0] + '">' + f[1] + '</button>'; }).join('') +
+        '</div><div class="c-modelos" id="ws-modelos"><div class="c-vacio">' + (ws.cargando || !ws.cat ? 'Cargando modelos de WaveSpeed…' : '') + '</div></div></div>';
+      if (matchMedia('(pointer:fine)').matches) $('#ws-buscar').focus();
+      if (ws.cat || ws.catError) wsPintarLista();
+      return;
+    }
+    var m = ws.modelo, ks = wsOrdenCampos(m), prin = ks.filter(function (k) { return wsEsPrincipal(m, k, m.campos[k]); }), resto = ks.filter(function (k) { return prin.indexOf(k) < 0; });
+    if (ws.pendiente) {   // «Usar como entrada»: va al primer campo de imagen del modelo
+      var kImg = ks.filter(function (k) { return wsTipoMedia(k, m.campos[k]) === 'image'; })[0];
+      if (kImg) { ws.media[kImg] = m.campos[kImg].t === 'array' ? (ws.media[kImg] || []).concat([ws.pendiente]) : [ws.pendiente]; ws.pendiente = null; }
+    }
+    mo.innerHTML = cab +
+      '<button type="button" class="c-opcion on c-ws-elegido" data-a="ws-cambiar"><span><b>' + esc(m.nombre) + '</b><small>' + esc(m.id) + '</small></span><em>' +
+      esc(wsNombreTipo(m.tipo)) + (m.precio != null ? ' · $' + m.precio : '') + ' · cambiar ▾</em></button>' +
+      '<div class="c-ws-form">' + prin.map(function (k) { return wsHtmlCampo(m, k); }).join('') + '</div>' +
+      (resto.length ? '<details class="c-ws-mas"><summary>Más opciones (' + resto.length + ')</summary><div class="c-ws-form">' + resto.map(function (k) { return wsHtmlCampo(m, k); }).join('') + '</div></details>' : '') +
+      '<div class="c-error" id="ws-error">' + esc(ws.error) + '</div>' +
+      '<div class="c-fila-botones"><span class="c-ws-nota">Se guarda en esta conversación · WaveSpeed lo borra a los 7 días</span>' +
+      '<button type="button" class="c-pri" data-a="ws-generar" id="ws-generar"' + (ws.lanzando || ws.subiendo ? ' disabled' : '') + '>' + (ws.lanzando ? 'Enviando…' : ws.subiendo ? 'Subiendo…' : 'Generar') + '</button></div></div>';
+    var p = $('#ws-f-prompt'); if (p && matchMedia('(pointer:fine)').matches) { p.focus(); p.setSelectionRange(p.value.length, p.value.length); }
+  }
+  function wsPintarLista() {
+    var caja = $('#ws-modelos'); if (!caja) return;
+    if (ws.catError) { caja.innerHTML = '<div class="c-error">No se pudo cargar WaveSpeed: ' + esc(ws.catError) + '</div><button type="button" class="c-link" data-a="ws-recargar">reintentar</button>'; return; }
+    var q = ws.filtro.q.trim().toLowerCase(), rec = wsRecientes();
+    var lista = (ws.cat || []).filter(function (m) {
+      if (ws.filtro.tipo !== 'todos' && m.tipo !== ws.filtro.tipo) return false;
+      return !q || q.split(/\s+/).every(function (p) { return (m.id + ' ' + m.nombre + ' ' + m.desc).toLowerCase().indexOf(p) >= 0; });
+    });
+    lista.sort(function (a, b) { var ra = rec.indexOf(a.id), rb = rec.indexOf(b.id); ra = ra < 0 ? 99 : ra; rb = rb < 0 ? 99 : rb; return ra - rb; });
+    caja.innerHTML = lista.slice(0, 300).map(function (m) {
+      return '<button type="button" class="c-opcion' + (ws.modelo && ws.modelo.id === m.id ? ' on' : '') + '" data-a="ws-elegir" data-id="' + esc(m.id) + '"><span><b>' +
+        (rec.indexOf(m.id) >= 0 ? '🕘 ' : '') + esc(m.nombre) + '</b><small>' + esc(m.id) + (m.desc ? ' · ' + esc(m.desc) : '') + '</small></span><em>' +
+        esc(wsNombreTipo(m.tipo)) + (m.precio != null ? ' · $' + m.precio : '') + '</em></button>';
+    }).join('') + '<div class="c-pie-modal">' + lista.length + ' modelos' + (lista.length > 300 ? ' · se muestran 300, afina la búsqueda' : '') +
+      ' · <button type="button" class="c-link" data-a="ws-recargar">recargar lista</button></div>';
+  }
+  function wsElegir(id) {
+    var m = wsPor(id); if (!m) return;
+    if (!ws.modelo || ws.modelo.id !== id) ws.media = {};
+    ws.modelo = m; ws.error = '';
+    var rec = wsRecientes().filter(function (x) { return x !== id; }); rec.unshift(id);
+    guardarLocal('miSemana.chat.ws.recientes', JSON.stringify(rec.slice(0, 8)));
+    wsPintarCrear();
+  }
+  function wsAnadirMedia(k, multi, urls) {
+    ws.media[k] = multi ? (ws.media[k] || []).concat(urls) : urls.slice(-1);
+    var c = ws.modelo && ws.modelo.campos[k];
+    if (c && c.maxItems) ws.media[k] = ws.media[k].slice(0, c.maxItems);
+    var caja = $('#ws-m-' + k); if (caja) caja.innerHTML = wsHtmlMedia(k);
+  }
+  function wsBoton() { var b = $('#ws-generar'); if (b) { b.disabled = ws.lanzando || ws.subiendo > 0; b.textContent = ws.lanzando ? 'Enviando…' : ws.subiendo ? 'Subiendo ' + ws.subiendo + '…' : 'Generar'; } }
+  function wsSubir(inp) {
+    var k = inp.getAttribute('data-k'), multi = inp.getAttribute('data-multi') === '1', fs = Array.prototype.slice.call(inp.files || []);
+    if (!fs.length) return;
+    var err = $('#ws-error');
+    fs.forEach(function (f) {
+      if (f.size > 100 * 1024 * 1024) { if (err) err.textContent = f.name + ': máximo 100 MB'; return; }
+      ws.subiendo++; wsBoton();
+      wsSubirArchivo(f).then(function (u) { wsAnadirMedia(k, multi, [u]); })
+        .catch(function (e) { if (err) err.textContent = 'No se pudo subir ' + f.name + ': ' + e.message; })
+        .then(function () { ws.subiendo--; wsBoton(); });
+    });
+    inp.value = '';
+  }
+  function wsLeerForm() {
+    var m = ws.modelo, entrada = {}, falta = [];
+    Array.prototype.forEach.call($('#c-modal').querySelectorAll('[data-k]'), function (el) {
+      var k = el.getAttribute('data-k'), c = m.campos[k];
+      if (!c || el.type === 'file' || el.classList.contains('c-ws-url')) return;
+      if (el.type === 'checkbox') { entrada[k] = el.checked; return; }
+      var v = el.value;
+      if (el.tagName === 'SELECT') { if (v !== '') entrada[k] = JSON.parse(v); return; }
+      if (el.getAttribute('data-num')) { if (v.trim() !== '') entrada[k] = el.getAttribute('data-num') === 'integer' ? parseInt(v, 10) : parseFloat(v); return; }
+      if (v.trim() !== '') entrada[k] = v.trim();
+    });
+    Object.keys(ws.media).forEach(function (k) {
+      var c = m.campos[k], l = ws.media[k] || []; if (!c || !l.length) return;
+      entrada[k] = c.t === 'array' ? l : l[0];
+    });
+    m.req.forEach(function (k) { if (entrada[k] === undefined || entrada[k] === '') falta.push((m.campos[k] && m.campos[k].ti) || k.replace(/_/g, ' ')); });
+    return { entrada: entrada, falta: falta };
+  }
+  function wsConv(titulo) {
+    if (actual) return Promise.resolve(actual);
+    var fila = { titulo: ('🎨 ' + titulo).slice(0, 60), proveedor: sel.proveedor, modelo: sel.proveedor === 'openrouter' ? sel.modelo : null, personaje_id: persSel || null };
+    return sb.from('chat_conversaciones').insert(fila).select('id').single().then(function (r) {
+      if (r.error) throw r.error; actual = r.data.id; guardarLocal('miSemana.chat', actual); return actual;
+    });
+  }
+  function wsGenerar() {
+    if (ws.lanzando || ws.subiendo || !ws.modelo) return;
+    var m = ws.modelo, f = wsLeerForm(), err = $('#ws-error');
+    if (f.falta.length) { err.textContent = 'Falta: ' + f.falta.join(', '); return; }
+    ws.lanzando = true; wsBoton(); err.textContent = '';
+    var prompt = String(f.entrada.prompt || ''), entradas = [];
+    Object.keys(ws.media).forEach(function (k) { if (m.campos[k]) entradas = entradas.concat(ws.media[k] || []); });
+    wsLlamar({ accion: 'generar', ruta: m.ruta, entrada: f.entrada }).then(function (d) {
+      var info = { id: d.id, modelo: m.id, nombre: m.nombre, tipo: m.tipo, precio: m.precio, estado: d.estado || 'created', salidas: [], error: '', inicio: Date.now() };
+      var txtU = prompt || '(sin prompt)', txtA = '🎨 ' + wsNombreTipo(m.tipo) + ' con ' + m.nombre + (prompt ? ': «' + prompt.slice(0, 400) + '»' : '');
+      var mu = { rol: 'user', contenido: txtU, uso: entradas.length ? { ws_entrada: entradas } : null };
+      var ma = { rol: 'assistant', contenido: txtA, modelo: 'wavespeed:' + m.id, uso: { wavespeed: info } };
+      ws.lanzando = false; ws.media = {}; error = '';
+      var caja = $('#c-texto'); if (caja && prompt && caja.value.trim() === prompt.trim()) { caja.value = ''; ajustar(); }
+      cerrarModelos();
+      msgs.push(mu, ma); pintarMsgs(true);
+      return wsConv(prompt || m.nombre).then(function (cid) {
+        return sb.from('chat_mensajes').insert({ conversacion_id: cid, rol: 'user', contenido: txtU, uso: mu.uso }).then(function (r) {
+          if (r.error) throw r.error;
+          return sb.from('chat_mensajes').insert({ conversacion_id: cid, rol: 'assistant', contenido: txtA, modelo: ma.modelo, uso: ma.uso }).select('id').single();
+        }).then(function (r) {
+          if (r.error) throw r.error;
+          ma.id = r.data.id;
+          sb.from('chat_conversaciones').update({ actualizado: new Date().toISOString() }).eq('id', cid).then(function () { cargarConvs(); });
+        });
+      }).catch(function (e) { error = 'Se está generando, pero no se guardó en la conversación: ' + (e.message || e); pintarMsgs(true); })
+        .then(function () { wsVigilar(ma); });
+    }).catch(function (e) {
+      ws.lanzando = false; wsBoton();
+      var er = $('#ws-error'); if (er) er.textContent = 'WaveSpeed: ' + e.message;
+    });
+  }
+  function wsTerminado(e) { return /^(completed|failed|cancelled|timeout|deleted|error)$/.test(e || ''); }
+  // Pregunta cada pocos segundos hasta que acaba; guarda el resultado en el mensaje (así sigue si recargas la página)
+  function wsVigilar(m) {
+    var w = m.uso && m.uso.wavespeed; if (!w || wsTerminado(w.estado) || ws.vigilando[w.id]) return;
+    ws.vigilando[w.id] = true;
+    var fallos = 0, espera = /video/.test(w.tipo || '') ? 5000 : 2500;
+    function paso() {
+      wsLlamar({ accion: 'estado', id: w.id }).then(function (d) {
+        fallos = 0;
+        if (d.estado && d.estado !== 'reintentar') w.estado = d.estado;
+        if (d.estado === 'completed') { w.salidas = d.salidas || []; w.fin = Date.now(); }
+        if (/^(failed|cancelled|timeout|deleted)$/.test(d.estado || '')) w.error = d.error || d.estado;
+      }).catch(function (e) { if (++fallos >= 8) { w.estado = 'error'; w.error = e.message; } }).then(function () {
+        wsRepintar(m);
+        if (wsTerminado(w.estado)) {
+          delete ws.vigilando[w.id];
+          if (m.id) sb.from('chat_mensajes').update({ uso: m.uso }).eq('id', m.id).then(function () { /* */ });
+          return;
+        }
+        setTimeout(paso, espera);
+      });
+    }
+    setTimeout(paso, 1500);
+  }
+  function wsRepintar(m) {
+    if (msgs.indexOf(m) < 0 || !montado) return;
+    var el = $('[data-ws="' + m.uso.wavespeed.id + '"]');
+    if (el) { var n = document.createElement('div'); n.innerHTML = htmlMsg(m); el.replaceWith(n.firstChild); } else pintarMsgs();
+  }
+  function wsHtmlSalida(u, tipo) {
+    if (typeof u !== 'string') return '<pre class="c-ws-texto">' + esc(JSON.stringify(u, null, 1)) + '</pre>';
+    if (!/^https?:\/\//.test(u)) return '<p>' + esc(u) + '</p>';
+    var e = esc(u), video = /\.(mp4|webm|mov|m4v)(\?|$)/i.test(u) || (!/\.(png|jpe?g|webp|gif)(\?|$)/i.test(u) && /video/.test(tipo || '')),
+        audio = /\.(mp3|wav|m4a|ogg|flac)(\?|$)/i.test(u) || (!video && /audio/.test(tipo || ''));
+    var medio = video ? '<video src="' + e + '" controls playsinline loop preload="metadata"></video>' : audio ? '<audio src="' + e + '" controls></audio>' :
+      '<a href="' + e + '" target="_blank" rel="noopener noreferrer"><img src="' + e + '" alt="Imagen generada" loading="lazy"></a>';
+    return '<figure class="c-ws-out">' + medio + '<figcaption><a href="' + e + '" target="_blank" rel="noopener noreferrer" download>⤓ Abrir / descargar</a>' +
+      (!video && !audio ? '<button type="button" class="c-link" data-a="ws-usar" data-u="' + e + '">↪ Usar como entrada</button>' : '') +
+      (video ? '<button type="button" class="c-link" data-a="ws-usar" data-u="' + e + '" data-v="1">↪ Usar este vídeo</button>' : '') + '</figcaption></figure>';
+  }
+  function htmlWs(m) {
+    var w = m.uso.wavespeed, seg = Math.round(((w.fin || Date.now()) - (w.inicio || Date.now())) / 1000);
+    var h = '<div class="c-m assistant c-ws-msg" data-ws="' + esc(w.id) + '"><p class="c-ws-tit">' + esc(m.contenido) + '</p>';
+    if (w.estado === 'completed') h += (w.salidas && w.salidas.length ? '<div class="c-ws-salidas">' + w.salidas.map(function (u) { return wsHtmlSalida(u, w.tipo); }).join('') + '</div>' : '<p class="c-error">Terminó sin resultados.</p>');
+    else if (wsTerminado(w.estado)) h += '<p class="c-error">No se pudo generar: ' + esc(w.error || w.estado) + '</p>';
+    else h += '<div class="c-ws-espera"><span class="c-cursor"></span> Generando' + (seg > 2 ? ' · ' + seg + ' s' : '') + '…</div>';
+    return h + '<div class="c-meta">🎨 WaveSpeed · ' + esc(w.nombre || w.modelo) + (w.precio != null ? ' · $' + esc(w.precio) : '') + '</div></div>';
+  }
+  function htmlEntradaWs(m) {
+    var l = (m.uso && m.uso.ws_entrada) || []; if (!l.length) return '';
+    return '<div class="c-ws-entradas">' + l.map(function (u) {
+      var e = esc(u); return /\.(mp4|webm|mov)(\?|$)/i.test(u) ? '<video src="' + e + '" muted playsinline></video>' : /\.(mp3|wav|m4a|ogg)(\?|$)/i.test(u) ? '<span>🎵</span>' : '<img src="' + e + '" alt="" loading="lazy">';
+    }).join('') + '</div>';
+  }
+  function wsUsar(u, video) {
+    ws.pendiente = null;
+    var m = ws.modelo && ws.modelo.campos ? ws.modelo : null;
+    var k = m && wsOrdenCampos(m).filter(function (x) { return wsTipoMedia(x, m.campos[x]) === (video ? 'video' : 'image'); })[0];
+    if (k) { ws.media = {}; ws.media[k] = [u]; abrirCrear(); return; }
+    ws.media = {}; ws.pendiente = video ? null : u; ws.modelo = null;
+    ws.filtro.tipo = video ? 'video-to-video' : 'image-to-video';
+    $('#c-modal').hidden = false; wsPintarCrear(true); wsCargarCat().then(function () { if ($('#ws-modelos')) wsPintarLista(); });
+    if (video) ws.pendienteVideo = u;
+  }
+
   // ---------- pintar ----------
   function htmlLogin() {
     return '<div class="c-centro"><div class="c-ante">CHAT · MI SEMANA</div><h1 class="c-tit">Entra con tu cuenta</h1>' +
@@ -510,7 +791,8 @@
       '<main class="c-main"><div class="c-msgs" id="c-msgs"></div>' +
       '<div class="c-pie"><div class="c-caja"><textarea id="c-texto" rows="1" placeholder="Escribe un mensaje…" enterkeyhint="send"></textarea>' +
       '<button type="button" class="c-pri" id="c-boton" data-a="enviar">Enviar</button></div>' +
-      '<div class="c-opc"><button type="button" class="c-voz" id="c-agente" data-a="agente" title="Hablar con tu agente de ElevenLabs">🤖 Agente</button>' +
+      '<div class="c-opc"><button type="button" class="c-voz" id="c-crear" data-a="crear" title="Crear imágenes y vídeos con WaveSpeed">🎨 Crear</button>' +
+      '<button type="button" class="c-voz" id="c-agente" data-a="agente" title="Hablar con tu agente de ElevenLabs">🤖 Agente</button>' +
       '<button type="button" class="c-voz" id="c-voz" data-a="voz">🎙 Manos libres</button>' +
       '<button type="button" class="c-link" data-a="voz-id" title="Voz de ElevenLabs">voz</button>' +
       '<button type="button" class="c-modelo" id="c-pers" data-a="personajes"></button>' +
@@ -533,7 +815,8 @@
     }).join('') : '<div class="c-vacio">Aún no hay conversaciones.</div>';
   }
   function htmlMsg(m) {
-    if (m.rol === 'user') return '<div class="c-m user">' + esc(m.contenido) + '</div>';
+    if (m.uso && m.uso.wavespeed) return htmlWs(m);
+    if (m.rol === 'user') return '<div class="c-m user">' + esc(m.contenido) + htmlEntradaWs(m) + '</div>';
     var h = '<div class="c-m assistant' + (m.vivo && !m.contenido ? ' c-cursor' : '') + '">';
     if (m.razonamiento) h += '<details class="c-razon"' + (m.vivo && !m.contenido ? ' open' : '') + '><summary>' + (m.vivo && !m.contenido ? 'Pensando…' : 'Razonamiento') + '</summary><div>' + esc(m.razonamiento) + '</div></details>';
     h += m.contenido ? md(m.contenido) : '';
@@ -660,6 +943,15 @@
     if (a === 'pers-guardar') return guardarPersonaje();
     if (a === 'pers-borrar') return borrarPersonaje(b.getAttribute('data-id'));
     if (a === 'agente') return agAlternar();
+    if (a === 'crear') return abrirCrear();
+    if (a === 'ws-tipo') { ws.filtro.tipo = b.getAttribute('data-v'); Array.prototype.forEach.call(raiz.querySelectorAll('[data-a=ws-tipo]'), function (x) { x.classList.toggle('on', x === b); }); return wsPintarLista(); }
+    if (a === 'ws-elegir') { var pv = ws.pendienteVideo; ws.pendienteVideo = null; wsElegir(b.getAttribute('data-id'));
+      if (pv && ws.modelo) { var kv = wsOrdenCampos(ws.modelo).filter(function (x) { return wsTipoMedia(x, ws.modelo.campos[x]) === 'video'; })[0]; if (kv) { ws.media[kv] = [pv]; wsPintarCrear(); } } return; }
+    if (a === 'ws-cambiar') return wsPintarCrear(true);
+    if (a === 'ws-recargar') { ws.cat = null; var cj = $('#ws-modelos'); if (cj) cj.innerHTML = '<div class="c-vacio">Cargando modelos de WaveSpeed…</div>'; return wsCargarCat(true).then(wsPintarLista); }
+    if (a === 'ws-quitar') { var kq = b.getAttribute('data-k'); (ws.media[kq] || []).splice(+b.getAttribute('data-i'), 1); var cq = $('#ws-m-' + kq); if (cq) cq.innerHTML = wsHtmlMedia(kq); return; }
+    if (a === 'ws-generar') return wsGenerar();
+    if (a === 'ws-usar') return wsUsar(b.getAttribute('data-u'), b.getAttribute('data-v') === '1');
     if (a === 'voz') return mvAlternar();
     if (a === 'voz-cortar') return mvCortar();
     if (a === 'voz-id') {
@@ -689,8 +981,12 @@
   raiz.addEventListener('input', function (ev) {
     if (ev.target.id === 'c-texto') ajustar();
     if (ev.target.id === 'c-buscar') { filtro.q = ev.target.value; pintarModelos(); }
+    if (ev.target.id === 'ws-buscar') { ws.filtro.q = ev.target.value; wsPintarLista(); }
   });
-  raiz.addEventListener('change', function (ev) { if (ev.target.id === 'c-pensar') guardarLocal('miSemana.chat.pensar', ev.target.checked ? '1' : '0'); });
+  raiz.addEventListener('change', function (ev) {
+    if (ev.target.type === 'file' && ev.target.closest('.c-ws')) return wsSubir(ev.target);
+    if (ev.target.classList && ev.target.classList.contains('c-ws-url')) { var u = ev.target.value.trim(); if (/^https?:\/\/\S+$/.test(u)) { wsAnadirMedia(ev.target.getAttribute('data-k'), ev.target.getAttribute('data-multi') === '1', [u]); ev.target.value = ''; } return; }
+    if (ev.target.id === 'c-pensar') guardarLocal('miSemana.chat.pensar', ev.target.checked ? '1' : '0'); });
   function entrar() {
     var c = ($('#c-correo') || {}).value, p = ($('#c-clave') || {}).value;
     if (!c || !p) { error = 'Escribe correo y contraseña'; return pintar(); }
